@@ -23,6 +23,8 @@ model member {
 	achieve		Int			@default(0)
 	socket		Int			@default(-1)
 	twoFactor	Boolean		@default(false)
+	friend   	member[]	@relation("friend")
+	black_list	member[]	@relation("friend")
 	history		history[]
 }
 
