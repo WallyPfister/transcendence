@@ -20,7 +20,7 @@ networks:
 
 services:
     postgres:
-        container_name: test
+        container_name: postgres
         image: postgres:14
         restart : always
         ports:

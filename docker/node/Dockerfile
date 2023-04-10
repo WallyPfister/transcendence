@@ -8,13 +8,14 @@ COPY . .
 
 RUN set -eux && \
 	npm install && \
-	npm install prisma --save-dev && \
-	npx prisma migrate dev --name init --schema=./prisma/schema.prisma && \
-	npm run build
+	npm install prisma --save-dev
 
+RUN npx prisma generate
+
+RUN	npm run build
 
 CMD ["npm", "run", "start:dev"]
-
+# CMD ["tail", "-f"]
 # RUN mkdir -p /app
 # WORKDIR /var/app
 
