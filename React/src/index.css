@@ -1,0 +1,19 @@
+@font-face {
+    font-family: pixopedia;
+    src: url(../public/pixopedia.ttf);
+}
+
+html {
+    background-color: black;
+    color: white;
+    font-family: pixopedia;
+}
+
+body {
+    margin: 0;
+}
+
+html, body, #root {
+    width: 100%;
+    height: 100%;
+}
