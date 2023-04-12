@@ -23,9 +23,9 @@ model Member {
 	achieve		 Int		@default(0)
 	socket		 Int		@default(-1)
 	twoFactor	 Boolean	@default(false)
-	friend   	 member[]	@relation("friend")
-	blackList	 member[]	@relation("friend")
-	history		 history[]
+	friend   	 Member[]	@relation("friend")
+	blackList	 Member[]	@relation("friend")
+	history		 History[]
 	refreshToken String     @db.VarChar(512)
 }
 
@@ -37,7 +37,7 @@ model History {
 	option		Int?
 	result		Boolean		@default(false)
 	date		DateTime	@default(now())
-	memberName	member 		@relation(fields: [name], references: [name])
+	memberName	Member 		@relation(fields: [name], references: [name])
 	name		String
 
 }
@@ -46,7 +46,7 @@ model Channel {
 	name		String		@unique @id
 	passwd		String?	
 	property	Int			@default(0)
-	list		ch_users[]
+	list		ChUsers[]
 }
 
 model ChUsers {
@@ -55,6 +55,6 @@ model ChUsers {
 	userFd		Int			@unique
 	property	Int			@default(0)
 	mute		DateTime?	
-	channel		channel 	@relation(fields: [chName], references: [name])
+	channel		Channel 	@relation(fields: [chName], references: [name])
 	chName		String
 }
