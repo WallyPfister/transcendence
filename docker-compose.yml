@@ -34,7 +34,7 @@ services:
         tty: true
     nestjs:
         container_name: nestjs
-        build: ./node/
+        build: ./backend/
         image: node:18-alpine3.16
         restart: always
         env_file:
@@ -45,5 +45,3 @@ services:
           - "3000:3000"
         networks:
           - trans
-          
-        

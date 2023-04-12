@@ -1,4 +1,4 @@
-VOLUME = ./hyunjcho/data
+# VOLUME = ./hyunjcho/data
 COMPOSE = docker-compose.yml
 
 all: 
