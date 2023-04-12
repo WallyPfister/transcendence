@@ -1,0 +1,49 @@
+
+version: '3'
+
+# volumes: 
+#   postgres-volume:
+#     name: postgres-volume
+#     driver: local
+#     driver_opts:
+#       type: none
+#       device: ./docker/postgres
+#       o: bind
+
+networks:
+    trans:
+        name: trans
+        driver: bridge
+        ipam:
+            config:
+            - subnet: 172.26.0.0/16
+
+services:
+    postgres:
+        container_name: postgres
+        image: postgres:14
+        restart : always
+        ports:
+         - "5432:5432"
+        env_file:
+            - .env
+        networks:
+          - trans
+        # volumes:
+        #     - postgres-volume:/var/lib/postgresql/data
+        tty: true
+    nestjs:
+        container_name: nestjs
+        build: ./node/
+        image: node:18-alpine3.16
+        restart: always
+        env_file:
+            - .env
+        # depends_on:
+        #   - postgres
+        ports:
+          - "3000:3000"
+        networks:
+          - trans
+          
+        
