@@ -10,25 +10,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model member {
-	name		String		@id @db.VarChar(20)
-	email		String		@db.VarChar(50)
-	intraId		String		@db.VarChar(20)
-	avartar		String		@db.VarChar(100)
-	status		Int			@default(1)
-	win			Int			@default(0)
-	lose		Int			@default(0)
-	level		Int			@default(0)
-	score		Int			@default(1000)
-	achieve		Int			@default(0)
-	socket		Int			@default(-1)
-	twoFactor	Boolean		@default(false)
-	friend   	member[]	@relation("friend")
-	black_list	member[]	@relation("friend")
-	history		history[]
+model Member {
+	name		 String		@id @db.VarChar(20)
+	email		 String		@db.VarChar(50)
+	intraId		 String		@db.VarChar(20)
+	avatar		 String		@db.VarChar(100)
+	status		 Int		@default(1)
+	win			 Int		@default(0)
+	lose		 Int		@default(0)
+	level		 Int		@default(0)
+	score		 Int		@default(1000)
+	achieve		 Int		@default(0)
+	socket		 Int		@default(-1)
+	twoFactor	 Boolean	@default(false)
+	friend   	 member[]	@relation("friend")
+	blackList	 member[]	@relation("friend")
+	history		 history[]
+	refreshToken String     @db.VarChar(512)
 }
 
-model history{
+model History {
 	id			Int			@id @default(autoincrement())
 	player		String?
 	scoreA		Int?
@@ -36,24 +37,24 @@ model history{
 	option		Int?
 	result		Boolean		@default(false)
 	date		DateTime	@default(now())
-	member_name	member 		@relation(fields: [name], references: [name])
+	memberName	member 		@relation(fields: [name], references: [name])
 	name		String
 
 }
 
-model channel{
+model Channel {
 	name		String		@unique @id
 	passwd		String?	
 	property	Int			@default(0)
 	list		ch_users[]
 }
 
-model ch_users{
+model ChUsers {
 	id			Int			@id @default(autoincrement())
-	user_name	String		@unique @db.VarChar(20)
-	user_fd		Int			@unique
+	userName	String		@unique @db.VarChar(20)
+	userFd		Int			@unique
 	property	Int			@default(0)
 	mute		DateTime?	
 	channel		channel 	@relation(fields: [chName], references: [name])
-	chName	String	
+	chName		String
 }
