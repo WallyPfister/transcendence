@@ -1,0 +1,8 @@
+#log-in {
+	font-size: 6vw;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	height: 50vw; /* how should I set the height?*/
+    text-align: center; 
+}
