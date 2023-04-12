@@ -34,7 +34,7 @@ services:
     nestjs:
         container_name: nestjs
         build: ./backend/
-        image: node:18-alpine3.16
+        image: node:transcendence
         restart: always
         env_file:
             - .env
