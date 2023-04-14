@@ -1,4 +1,4 @@
-FROM node:18-alpine3.16
+FROM node:18
 
 WORKDIR /app
 
@@ -6,13 +6,19 @@ COPY ./package.json .
 
 COPY . .
 
+RUN apt-get update && apt-get install -y wait-for-it
+
 RUN set -eux && \
 	npm install && \
 	npm install prisma --save-dev
 
-RUN npx prisma generate
+# RUN npx prisma migrate dev --name init && \
+# 	npx prisma generate
 
-RUN	npm run build
+# RUN	npm run build
+COPY ./entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
 
 CMD ["npm", "run", "start:dev"]
 # CMD ["tail", "-f"]
