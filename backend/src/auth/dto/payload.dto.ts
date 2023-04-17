@@ -1,10 +1,6 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
-export class AuthDTO {
-  @IsNotEmpty()
-  @IsString()
-  accessToken: string;
-
+export class PayloadDTO {
   @IsNotEmpty()
   @IsString()
   refreshToken: string;
