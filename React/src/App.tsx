@@ -4,6 +4,7 @@ import Login from './Login/Login';
 import SignUp from './SignUp/SignUp';
 import Verify from './Verify/Verify';
 import Main from './Main/Main';
+import Rank from './Rank/Rank';
 
 function App() {
   return (
@@ -14,8 +15,8 @@ function App() {
 				<Route path='/signup' element={<SignUp/>}/>
 				<Route path='/verify' element={<Verify/>}/>
 				<Route path='/main' element={<Main/>}/>
-				{/* <Route path='/rank' element={<Rank/>}/>
-				<Route path='/profile' element={<Profile/>}/>
+				<Route path='/rank' element={<Rank/>}/>
+				{/*<Route path='/profile' element={<Profile/>}/>
 				<Route path='/game' element={<Game/>}/> */}
 			</Routes>
 		</BrowserRouter>

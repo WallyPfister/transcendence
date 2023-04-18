@@ -7,7 +7,7 @@ function Verify() {
             <div id="title">Two Factor<br/>Verification</div>
             <button id="send-button">send</button>
             <form id="verify-form">
-                <input id="verify-input"></input>
+                <input id="verify-input" placeholder="code"></input>
                 <button id="verify-button">verify</button>
             </form>
         </div>
