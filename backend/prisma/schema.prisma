@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  binaryTarget = ["native"]
 }
 
 datasource db {
@@ -10,10 +11,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Member {
+model member {
 	name		 String		@id @db.VarChar(20)
 	email		 String		@db.VarChar(50)
-	intraId		 String		@db.VarChar(20)
+	intraId		 String		@db.VarChar(20) @unique
 	avatar		 String		@db.VarChar(100)
 	status		 Int		@default(1)
 	win			 Int		@default(0)
@@ -23,13 +24,13 @@ model Member {
 	achieve		 Int		@default(0)
 	socket		 Int		@default(-1)
 	twoFactor	 Boolean	@default(false)
-	friend   	 Member[]	@relation("friend")
-	blackList	 Member[]	@relation("friend")
-	history		 History[]
+	friend   	 member[]	@relation("friend")
+	blackList	 member[]	@relation("friend")
+	history		 history[]
 	refreshToken String     @db.VarChar(512)
 }
 
-model History {
+model history {
 	id			Int			@id @default(autoincrement())
 	player		String?
 	scoreA		Int?
@@ -37,24 +38,24 @@ model History {
 	option		Int?
 	result		Boolean		@default(false)
 	date		DateTime	@default(now())
-	memberName	Member 		@relation(fields: [name], references: [name])
+	memberName	member 		@relation(fields: [name], references: [name])
 	name		String
 
 }
 
-model Channel {
+model channel {
 	name		String		@unique @id
 	passwd		String?	
 	property	Int			@default(0)
-	list		ChUsers[]
+	list		chusers[]
 }
 
-model ChUsers {
+model chusers {
 	id			Int			@id @default(autoincrement())
 	userName	String		@unique @db.VarChar(20)
 	userFd		Int			@unique
 	property	Int			@default(0)
 	mute		DateTime?	
-	channel		Channel 	@relation(fields: [chName], references: [name])
+	channel		channel 	@relation(fields: [chName], references: [name])
 	chName		String
 }
