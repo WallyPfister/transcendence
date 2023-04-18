@@ -1,4 +1,4 @@
-.chat {
+#chat-box {
     width: 400px;
     height: 400px;
     background-color: white;
@@ -6,14 +6,4 @@
     font-family: Arial;
     padding: 10px;
     overflow-y: scroll;
-  }
-  
-  .chat input[type="text"] {
-    width: 80%;
-    padding: 5px;
-    margin-right: 5px;
-  }
-  
-  .chat button[type="submit"] {
-    padding: 5px 10px;
   }
