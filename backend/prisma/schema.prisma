@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  binaryTarget = ["native"]
 }
 
 datasource db {
@@ -13,7 +14,7 @@ datasource db {
 model member {
 	name		 String		@id @db.VarChar(20)
 	email		 String		@db.VarChar(50)
-	intraId		 String		@db.VarChar(20)
+	intraId		 String		@db.VarChar(20) @unique
 	avatar		 String		@db.VarChar(100)
 	status		 Int		@default(1)
 	win			 Int		@default(0)
