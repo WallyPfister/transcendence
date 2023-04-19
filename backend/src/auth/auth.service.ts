@@ -33,10 +33,10 @@ export class AuthService {
 
 	// TODO: RefreshToken의 변조 여부 검사(다른 유저의 토큰으로 바꿔치기 여부)
 
-	async saveRefreshToken(username: string, token: string): Promise<void> {
+	async saveRefreshToken(userName: string, token: string): Promise<void> {
 		await this.prisma.member.update({
 			where: {
-				name: username,
+				name: userName,
 			},
 			data: {
 				refreshToken: token,
@@ -44,9 +44,9 @@ export class AuthService {
 		});
 	}
 
-	async issueAccessToken(username: string, tfa: boolean): Promise<string> {
+	async issueAccessToken(userName: string, tfa: boolean): Promise<string> {
 		const payload = {
-			sub: username,
+			sub: userName,
 			tfa_done: tfa,
 		};
 		const token = this.jwtService.signAsync(
@@ -67,18 +67,19 @@ export class AuthService {
 				expiresIn: this.config.get<string>('JWT_REFRESH_EXPIRE_TIME'),
 			},
 		);
-		await this.saveRefreshToken(username, token);
+		// TODO: 유저 생성 기능 적용 후에 활성화
+		// await this.saveRefreshToken(username, token);
 		return token;
 	}
 
 	async refreshAccessToken(
-		username: string,
-		tfa: boolean,
+		userName: string,
 		refreshToken: string,
+		tfa: boolean
 	): Promise<{ accessToken: string }> {
 		if (!this.verifyRefreshToken(refreshToken)) throw new HttpException('Refresh token is invalid.', 401);
 		// TODO: RefreshToken 변조 여부 검사(다른 유저와 바꿔치기 여부)
-		const token = await this.issueAccessToken(username, tfa);
+		const token = await this.issueAccessToken(userName, tfa);
 		return {
 			accessToken: token,
 		};
