@@ -12,7 +12,7 @@ datasource db {
 }
 
 model member {
-	name		 String		@id @db.VarChar(20)
+	name		 String		@id @db.VarChar(20) @unique
 	email		 String		@db.VarChar(50)
 	intraId		 String		@db.VarChar(20) @unique
 	avatar		 String		@db.VarChar(100)

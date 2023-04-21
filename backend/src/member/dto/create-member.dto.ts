@@ -14,15 +14,11 @@ export class CreateMemberDto {
 	avatar: string;
 
 	@IsEmail()
+	@IsNotEmpty()
 	email: string;
 
 	@IsBoolean()
 	@IsNotEmpty()
 	@Exclude()
 	twoFactor: boolean;
-
-	@IsString()
-	@IsNotEmpty()
-	@Exclude()
-	refreshToken: string;
 }
