@@ -1,22 +1,36 @@
-# VOLUME = ./hyunjcho/data
-COMPOSE = docker-compose.yml
+COMPOSE_SRC = ./docker-compose.yml
 
-all: 
-	# @mkdir -p $(VOLUME)
-	# @mkdir -p $(VOLUME)/mariadb
-	# @mkdir -p $(VOLUME)/wordpress
-	docker-compose -f $(COMPOSE) up -d --build
+VOLUME_PATH = /Users/highcho/Desktop/tsen
 
-clean:
-	docker-compose -f $(COMPOSE) down
+.PHONY : all
+all : build
+	@ mkdir -p $(VOLUME_PATH)/example_path
+	@ sudo docker compose -f $(COMPOSE_SRC) up -d
 
-fclean:
-	docker-compose -f $(COMPOSE) down --rmi all
-	docker volume rm $$(docker volume ls -f dangling=true -q)
-	# @rm -rf ./hyunjcho
+.PHONY : build
+build :
+	@ sudo docker compose -f $(COMPOSE_SRC) build --progress=plain
 
-re:
-	@make fclean
+.PHONY : stop
+stop :
+	@ sudo docker compose -f $(COMPOSE_SRC) stop
+
+.PHONY : restart
+restart :
+	@ sudo docker compose -f $(COMPOSE_SRC) restart
+
+
+.PHONY : clean
+clean :
+	@ sudo docker compose -f $(COMPOSE_SRC) down \
+	--remove-orphans --rmi all -v
+
+
+.PHONY : fclean
+fclean : clean
+	@ sudo rm -rf $(VOLUME_PATH)/example_path
+
+.PHONY : re
+re :
+	make fclean
 	make all
-
-.PHONY: all re clean fclean
