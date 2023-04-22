@@ -2,13 +2,15 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { MemberRepository } from 'src/member/member.repository';
 
 @Injectable()
 export class AuthService {
 	constructor(
-		private jwtService: JwtService,
-		private config: ConfigService,
-		private prisma: PrismaService,
+		private readonly jwtService: JwtService,
+		private readonly config: ConfigService,
+		private readonly prisma: PrismaService,
+		private readonly memberRepository: MemberRepository,
 	) { }
 
 	verifyAccessToken(token: string) {
@@ -52,23 +54,22 @@ export class AuthService {
 		const token = this.jwtService.signAsync(
 			payload,
 			{
-				secret: this.config.get<string>('JWT_SECRET'),
+				secret: this.config.get<string>('JWT_ACCESS_SECRET'),
 				expiresIn: this.config.get<string>('JWT_ACCESS_EXPIRE_TIME'),
 			},
 		);
 		return token;
 	}
 
-	async issueRefreshToken(username: string): Promise<string> {
+	async issueRefreshToken(userName: string): Promise<string> {
 		const token = this.jwtService.sign(
 			{},
 			{
-				secret: this.config.get<string>('JWT_SECRET'),
+				secret: this.config.get<string>('JWT_REFRESH_SECRET'),
 				expiresIn: this.config.get<string>('JWT_REFRESH_EXPIRE_TIME'),
 			},
 		);
-		// TODO: 유저 생성 기능 적용 후에 활성화
-		// await this.saveRefreshToken(username, token);
+		// await this.memberRepository.updateRefreshToken(userName, token);
 		return token;
 	}
 
@@ -76,16 +77,13 @@ export class AuthService {
 		userName: string,
 		refreshToken: string,
 		tfa: boolean
-	): Promise<{ accessToken: string }> {
+	): Promise<string> {
 		if (!this.verifyRefreshToken(refreshToken)) throw new HttpException('Refresh token is invalid.', 401);
 		// TODO: RefreshToken 변조 여부 검사(다른 유저와 바꿔치기 여부)
 		const token = await this.issueAccessToken(userName, tfa);
-		return {
-			accessToken: token,
-		};
+		return token;
 	}
 
-	// TODO: login() 구현
-	// TODO: logout() 구현 -> 질문: accessToken & refreshToken 멤버에서 삭제?
+	// TODO: logout() 구현 -> 질문: refreshToken 멤버에서 삭제?
 	// TODO: twoFactorAuthentication() 구현
 }
