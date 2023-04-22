@@ -2,13 +2,14 @@ import { Injectable } from "@nestjs/common";
 import { CreateMemberDto } from "./dto/create-member.dto";
 import { PrismaService } from "src/prisma/prisma.service";
 import { MemberProfileDto } from "./dto/memberProfile.dto";
+import { FriendProfile } from "./dto/friendProfile.dto";
 
 @Injectable()
 export class MemberRepository {
 	constructor(private prisma: PrismaService) {} 
 
 	async createMember(memberInfo: CreateMemberDto): Promise<any> {
-		await this.prisma.member.create({
+		return await this.prisma.member.create({
 			data: {
 				...memberInfo,
 				status: 0,
@@ -92,7 +93,7 @@ export class MemberRepository {
 		});
 	}
 
-	async addFriend(name: string, friendName: string): Promise<boolean> {
+	async addFriend(name: string, friendName: string): Promise<void> {
 		await this.prisma.member.update({
 			where: { name: name },
 			data: {
@@ -101,10 +102,9 @@ export class MemberRepository {
 				}
 			}
 		});
-		return true;
 	}
 
-	async findOneFriend(name: string, friendName: string): Promise<any> {
+	async findOneFriend(name: string, friendName: string): Promise<FriendProfile[]> {
 		return await this.prisma.member.findUnique({
 			where: { name: name },
 		}).friend({
@@ -120,7 +120,8 @@ export class MemberRepository {
 	}
 
 	async findAllFriend(name: string): Promise<any> {
-		return await this.prisma.member.findUnique({
+		console.log(`hello`);
+		const friends = await this.prisma.member.findUnique({
 			where: { name: name },
 			select: {
 				friend: {
@@ -137,9 +138,10 @@ export class MemberRepository {
 				},
 			},
 		}).friend;
+		return friends;
 	}
 
-	async deleteFriend(name: string, friendName: string): Promise<boolean> {
+	async deleteFriend(name: string, friendName: string): Promise<void> {
 		await this.prisma.member.update({
 			where: { 
 				name: name
@@ -152,6 +154,5 @@ export class MemberRepository {
 				} 
 			},
 		});
-		return true;
 	}
 }

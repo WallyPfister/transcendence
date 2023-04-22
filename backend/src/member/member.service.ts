@@ -2,21 +2,23 @@ import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/co
 import { MemberRepository } from './member.repository';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { MemberProfileDto } from './dto/memberProfile.dto';
+import { FriendProfile } from './dto/friendProfile.dto';
 
 @Injectable()
 export class MemberService {
 	constructor(private memberRepository: MemberRepository){};
 
-	createMember(memberInfo: CreateMemberDto): Promise<string> {
-		return this.memberRepository.createMember(memberInfo);
-	}
+	// async createMember(memberInfo: CreateMemberDto): Promise<string> {
+	// 	return await this.memberRepository.createMember(memberInfo);
+	// }
 
-	async saveRefreshToken(name: string, refreshToken: string): Promise<boolean> {
-		return await this.memberRepository.updateRefreshToken(name, refreshToken);
-	}
+	// async saveRefreshToken(name: string, refreshToken: string): Promise<boolean> {
+	// 	return await this.memberRepository.updateRefreshToken(name, refreshToken);
+	// }
 
 	async getMemberInfo(name: string): Promise<MemberProfileDto> { // 향후 토큰으로 멤버 찾는 것으로 대체?
-		const member: MemberProfileDto = await this.memberRepository.getMemberInfo(name); 
+		const member: MemberProfileDto = await this.memberRepository.getMemberInfo(name);
+		if (!member)
 			throw new NotFoundException(`${name} 이름을 가진 멤버를 찾을 수 없습니다.`); // nestjs 에러 핸들러같은 것이 있는 지 확인 필요
 			// notFound? conflict? badRequest?
 		return member;
@@ -29,9 +31,9 @@ export class MemberService {
 		return member;
 	}
 
-	async updateStatus(name: string, status: number): Promise<void> {
-		this.memberRepository.updateStatus(name, status);
-	}
+	// async updateStatus(name: string, status: number): Promise<void> {
+	// 	this.memberRepository.updateStatus(name, status);
+	// }
 	
 	async updateGameScore(name: string, result: boolean): Promise<void> {
 		const member = await this.memberRepository.getMemberInfo(name);
@@ -53,23 +55,23 @@ export class MemberService {
 		// 어떤 식으로 Achieve를 만들지?
 	}
 
-	async deleteMember(name: string) {
-		return this.memberRepository.deleteMember(name);
-	}
+	// async deleteMember(name: string) {
+	// 	return this.memberRepository.deleteMember(name);
+	// }
 
-	async addFriend(name: string, friendName: string): Promise<any> {
-		return await this.memberRepository.addFriend(name, friendName);
-	}
+	// async addFriend(name: string, friendName: string): Promise<any> {
+	// 	return await this.memberRepository.addFriend(name, friendName);
+	// }
 
-	async findOneFriend(name: string, friendName: string): Promise<any> {
-		return await this.memberRepository.findOneFriend(name, friendName);
-	}
+	// async findOneFriend(name: string, friendName: string): Promise<FriendProfile[]> {
+	// 	return await this.memberRepository.findOneFriend(name, friendName);
+	// }
 
-	async findAllFriend(name: string): Promise<any> {
-		return await this.memberRepository.findAllFriend(name);
-	}
+	// async findAllFriend(name: string): Promise<any> {
+	// 	return await this.memberRepository.findAllFriend(name);
+	// }
 
-	async deleteFriend(name: string, friendName: string): Promise<boolean> {
-		return this.memberRepository.deleteFriend(name, friendName);
-	}
+	// async deleteFriend(name: string, friendName: string): Promise<boolean> {
+	// 	return this.memberRepository.deleteFriend(name, friendName);
+	// }
 }
