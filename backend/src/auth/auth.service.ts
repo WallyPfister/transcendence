@@ -62,11 +62,12 @@ export class AuthService {
 	}
 
 	async issueRefreshToken(userName: string, tfa: boolean): Promise<string> {
+		const payload = {
+			sub: userName,
+			tfaCheck: tfa,
+		};
 		const token = this.jwtService.sign(
-			{
-				sub: userName,
-				tfaCheck: tfa,
-			},
+			payload,
 			{
 				secret: this.config.get<string>('JWT_REFRESH_SECRET'),
 				expiresIn: this.config.get<string>('JWT_REFRESH_EXPIRE_TIME'),
