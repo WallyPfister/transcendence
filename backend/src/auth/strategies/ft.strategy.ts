@@ -24,7 +24,7 @@ export class FTOauthStrategy extends PassportStrategy(Strategy, 'ft') {
 	) {
 		const member = await this.memberRepository.findOneByIntraId(profile.username);
 		if (!member)
-			throw new HttpException(`Not registered as a pong member yet(${profile.id}).`, 401);
+			throw new HttpException(`Not registered as a pong member yet(${profile.username}).`, 401);
 		return member;
 	}
 }
