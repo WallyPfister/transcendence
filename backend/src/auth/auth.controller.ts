@@ -71,6 +71,7 @@ export class AuthController {
 	})
 	@Post('Tfa')
 	// TODO: member DTO 정의 필요
+	// TODO: Guard 필요
 	async twoFactorAuthentication(@Payload() member: any): Promise<void> {
 		// TODO: Implement sendTwoFactorCode
 		// this.authService.sendTwoFactorCode(member.email);
