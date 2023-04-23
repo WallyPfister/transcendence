@@ -46,14 +46,14 @@ export class AuthController {
 		description: '42 OAuth will be redirected here.',
 	})
 	@ApiResponse({
-		status: 401,
-		description:
-			'Not a registered member yet. Redirect to signup page.',
-	})
-	@ApiResponse({
 		status: 200,
 		description:
 			'JWT token issued and login has been successful.',
+	})
+	@ApiResponse({
+		status: 401,
+		description:
+			'Not a registered member yet. Redirect to signup page.',
 	})
 	@Get('callback')
 	@UseGuards(FortyTwoAuthGuard)
@@ -87,14 +87,14 @@ export class AuthController {
 		description: 'Refresh JWT access token.',
 	})
 	@ApiResponse({
-		status: 401,
-		description:
-			'JWT refresh token is not validate.',
-	})
-	@ApiResponse({
 		status: 200,
 		description:
 			'JWT access token reissued successfully.',
+	})
+	@ApiResponse({
+		status: 401,
+		description:
+			'JWT refresh token is not validate.',
 	})
 	@Get('refresh')
 	@UseGuards(JwtRefreshAuthGuard)
@@ -117,6 +117,11 @@ export class AuthController {
 	@ApiResponse({
 		status: 200,
 		description: 'Logout has been successful.',
+	})
+	@ApiResponse({
+		status: 401,
+		description:
+			'JWT access token is not validate.',
 	})
 	@ApiBearerAuth('token')
 	@Get('logout')
