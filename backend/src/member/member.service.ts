@@ -6,7 +6,7 @@ import { FriendProfile } from './dto/friendProfile.dto';
 
 @Injectable()
 export class MemberService {
-	constructor(private memberRepository: MemberRepository){};
+	constructor(private memberRepository: MemberRepository) { };
 
 	// async createMember(memberInfo: CreateMemberDto): Promise<string> {
 	// 	return await this.memberRepository.createMember(memberInfo);
@@ -22,18 +22,18 @@ export class MemberService {
 			throw new NotFoundException(`${name} 이름을 가진 멤버를 찾을 수 없습니다.`); // nestjs 에러 핸들러같은 것이 있는 지 확인 필요
 		return member;
 	}
-	
+
 	async findOneByIntraId(intraId: string): Promise<string> {
 		const member = await this.memberRepository.findOneByIntraId(intraId);
 		if (!member)
 			throw new UnauthorizedException(`[${intraId}]: 가입되지 않은 회원입니다.`)
-		return member;
+		return member.name;
 	}
 
 	// async updateStatus(name: string, status: number): Promise<void> {
 	// 	this.memberRepository.updateStatus(name, status);
 	// }
-	
+
 	async updateGameScore(name: string, result: boolean): Promise<void> {
 		const member = await this.memberRepository.getMemberInfo(name);
 		let win, lose, score, level: number;
