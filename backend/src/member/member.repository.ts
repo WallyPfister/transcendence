@@ -1,13 +1,15 @@
+import { Injectable } from "@nestjs/common";
+import { CreateMemberDto } from "./dto/create-member.dto";
 import { PrismaService } from "src/prisma/prisma.service";
-import { CreateMemberDto } from "./dto/create-member.dto/create-member.dto";
-import { PrismaClient } from "@prisma/client";
+import { MemberProfileDto } from "./dto/memberProfile.dto";
+import { FriendProfile } from "./dto/friendProfile.dto";
 
-const prisma = new PrismaClient();
-
+@Injectable()
 export class MemberRepository {
-	// constructor(private prisma: PrismaService) {}
-	async createMember(memberInfo: CreateMemberDto) {
-		return await prisma.member.create({
+	constructor(private prisma: PrismaService) {} 
+
+	async createMember(memberInfo: CreateMemberDto): Promise<any> {
+		return await this.prisma.member.create({
 			data: {
 				...memberInfo,
 				status: 0,
@@ -17,53 +19,140 @@ export class MemberRepository {
 				score: 0,
 				achieve: 0,
 				socket: 0,
+				refreshToken: ""
+			},
+			select: {
+				name: true,
 			}
 		});
 	}
 
-	findOneByIntraId(intraId: string) { // 친구의 닉네임이 변경될 때 내 디비 친구 컬럼에서도 변경이 되나?
-		return prisma.member.findFirst({where: {intraId}});
+	async updateRefreshToken(name: string, refreshToken: string): Promise<boolean> {
+		await this.prisma.member.update({
+			where: { name: name },
+			data: { refreshToken: refreshToken }
+		});
+		return true;
 	}
 
-	async addFriend(ownerIntra: string, friendIntra: string) {
-		return await prisma.member.update( { 
+	async getMemberInfo(name: string): Promise<MemberProfileDto> {
+		return await this.prisma.member.findUnique({
+			where: { name: name },
+			select: {
+				name: true,
+				email: true,
+				avatar: true,
+				status: true,
+				win: true,
+				lose: true,
+				level: true,
+				score: true,
+				achieve: true,
+			}
+		});
+	}
+
+	async findOneByIntraId(intraId: string): Promise<any> {
+		return this.prisma.member.findUnique({
+			where: { intraId: intraId },
+			select: { name: true }
+		});
+	}
+
+	async updateStatus(name: string, status: number): Promise<void> {
+		await this.prisma.member.update({
+			where: { name: name },
+			data: { status: status }
+		});
+	}
+
+	async updateGameScore(name: string, win: number, lose: number, score: number, level: number): Promise<void> {
+		await this.prisma.member.update({
+			where: { name: name },
+			data: {
+				win: win,
+				lose: lose,
+				score: score,
+				level: level,
+			}
+		});
+	}
+
+	async updateAchieve(name: string, achieve: number): Promise<void> {
+		await this.prisma.member.update({
+			where: { name: name },
+			data: { achieve: achieve }
+		});
+	}
+
+	async deleteMember(name: string): Promise<void> {
+		await this.prisma.member.delete({
 			where: {
-				intraId: ownerIntra
-			}, data: {
+				name: name
+			}
+		});
+	}
+
+	async addFriend(name: string, friendName: string): Promise<void> {
+		await this.prisma.member.update({
+			where: { name: name },
+			data: {
 				friend: {
-					connect: {
-						intraId: friendIntra
-					}
+					connect: { name: friendName }
 				}
 			}
-		})
+		});
 	}
 
-	findOneFriend(ownerIntra: string, friendIntra: string) {
-		return prisma.member.findUnique({
-			where: {
-				intraId: ownerIntra 
-			}
+	async findOneFriend(name: string, friendName: string): Promise<FriendProfile[]> {
+		return await this.prisma.member.findUnique({
+			where: { name: name },
 		}).friend({
-			where: {
-				intraId: friendIntra
+			where: { name: friendName },
+			select: {
+				name: true,
+				avatar: true,
+				status: true,
+				level: true,
+				achieve: true
 			}
 		})
 	}
 
-	findAllFriend(ownerIntra: string) {
-		return prisma.member.findUnique({
-			where: {
-				intraId: ownerIntra
-			}
-		}).friend // 이렇게 했을 때 전체가 반환이 되는지?
+	async findAllFriend(name: string): Promise<any> {
+		console.log(`hello`);
+		const friends = await this.prisma.member.findUnique({
+			where: { name: name },
+			select: {
+				friend: {
+					orderBy: {
+						name: 'asc',
+					},
+					select: {
+						name: true,
+						avatar: true,
+						status: true,
+						level: true,
+						achieve: true
+					}
+				},
+			},
+		}).friend;
+		return friends;
 	}
 
-	hasFriend(ownerIntra: string) {
-		return prisma.member.findUnique({
-			where: {
-				name: ownerIntra
-			}
-		}).friend // 뭔가 참 거짓으로 못하나 여기에 값있는지 없는지 정도..?
+	async deleteFriend(name: string, friendName: string): Promise<void> {
+		await this.prisma.member.update({
+			where: { 
+				name: name
+			},
+			data: { 
+				friend: {
+					disconnect: { 
+						name: friendName
+					} 
+				} 
+			},
+		});
 	}
 }
