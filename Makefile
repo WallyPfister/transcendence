@@ -7,6 +7,11 @@ all : build
 	@ mkdir -p $(VOLUME_PATH)/example_path
 	@ sudo docker compose -f $(COMPOSE_SRC) up -d
 
+.PHONY : dev
+dev : build
+	@ mkdir -p $(VOLUME_PATH)/example_path
+	@ sudo docker compose -f $(COMPOSE_SRC) up
+
 .PHONY : build
 build :
 	@ sudo docker compose -f $(COMPOSE_SRC) build --progress=plain

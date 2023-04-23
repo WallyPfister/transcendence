@@ -3,10 +3,11 @@ import { CreateMemberDto } from "./dto/create-member.dto";
 import { PrismaService } from "src/prisma/prisma.service";
 import { MemberProfileDto } from "./dto/memberProfile.dto";
 import { FriendProfile } from "./dto/friendProfile.dto";
+import { LoginMemberDTO } from "src/auth/dto/loginMember.dto";
 
 @Injectable()
 export class MemberRepository {
-	constructor(private prisma: PrismaService) {} 
+	constructor(private prisma: PrismaService) { }
 
 	async createMember(memberInfo: CreateMemberDto): Promise<any> {
 		return await this.prisma.member.create({
@@ -61,7 +62,7 @@ export class MemberRepository {
 	async findOneByIntraId(intraId: string): Promise<LoginMemberDTO> {
 		return this.prisma.member.findUnique({
 			where: { intraId: intraId },
-			select: { 
+			select: {
 				name: true,
 				twoFactor: true
 			}
@@ -151,15 +152,15 @@ export class MemberRepository {
 
 	async deleteFriend(name: string, friendName: string): Promise<void> {
 		await this.prisma.member.update({
-			where: { 
+			where: {
 				name: name
 			},
-			data: { 
+			data: {
 				friend: {
-					disconnect: { 
+					disconnect: {
 						name: friendName
-					} 
-				} 
+					}
+				}
 			},
 		});
 	}
