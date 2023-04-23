@@ -1,7 +1,6 @@
 import { Injectable, HttpException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { Strategy } from 'passport-42';
 import { MemberRepository } from '../../member/member.repository';
 
@@ -9,7 +8,6 @@ import { MemberRepository } from '../../member/member.repository';
 export class FTOauthStrategy extends PassportStrategy(Strategy, 'ft') {
 	constructor(
 		private readonly config: ConfigService,
-		private readonly prisma: PrismaService,
 		private readonly memberRepository: MemberRepository
 	) {
 		super({
