@@ -55,7 +55,11 @@ export class MemberRepository {
 	async findOneByIntraId(intraId: string): Promise<any> {
 		return this.prisma.member.findUnique({
 			where: { intraId: intraId },
-			select: { name: true }
+			select: { 
+				name: true,
+				email: true,
+				twoFactor: true,
+			}
 		});
 	}
 
@@ -119,7 +123,7 @@ export class MemberRepository {
 		})
 	}
 
-	async findAllFriend(name: string): Promise<any> {
+	async findAllFriends(name: string): Promise<any> {
 		console.log(`hello`);
 		const friends = await this.prisma.member.findUnique({
 			where: { name: name },
