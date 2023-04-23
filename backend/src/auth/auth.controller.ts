@@ -10,13 +10,15 @@ import { JwtAuthGuard } from './guards/jwt.guard';
 import { JwtRefreshAuthGuard } from './guards/jwt.refresh.guard';
 import { FortyTwoAuthGuard } from './guards/ft.guard';
 import { AuthService } from './auth.service';
-import { refreshJwtTokenDTO } from './dto/refreshJwtToken.dto';
+import { RefreshJwtTokenDTO } from './dto/refreshJwtToken.dto';
+import { LoginMemberDTO } from './dto/loginMember.dto';
 import { JwtTokenInfo, JwtAccessTokenInfo } from '../utils/type';
 import { ConfigService } from '@nestjs/config';
 import {
 	ApiOperation,
 	ApiResponse,
 	ApiTags,
+	ApiBearerAuth
 } from '@nestjs/swagger';
 
 @ApiTags('Login')
@@ -55,20 +57,28 @@ export class AuthController {
 	})
 	@Get('callback')
 	@UseGuards(FortyTwoAuthGuard)
-	async login(@Payload() member: any): Promise<JwtTokenInfo> {
-		// TODO: Two factor authentication
-		if (member.twoFactor) {
-			// TODO: Implement sendTwoFactorCode
-			// this.authService.sendTwoFactorCode(member.email);
-			// // TODO: Implement issueLimitedTimeToken
-			// const limitedTimeToken =
-			// 	this.authService.issueLimitedTimeToken(member.intraId);
-			console.log(member.email);
-		}
+	async login(@Payload() member: LoginMemberDTO): Promise<JwtTokenInfo> {
 		const atoken = await this.authService.issueAccessToken(member.name, member.twoFactor);
-		const rtoken = await this.authService.issueRefreshToken(member.name);
+		const rtoken = await this.authService.issueRefreshToken(member.name, member.twoFactor);
 		const time = +this.config.get<string>('JWT_REFRESH_EXPIRE_TIME');
 		return { accessToken: atoken, refreshToken: rtoken, expiresIn: time }
+	}
+
+	// TODO: Implement two-factor authentication
+	@ApiOperation({
+		summary: 'Two-factor authentication',
+		description: 'Send authentication code to user by e-mail.',
+	})
+	@Post('Tfa')
+	// TODO: member DTO 정의 필요
+	async twoFactorAuthentication(@Payload() member: any): Promise<void> {
+		// TODO: Implement sendTwoFactorCode
+		// this.authService.sendTwoFactorCode(member.email);
+		// // TODO: Implement issueLimitedTimeToken
+		// const limitedTimeToken =
+		// 	this.authService.issueLimitedTimeToken(member.intraId);
+		console.log(member.email);
+		// return await 'code';
 	}
 
 	@ApiOperation({
@@ -88,7 +98,7 @@ export class AuthController {
 	@Get('refresh')
 	@UseGuards(JwtRefreshAuthGuard)
 	async refreshJwtToken(
-		@Payload() payload: refreshJwtTokenDTO,
+		@Payload() payload: RefreshJwtTokenDTO,
 	): Promise<JwtAccessTokenInfo> {
 		const token = await this.authService.refreshAccessToken(
 			payload.userName,
@@ -100,11 +110,22 @@ export class AuthController {
 	}
 
 	// TODO: logout() 구현
+	@ApiOperation({
+		summary: 'logout',
+		description: 'this will invalidate refresh token',
+	})
+	@ApiResponse({
+		status: 200,
+		description: 'Goodbye',
+	})
+	@ApiBearerAuth('token')
 	@Get('logout')
 	@UseGuards(JwtAuthGuard)
-	async logout() {
-
+	async logout(name: string): Promise<void> {
+		console.log(name);
+		this.authService.logout(name);
 	}
+
 	// TODO: tfa() 구현
 }
 
