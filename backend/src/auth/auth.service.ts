@@ -25,7 +25,7 @@ export class AuthService {
 	verifyRefreshToken(token: string) {
 		try {
 			return this.jwtService.verify(token, {
-				secret: this.config.get<string>('JWTREF_SECRET'),
+				secret: this.config.get<string>('JWT_REFRESH_SECRET'),
 			});
 		} catch (err) {
 			console.log('JWT refresh token verification failed.');
@@ -89,7 +89,7 @@ export class AuthService {
 
 	async logout(name: string): Promise<void> {
 		// await this.memberRepository.deleteRefreshToken(name);
-		// status 가 0인게 offline?
+		// status 가 0인게 offline? ->yes
 		await this.memberRepository.updateStatus(name, 0);
 	}
 
