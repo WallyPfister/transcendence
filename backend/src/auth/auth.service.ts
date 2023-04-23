@@ -88,8 +88,7 @@ export class AuthService {
 	}
 
 	async logout(name: string): Promise<void> {
-		// await this.memberRepository.deleteRefreshToken(name);
-		// status 가 0인게 offline? ->yes
+		await this.memberRepository.deleteRefreshToken(name);
 		await this.memberRepository.updateStatus(name, 0);
 	}
 
