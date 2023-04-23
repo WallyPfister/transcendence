@@ -69,7 +69,7 @@ export class AuthController {
 		summary: 'Two-factor authentication',
 		description: 'Send authentication code to user by e-mail.',
 	})
-	@Post('Tfa')
+	@Post('tfa')
 	// TODO: member DTO 정의 필요
 	// TODO: Guard 필요
 	async twoFactorAuthentication(@Payload() member: any): Promise<void> {
@@ -110,7 +110,6 @@ export class AuthController {
 		return { accessToken: token, expiresIn: time };
 	}
 
-	// TODO: logout() 구현
 	@ApiOperation({
 		summary: 'logout',
 		description: 'Delete refresh token.',
@@ -122,12 +121,10 @@ export class AuthController {
 	@ApiBearerAuth('token')
 	@Get('logout')
 	@UseGuards(JwtAuthGuard)
-	async logout(name: string): Promise<void> {
-		console.log(name);
-		this.authService.logout(name);
+	async logout(@Payload() payload: any): Promise<void> {
+		console.log(payload.name);
+		this.authService.logout(payload.name);
 	}
-
-	// TODO: tfa() 구현
 }
 
 
