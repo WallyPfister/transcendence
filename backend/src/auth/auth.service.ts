@@ -49,7 +49,7 @@ export class AuthService {
 	async issueAccessToken(userName: string, tfa: boolean): Promise<string> {
 		const payload = {
 			sub: userName,
-			tfa_done: tfa,
+			tfaCheck: tfa,
 		};
 		const token = this.jwtService.signAsync(
 			payload,
@@ -61,15 +61,18 @@ export class AuthService {
 		return token;
 	}
 
-	async issueRefreshToken(userName: string): Promise<string> {
+	async issueRefreshToken(userName: string, tfa: boolean): Promise<string> {
 		const token = this.jwtService.sign(
-			{},
+			{
+				sub: userName,
+				tfaCheck: tfa,
+			},
 			{
 				secret: this.config.get<string>('JWT_REFRESH_SECRET'),
 				expiresIn: this.config.get<string>('JWT_REFRESH_EXPIRE_TIME'),
 			},
 		);
-		// await this.memberRepository.updateRefreshToken(userName, token);
+		await this.memberRepository.updateRefreshToken(userName, token);
 		return token;
 	}
 
@@ -84,6 +87,11 @@ export class AuthService {
 		return token;
 	}
 
-	// TODO: logout() 구현 -> 질문: refreshToken 멤버에서 삭제?
+	async logout(name: string): Promise<void> {
+		// await this.memberRepository.deleteRefreshToken(name);
+		// status 가 0인게 offline?
+		await this.memberRepository.updateStatus(name, 0);
+	}
+
 	// TODO: twoFactorAuthentication() 구현
 }
