@@ -5,43 +5,107 @@ import {
 	Post,
 	UseGuards,
 } from '@nestjs/common';
-import { JwtAccessAuthGuard } from './guards/jwt.access.guard';
+import { Payload } from './decorators/payload';
+import { JwtAuthGuard } from './guards/jwt.guard';
 import { JwtRefreshAuthGuard } from './guards/jwt.refresh.guard';
+import { FortyTwoAuthGuard } from './guards/ft.guard';
 import { AuthService } from './auth.service';
-import { createJwtTokenDTO } from './dto/createJwtToken.dto';
 import { refreshJwtTokenDTO } from './dto/refreshJwtToken.dto';
+import { JwtTokenInfo, JwtAccessTokenInfo } from '../utils/type';
+import { ConfigService } from '@nestjs/config';
+import {
+	ApiOperation,
+	ApiResponse,
+	ApiTags,
+} from '@nestjs/swagger';
 
+@ApiTags('Login')
 @Controller('auth')
 export class AuthController {
 	constructor(
-		private authService: AuthService,
+		private readonly authService: AuthService,
+		private readonly config: ConfigService,
 	) { }
 
-	@Post('create')
-	// @UseGuards(JwtAccessAuthGuard)
-	async createJwtToken(@Body() payload: createJwtTokenDTO): Promise<{ accessToken: string, refreshToken: string }> {
-		const at = await this.authService.issueAccessToken(payload.userName, payload.tfa);
-		const rt = await this.authService.issueRefreshToken(payload.userName);
-		return { accessToken: at, refreshToken: rt }
+	@ApiOperation({
+		summary: 'Login Entrypoint',
+		description: 'Redirect to callback page.',
+	})
+	@ApiResponse({
+		status: 302,
+		description: 'Redirect to callback URL if user agreed to authorize.',
+	})
+	@Get('ft_login')
+	@UseGuards(FortyTwoAuthGuard)
+	ft_login(): void { }
+
+	@ApiOperation({
+		summary: '42 OAuth callback url',
+		description: '42 OAuth will be redirected here.',
+	})
+	@ApiResponse({
+		status: 401,
+		description:
+			'Not a registered member yet. Redirect to signup page.',
+	})
+	@ApiResponse({
+		status: 200,
+		description:
+			'JWT token issued and login has been successful.',
+	})
+	@Get('callback')
+	@UseGuards(FortyTwoAuthGuard)
+	async login(@Payload() member: any): Promise<JwtTokenInfo> {
+		// TODO: Two factor authentication
+		if (member.twoFactor) {
+			// TODO: Implement sendTwoFactorCode
+			// this.authService.sendTwoFactorCode(member.email);
+			// // TODO: Implement issueLimitedTimeToken
+			// const limitedTimeToken =
+			// 	this.authService.issueLimitedTimeToken(member.intraId);
+			console.log(member.email);
+		}
+		const atoken = await this.authService.issueAccessToken(member.name, member.twoFactor);
+		const rtoken = await this.authService.issueRefreshToken(member.name);
+		const time = +this.config.get<string>('JWT_REFRESH_EXPIRE_TIME');
+		return { accessToken: atoken, refreshToken: rtoken, expiresIn: time }
 	}
 
-	@Post('refresh')
-	// @UseGuards(JwtRefreshAuthGuard)
+	@ApiOperation({
+		summary: 'JWT refresh',
+		description: 'Refresh JWT access token.',
+	})
+	@ApiResponse({
+		status: 401,
+		description:
+			'JWT refresh token is not validate.',
+	})
+	@ApiResponse({
+		status: 200,
+		description:
+			'JWT access token reissued successfully.',
+	})
+	@Get('refresh')
+	@UseGuards(JwtRefreshAuthGuard)
 	async refreshJwtToken(
-		@Body() payload: refreshJwtTokenDTO,
-	): Promise<{ accessToken: string }> {
-		console.log(payload);
+		@Payload() payload: refreshJwtTokenDTO,
+	): Promise<JwtAccessTokenInfo> {
 		const token = await this.authService.refreshAccessToken(
 			payload.userName,
 			payload.refreshToken,
 			payload.tfa
 		);
-		return token;
+		const time = +this.config.get<string>('JWT_REFRESH_EXPIRE_TIME');
+		return { accessToken: token, expiresIn: time };
 	}
 
-	// TODO: login() 구현
 	// TODO: logout() 구현
-	// TODO: tfaLogin() 구현 -> issueAccessToken() + issueRefreshToken()
+	@Get('logout')
+	@UseGuards(JwtAuthGuard)
+	async logout() {
+
+	}
+	// TODO: tfa() 구현
 }
 
 
