@@ -113,11 +113,11 @@ export class AuthController {
 	// TODO: logout() 구현
 	@ApiOperation({
 		summary: 'logout',
-		description: 'this will invalidate refresh token',
+		description: 'Delete refresh token.',
 	})
 	@ApiResponse({
 		status: 200,
-		description: 'Goodbye',
+		description: 'Logout has been successful.',
 	})
 	@ApiBearerAuth('token')
 	@Get('logout')
