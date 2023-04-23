@@ -58,13 +58,12 @@ export class MemberRepository {
 		});
 	}
 
-	async findOneByIntraId(intraId: string): Promise<any> {
+	async findOneByIntraId(intraId: string): Promise<LoginMemberDTO> {
 		return this.prisma.member.findUnique({
 			where: { intraId: intraId },
 			select: { 
 				name: true,
-				email: true,
-				twoFactor: true,
+				twoFactor: true
 			}
 		});
 	}
