@@ -27,12 +27,18 @@ export class MemberRepository {
 		});
 	}
 
-	async updateRefreshToken(name: string, refreshToken: string): Promise<boolean> {
+	async updateRefreshToken(name: string, refreshToken: string): Promise<void> {
 		await this.prisma.member.update({
 			where: { name: name },
 			data: { refreshToken: refreshToken }
 		});
-		return true;
+	}
+
+	async deleteRefreshToken(name: string): Promise<void> {
+		await this.prisma.member.update({
+			where: { name: name },
+			data: { refreshToken: "" }
+		});
 	}
 
 	async getMemberInfo(name: string): Promise<MemberProfileDto> {
@@ -125,7 +131,7 @@ export class MemberRepository {
 
 	async findAllFriends(name: string): Promise<any> {
 		console.log(`hello`);
-		const friends = await this.prisma.member.findUnique({
+		return this.prisma.member.findUnique({
 			where: { name: name },
 			select: {
 				friend: {
@@ -142,7 +148,6 @@ export class MemberRepository {
 				},
 			},
 		}).friend;
-		return friends;
 	}
 
 	async deleteFriend(name: string, friendName: string): Promise<void> {

@@ -16,7 +16,7 @@ export class MemberService {
 	// 	return await this.memberRepository.updateRefreshToken(name, refreshToken);
 	// }
 
-	async getMemberInfo(name: string): Promise<MemberProfileDto> { // 향후 토큰으로 멤버 찾는 것으로 대체?
+	async getMemberInfo(name: string): Promise<MemberProfileDto> {
 		const member: MemberProfileDto = await this.memberRepository.getMemberInfo(name);
 		if (!member)
 			throw new NotFoundException(`${name} 이름을 가진 멤버를 찾을 수 없습니다.`); // nestjs 에러 핸들러같은 것이 있는 지 확인 필요
