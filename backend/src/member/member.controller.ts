@@ -186,7 +186,7 @@ export class MemberController {
 
 	@ApiOperation({
 		summary: 'Delete a friend',
-		description: 'It deletes a friend from the requester.',		
+		description: 'It deletes a friend from the requester.'
 	})
 	@ApiParam({
 		name: 'name',
