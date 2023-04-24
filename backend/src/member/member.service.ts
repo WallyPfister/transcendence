@@ -3,6 +3,7 @@ import { MemberRepository } from './member.repository';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { MemberProfileDto } from './dto/memberProfile.dto';
 import { FriendProfile } from './dto/friendProfile.dto';
+import { LoginMemberDTO } from 'src/auth/dto/loginMember.dto';
 
 @Injectable()
 export class MemberService {
@@ -23,11 +24,11 @@ export class MemberService {
 		return member;
 	}
 
-	async findOneByIntraId(intraId: string): Promise<string> {
+	async findOneByIntraId(intraId: string): Promise<LoginMemberDTO> {
 		const member = await this.memberRepository.findOneByIntraId(intraId);
 		if (!member)
 			throw new UnauthorizedException(`[${intraId}]: 가입되지 않은 회원입니다.`)
-		return member.name;
+		return member;
 	}
 
 	// async updateStatus(name: string, status: number): Promise<void> {
