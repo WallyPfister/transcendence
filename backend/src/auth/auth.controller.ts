@@ -1,19 +1,21 @@
 import {
-	Body,
 	Controller,
 	Get,
-	Post,
 	UseGuards,
+	Query,
+	HttpException
 } from '@nestjs/common';
 import { Payload } from './decorators/payload';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { JwtRefreshAuthGuard } from './guards/jwt.refresh.guard';
 import { FortyTwoAuthGuard } from './guards/ft.guard';
 import { AuthService } from './auth.service';
-import { RefreshJwtTokenDTO } from './dto/refreshJwtToken.dto';
-import { LoginMemberDTO } from './dto/loginMember.dto';
-import { JwtTokenInfo, JwtAccessTokenInfo } from '../utils/type';
+import { RefreshJwtTokenDTO } from './dto/jwt.refresh.dto';
+import { LoginMemberDTO } from './dto/member.login';
+import { JwtTokenInfo } from '../utils/type';
+import { JwtAccessTokenDTO } from './dto/jwt.access.dto';
 import { ConfigService } from '@nestjs/config';
+import { MemberRepository } from '../member/member.repository';
 import {
 	ApiOperation,
 	ApiResponse,
@@ -27,6 +29,7 @@ export class AuthController {
 	constructor(
 		private readonly authService: AuthService,
 		private readonly config: ConfigService,
+		private readonly memberRepository: MemberRepository,
 	) { }
 
 	@ApiOperation({
@@ -48,38 +51,93 @@ export class AuthController {
 	@ApiResponse({
 		status: 200,
 		description:
-			'JWT token issued and login has been successful.',
+			'JWT token issued successfully. Redirect to homepage or tfa if checked.',
 	})
 	@ApiResponse({
 		status: 401,
 		description:
-			'Not a registered member yet. Redirect to signup page.',
+			'Not a registered member yet. Please redirect to signup page.',
 	})
 	@Get('callback')
 	@UseGuards(FortyTwoAuthGuard)
 	async login(@Payload() member: LoginMemberDTO): Promise<JwtTokenInfo> {
+		// if (member.twoFactor) {
+		// 	if (!this.authService.sendTfaCode(member.name, member.email))
+		// 		console.log('Failed to send mail.');
+		// }
 		const atoken = await this.authService.issueAccessToken(member.name, member.twoFactor);
 		const rtoken = await this.authService.issueRefreshToken(member.name, member.twoFactor);
-		const time = +this.config.get<string>('JWT_REFRESH_EXPIRE_TIME');
-		return { accessToken: atoken, refreshToken: rtoken, expiresIn: time }
+		const time = +this.config.get<string>('JWT_ACCESS_EXPIRE_TIME');
+		return { accessToken: atoken, refreshToken: rtoken, expiresIn: time, tfa: member.twoFactor }
 	}
 
-	// TODO: Implement two-factor authentication
+	@ApiOperation({
+		summary: 'Two-factor authentication sending code',
+		description: 'Send two-factor authentication code by e-mail.',
+	})
+	@ApiResponse({
+		status: 200,
+		description:
+			'Two-factor authentication code has been sent.',
+	})
+	@ApiResponse({
+		status: 403,
+		description:
+			'Two-factor authentication code has failed to be sent.',
+	})
+	@Get('tfa')
+	@UseGuards(JwtAuthGuard)
+	async sendTwoFactorAuthCode(@Payload() payload: JwtAccessTokenDTO): Promise<void> {
+		const member = await this.memberRepository.getMemberInfo(payload.userName);
+		const result = await this.authService.sendTfaCode(member.name, member.email);
+		if (!result)
+			throw new HttpException('Failed to send tfa code.', 403);
+		console.log('TFA code sent.');
+	}
+
 	@ApiOperation({
 		summary: 'Two-factor authentication',
-		description: 'Send authentication code to user by e-mail.',
+		description: 'Verify two-factor authentication code sent by e-mail.',
 	})
-	@Post('tfa')
-	// TODO: member DTO 정의 필요
-	// TODO: Guard 필요
-	async twoFactorAuthentication(@Payload() member: any): Promise<void> {
-		// TODO: Implement sendTwoFactorCode
-		// this.authService.sendTwoFactorCode(member.email);
-		// // TODO: Implement issueLimitedTimeToken
-		// const limitedTimeToken =
-		// 	this.authService.issueLimitedTimeToken(member.intraId);
-		console.log(member.email);
-		// return await 'code';
+	@ApiResponse({
+		status: 200,
+		description:
+			'Two-factor authentication code has been verified.',
+	})
+	@ApiResponse({
+		status: 403,
+		description:
+			'Two-factor authentication has failed.',
+	})
+	@Get('tfa_verify')
+	@UseGuards(JwtAuthGuard)
+	async twoFactorAuth(@Query() code: string, @Payload() payload: JwtAccessTokenDTO): Promise<void> {
+		const match = await this.authService.verifyTfaCode(payload.userName, code);
+		if (!match)
+			throw new HttpException('Two-factor authentication failed.', 403);
+		console.log('TFA code verification done');
+	}
+
+	@ApiOperation({
+		summary: 'JWT Access Token verification',
+		description: 'Login if access token is validate.',
+	})
+	@ApiResponse({
+		status: 200,
+		description:
+			'JWT access token verified. Login has been successful.',
+	})
+	@ApiResponse({
+		status: 401,
+		description:
+			'JWT access token is not validate. Try 42 login again.',
+	})
+	@Get('verify')
+	@UseGuards(JwtAuthGuard)
+	async verifyAccessToken(
+		@Payload() payload: JwtAccessTokenDTO,
+	): Promise<any> {
+		console.log("Access token verified.");
 	}
 
 	@ApiOperation({
@@ -100,7 +158,7 @@ export class AuthController {
 	@UseGuards(JwtRefreshAuthGuard)
 	async refreshJwtToken(
 		@Payload() payload: RefreshJwtTokenDTO,
-	): Promise<JwtAccessTokenInfo> {
+	): Promise<any> {
 		const token = await this.authService.refreshAccessToken(
 			payload.userName,
 			payload.refreshToken,
@@ -123,12 +181,13 @@ export class AuthController {
 		description:
 			'JWT access token is not validate.',
 	})
-	@ApiBearerAuth('token')
+	@ApiBearerAuth()
+	// TODO: logout is not working(401)
 	@Get('logout')
 	@UseGuards(JwtAuthGuard)
-	async logout(@Payload() payload: any): Promise<void> {
-		console.log(payload.name);
-		this.authService.logout(payload.name);
+	async logout(@Payload() payload: JwtAccessTokenDTO): Promise<void> {
+		console.log(payload.userName);
+		this.authService.logout(payload.userName);
 	}
 }
 
