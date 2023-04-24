@@ -11,14 +11,16 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { MemberRepository } from '../member/member.repository';
 
 @Module({
-	imports: [JwtModule.register({
-		secret: process.env.JWT_SECRET,
-		signOptions: { expiresIn: process.env.JWT_ACCESS_EXPIRE_TIME }
-	}),
-		PassportModule],
+	imports: [
+		JwtModule.register({
+			secret: process.env.JWT_SECRET,
+			signOptions: { expiresIn: process.env.JWT_ACCESS_EXPIRE_TIME }
+		}),
+		PassportModule,
+	],
 	controllers: [AuthController],
 	providers: [AuthService, JwtStrategy, RefreshTokenStrategy, FTOauthStrategy,
-		ConfigService, PrismaService, MemberRepository],
+		ConfigService, PrismaService, MemberRepository,],
 	exports: [AuthService]
 })
 export class AuthModule { }
