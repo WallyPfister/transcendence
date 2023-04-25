@@ -5,6 +5,7 @@ import SignUp from './SignUp/SignUp';
 import Verify from './Verify/Verify';
 import Main from './Main/Main';
 import Rank from './Rank/Rank';
+import Profile from './Profile/Profile';
 
 function App() {
   return (
@@ -16,8 +17,8 @@ function App() {
 				<Route path='/verify' element={<Verify/>}/>
 				<Route path='/main' element={<Main/>}/>
 				<Route path='/rank' element={<Rank/>}/>
-				{/*<Route path='/profile' element={<Profile/>}/>
-				<Route path='/game' element={<Game/>}/> */}
+				<Route path='/profile' element={<Profile/>}/>
+				{/*<Route path='/game' element={<Game/>}/> */}
 			</Routes>
 		</BrowserRouter>
 	</div>
