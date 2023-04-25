@@ -4,39 +4,46 @@ import io, { Socket } from 'socket.io-client';
 import './Main.css';
 
 
+const socket: Socket = io('http://localhost:3001',{ withCredentials: true });
 
 function Main() {
 
-  const socket: Socket = io('http://localhost:3000');
 
   interface Message {
-    username: string;
+    nickname: string;
     message: string;
   }
 
   const [message, setMessage] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
-  const [room, setRoom] = useState<string>('');
-  const [username, setUsername] = useState<string>('');
+  const [roomId, setRoom] = useState<string>('');
+  const [nickname, setNickname] = useState<string>('');
 
   useEffect(() => {
-    // Join the specified room with the given username
-    socket.emit('joinRoom', { roomId: room, username });
-    
+    // Join the specified room with the given nickname
+
+    socket.on('connect', () => {
+		console.log('Socket.IO connected!');
+	  });
+
     // Listen for new messages in the room
     socket.on('newMessage', (data: Message) => {
       setMessages([...messages, data]);
     });
 
     // Listen for userJoined events
-    socket.on('userJoined', (data: { username: string }) => {
-      console.log(`${data.username} has joined the room`);
+    socket.on('userJoined', (data: { nickname: string }) => {
+      console.log(`${data.nickname} has joined the room`);
     });
-  }, [room, username, messages]);
+
+	socket.on('errorMessage', (data: {message: string}) => {
+		console.log(message);
+	});
+  }, [roomId, nickname, messages]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    socket.emit('test', { roomId: room, username, message });
+    socket.emit('test', { roomId, nickname, message });
     setMessage('');
   };
 
@@ -44,18 +51,20 @@ function Main() {
     <div id="chat-box">
       <h1>Chat App</h1>
       <div>
-        <input type="text" value={room} onChange={(e) => setRoom(e.target.value)} placeholder="Room ID" />
-        <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" />
-        <button onClick={() => socket.emit('joinRoom', { roomId: room, username })}>Join Room</button>
+        <input type="text" value={roomId} onChange={(e) => setRoom(e.target.value)} placeholder="Room ID" />
+        <input type="text" value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder="nickname" />
+        <button onClick={() => socket.emit('joinRoom', { roomId, nickname })}>Join Room</button>
+		<button onClick={() => socket.emit('setUser', { nickname })}>user</button>
+		<button onClick={() => socket.emit('createRoom', { roomId })}>create</button>
       </div>
       <div style={{ height: '200px', overflowY: 'scroll' }}>
         {messages.map((msg: Message, index: number) => (
-          <div key={index}>{msg.username}: {msg.message}</div>
+          <div key={index}>{msg.nickname}: {msg.message}</div>
         ))}
       </div>
       <form onSubmit={handleSubmit}>
         <input type="text" value={message} onChange={(e) => setMessage(e.target.value)} />
-        <button type="submit">Send</button>
+        <button onClick={() => socket.emit('sendMessage', { nickname ,message })}>Send</button>
       </form>
     </div>
   );
