@@ -31,6 +31,16 @@ export class MemberController {
 	createMember(@Body() memberInfo: CreateMemberDto): Promise<string> {
 		return this.memberRepository.createMember(memberInfo);
 	}
+	
+	@Post('tfa/:name')
+	generateCode(@Param('name') name: string): Promise<string> {
+		return this.memberRepository.generateCode(name);
+	}
+
+	@Get('tfa/:name')
+	getTfaCode(@Param('name') name: string): Promise<string> {
+		return this.memberRepository.getTfaCode(name);
+	}
 
 	@ApiOperation({
 		summary: 'Get the member information by name',
@@ -106,6 +116,11 @@ export class MemberController {
 		await this.memberService.updateGameScore(name, result);
 	}
 
+	@Get('history/:name')
+	async getGameHistory(@Param('name') name: string) {
+		return await this.memberRepository.getMemberHistory(name);
+	}
+
 	@ApiOperation({
 		summary: 'Delete a member',
 		description: 'It deletes a member.'
@@ -173,7 +188,7 @@ export class MemberController {
 		summary: 'Get all friends information',
 		description: 'It returns all friends\' informations.'
 	})
-	@ApiParam({
+	@ApiQuery({
 		name: 'name',
 		description: 'The requester name.',
 		required: true,
@@ -181,7 +196,10 @@ export class MemberController {
 	})
 	@Get('friend/all')
 	async findAllFriends(@Query('name') name: string): Promise<any> {
-		return await this.memberRepository.findAllFriends(name);
+		const friends = await this.memberRepository.findAllFriends(name);
+		console.log(friends) ;
+		console.log(typeof(friends));
+		return friends;
 	}
 
 	@ApiOperation({

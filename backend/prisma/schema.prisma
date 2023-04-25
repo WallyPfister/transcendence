@@ -23,11 +23,13 @@ model member {
 	score		 Int		@default(1000)
 	achieve		 Int		@default(0)
 	socket		 Int		@default(-1)
-	twoFactor	 Boolean	@default(false)
 	friend   	 member[]	@relation("friend")
 	blackList	 member[]	@relation("friend")
 	history		 history[]
 	refreshToken String     @db.VarChar(512)
+	twoFactor	 Boolean	@default(false)
+	tfaCode		 String?	@db.VarChar(512)
+	tfaTime	 	 DateTime?
 }
 
 model history {
@@ -40,7 +42,6 @@ model history {
 	date		DateTime	@default(now())
 	memberName	member 		@relation(fields: [name], references: [name])
 	name		String
-
 }
 
 model channel {

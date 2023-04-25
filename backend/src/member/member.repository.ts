@@ -6,6 +6,7 @@ import { FriendProfile } from "./dto/friendProfile.dto";
 import { LoginMemberDTO } from "src/auth/dto/loginMember.dto";
 import { ConfigType } from "@nestjs/config";
 import memberConfig from "src/config/member.config";
+import { HistoryDto } from "src/history/dto/history.dto";
 
 @Injectable()
 export class MemberRepository {
@@ -46,6 +47,28 @@ export class MemberRepository {
 		});
 	}
 
+	async generateCode(name: string): Promise<string> {
+		// TODO: 상수 대신 랜덤 OTP로 교체 필요
+		const code = "1234";
+		await this.prisma.member.update({
+			where: { name: name },
+			data: { 
+				tfaCode: code,
+				tfaTime: new Date()
+			}
+		});
+		return code;
+	}
+
+	async getTfaCode(name: string): Promise<any> {
+		return await this.prisma.member.findUnique({
+			where: { name: name },
+			select: {
+				tfaCode: true
+			}
+		});
+	}
+
 	async getMemberInfo(name: string): Promise<MemberProfileDto> {
 		return await this.prisma.member.findUnique({
 			where: { name: name },
@@ -61,6 +84,26 @@ export class MemberRepository {
 				achieve: true,
 			}
 		});
+	}
+
+	async getMemberHistory(name: string): Promise<HistoryDto[]> {
+		return await this.prisma.member.findUnique({
+			where: { name: name }
+		}).history({
+			where: {name: name},
+			orderBy: {
+				date: 'asc',
+			},
+			select: {
+				name: true,
+				player: true,
+				scoreA: true,
+				scoreB: true,
+				result: true,
+				option: true,
+				date: true
+			}
+		})
 	}
 
 	async findOneByIntraId(intraId: string): Promise<LoginMemberDTO> {
@@ -134,25 +177,41 @@ export class MemberRepository {
 	}
 
 	async findAllFriends(name: string): Promise<any> {
-		console.log(`hello`);
-		return this.prisma.member.findUnique({
-			where: { name: name },
-			select: {
-				friend: {
-					orderBy: {
-						name: 'asc',
-					},
-					select: {
-						name: true,
-						avatar: true,
-						status: true,
-						level: true,
-						achieve: true
-					}
-				},
-			},
+		return await this.prisma.member.findUnique({
+		  where: {
+			name: name
+		  },
+		  select: {
+			friend: {
+			  select: {
+				name: true,
+				avatar: true,
+				status: true,
+				level: true,
+				achieve: true
+			  }
+			}
+		  }
 		}).friend;
 	}
+
+	// async findAllFriends(name: string): Promise<FriendProfile[]> {
+	// 	console.log(`hello`);
+	// 	return await this.prisma.member.findUnique({
+	// 		where: { name: name }
+	// 	}).friend({
+	// 		orderBy: {
+	// 			name: 'asc',
+	// 		},
+	// 		select: {
+	// 			name: true,
+	// 			avatar: true,
+	// 			status: true,
+	// 			level: true,
+	// 			achieve: true
+	// 		}
+	// 	})
+	// }
 
 	async deleteFriend(name: string, friendName: string): Promise<void> {
 		await this.prisma.member.update({

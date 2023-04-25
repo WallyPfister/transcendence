@@ -46,6 +46,8 @@ export class MemberService {
 			win = member.win;
 			lose = member.lose + 1;
 			score = member.score - 3;
+			if (score < 0)
+				score = 0;
 		}
 		level = Math.floor(score / 10);
 		this.memberRepository.updateGameScore(name, win, lose, score, level);
