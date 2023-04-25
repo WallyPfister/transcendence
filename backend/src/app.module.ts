@@ -12,7 +12,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
       transport: {
         service: 'Google',
         host: 'smtp.google.com',
-        port: 587,
+        port: 465, // for SSL. 587 for TLS
         auth: {
           user: process.env.MAILER_NAME,
           pass: process.env.MAILER_PASS,
