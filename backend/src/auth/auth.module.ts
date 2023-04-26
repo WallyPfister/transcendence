@@ -16,7 +16,7 @@ import jwtConfig from 'src/config/jwt.config';
 @Module({
 	imports: [
 		JwtModule.register({
-			secret: process.env.JWT_SECRET,
+			secret: process.env.JWT_ACCESS_SECRET,
 			signOptions: { expiresIn: process.env.JWT_ACCESS_EXPIRE_TIME }
 		}),
 		PassportModule,
