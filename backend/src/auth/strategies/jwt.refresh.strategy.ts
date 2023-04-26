@@ -6,7 +6,7 @@ import { Request } from 'express';
 
 @Injectable()
 export class RefreshTokenStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
-	constructor(private config: ConfigService) {
+	constructor(private readonly config: ConfigService) {
 		super({
 			jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
 			ignoreExpiration: false,
@@ -16,7 +16,7 @@ export class RefreshTokenStrategy extends PassportStrategy(Strategy, 'jwt-refres
 	}
 
 	validate(req: Request, payload: any) {
-		const rToken = req.get('Authorization').replace('Bearer', '').trim();
+		const rToken = req.get('Authorization').replace('Bearer ', '').trim();
 		return { userName: payload.sub, refreshToken: rToken, tfa: payload.tfaCheck };
 	}
 }
