@@ -173,19 +173,18 @@ export class MemberRepository {
 	async generateCode(name: string): Promise<string> {
 		// TODO: 상수 대신 랜덤 OTP로 교체 필요
 		const code = '1234';
-		const time = new Date();
-		// await this.prisma.member.update({
-		// 	where: {
-		// 		name: name
-		// 	},
-		// 	data: {
-		// 		tfaCode: code,
-		// 		tfaTime: time,
-		// 	},
-		// });
+		// 	const time = new Date();
+		// 	await this.prisma.member.update({
+		// 		where: {
+		// 			name: name
+		// 		},
+		// 		data: {
+		// 			tfaCode: code,
+		// 			tfaTime: time,
+		// 		},
+		// 	});
 		return code;
 	}
-
 
 	// async getTfaCode(name: string): Promise<any> {
 	// 	return await this.prisma.member.findUnique({
