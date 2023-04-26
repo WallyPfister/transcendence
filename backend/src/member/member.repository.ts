@@ -3,15 +3,15 @@ import { CreateMemberDto } from "./dto/create-member.dto";
 import { PrismaService } from "src/prisma/prisma.service";
 import { MemberProfileDto } from "./dto/memberProfile.dto";
 import { FriendProfile } from "./dto/friendProfile.dto";
-import { LoginMemberDTO } from "src/auth/dto/loginMember.dto";
+import { LoginMemberDTO } from "src/auth/dto/member.login";
 import { ConfigType } from "@nestjs/config";
 import memberConfig from "src/config/member.config";
 
 @Injectable()
 export class MemberRepository {
 	constructor(private prisma: PrismaService,
-				@Inject(memberConfig.KEY)
-				private config: ConfigType<typeof memberConfig>) { }
+		@Inject(memberConfig.KEY)
+		private config: ConfigType<typeof memberConfig>) { }
 
 	async createMember(memberInfo: CreateMemberDto): Promise<any> {
 		return await this.prisma.member.create({
@@ -68,6 +68,7 @@ export class MemberRepository {
 			where: { intraId: intraId },
 			select: {
 				name: true,
+				email: true,
 				twoFactor: true
 			}
 		});
@@ -168,4 +169,29 @@ export class MemberRepository {
 			},
 		});
 	}
+
+	async generateCode(name: string): Promise<string> {
+		// TODO: 상수 대신 랜덤 OTP로 교체 필요
+		const code = '1234';
+		// 	const time = new Date();
+		// 	await this.prisma.member.update({
+		// 		where: {
+		// 			name: name
+		// 		},
+		// 		data: {
+		// 			tfaCode: code,
+		// 			tfaTime: time,
+		// 		},
+		// 	});
+		return code;
+	}
+
+	// async getTfaCode(name: string): Promise<any> {
+	// 	return await this.prisma.member.findUnique({
+	// 		where: { name: name },
+	// 		select: {
+	// 			tfaCode: true,
+	// 		}
+	// 	});
+	// }
 }

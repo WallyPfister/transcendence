@@ -3,7 +3,7 @@ import { MemberRepository } from './member.repository';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { MemberProfileDto } from './dto/memberProfile.dto';
 import { FriendProfile } from './dto/friendProfile.dto';
-import { LoginMemberDTO } from 'src/auth/dto/loginMember.dto';
+import { LoginMemberDTO } from 'src/auth/dto/member.login';
 
 @Injectable()
 export class MemberService {
