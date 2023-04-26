@@ -3,7 +3,7 @@ import {
 	Get,
 	UseGuards,
 	Query,
-	HttpException
+	HttpException,
 } from '@nestjs/common';
 import { Payload } from './decorators/payload';
 import { JwtAuthGuard } from './guards/jwt.guard';
@@ -85,6 +85,7 @@ export class AuthController {
 		description:
 			'Two-factor authentication code has failed to be sent.',
 	})
+	@ApiBearerAuth()
 	@Get('tfa')
 	@UseGuards(JwtAuthGuard)
 	async sendTwoFactorAuthCode(@Payload() payload: JwtAccessTokenDTO): Promise<void> {
@@ -109,13 +110,14 @@ export class AuthController {
 		description:
 			'Two-factor authentication has failed.',
 	})
+	@ApiBearerAuth()
 	@Get('tfa_verify')
 	@UseGuards(JwtAuthGuard)
 	async twoFactorAuth(@Query() code: string, @Payload() payload: JwtAccessTokenDTO): Promise<void> {
 		const match = await this.authService.verifyTfaCode(payload.userName, code);
 		if (!match)
 			throw new HttpException('Two-factor authentication failed.', 403);
-		console.log('TFA code verification done');
+
 	}
 
 	@ApiOperation({
@@ -132,13 +134,12 @@ export class AuthController {
 		description:
 			'JWT access token is not validate. Try 42 login again.',
 	})
+	@ApiBearerAuth()
 	@Get('verify')
 	@UseGuards(JwtAuthGuard)
 	async verifyAccessToken(
-		@Payload() payload: JwtAccessTokenDTO,
-	): Promise<any> {
-		console.log("Access token verified.");
-	}
+		@Payload() payload: JwtAccessTokenDTO
+	): Promise<any> { }
 
 	@ApiOperation({
 		summary: 'JWT refresh',
@@ -154,6 +155,7 @@ export class AuthController {
 		description:
 			'JWT refresh token is not validate.',
 	})
+	@ApiBearerAuth()
 	@Get('refresh')
 	@UseGuards(JwtRefreshAuthGuard)
 	async refreshJwtToken(
@@ -182,11 +184,9 @@ export class AuthController {
 			'JWT access token is not validate.',
 	})
 	@ApiBearerAuth()
-	// TODO: logout is not working(401)
 	@Get('logout')
 	@UseGuards(JwtAuthGuard)
 	async logout(@Payload() payload: JwtAccessTokenDTO): Promise<void> {
-		console.log(payload.userName);
 		this.authService.logout(payload.userName);
 	}
 }
