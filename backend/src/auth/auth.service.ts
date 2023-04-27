@@ -61,32 +61,35 @@ export class AuthService {
 		// 	return e;
 		// }
 
-		const response = await axios.post('https://api.intra.42.fr/oauth/token', {
-			grant_type: 'authorization_code',
-			client_id: this.configService.get<string>('FT_OAUTH_CLIENT_ID'),
-			client_secret: this.configService.get<string>('FT_OAUTH_SECRET'),
-			code: code,
-			redirect_uri: this.configService.get<string>('FT_OAUTH_CALLBACK'),
-		});
-		return response.data.access_token;
+		// const response = await axios.post('https://api.intra.42.fr/oauth/token', {
+		// 	grant_type: 'authorization_code',
+		// 	client_id: this.configService.get<string>('FT_OAUTH_CLIENT_ID'),
+		// 	client_secret: this.configService.get<string>('FT_OAUTH_SECRET'),
+		// 	code: code,
+		// 	redirect_uri: this.configService.get<string>('FT_OAUTH_CALLBACK'),
+		// });
+		// return response.data.access_token;
 
-		// const { data } = await firstValueFrom(this.httpService.post(
-		// 	url,
-		// 	formData,
-		// 	{ headers: { "content-type": "application/x-www-form-urlencoded" } },
-		// ).pipe(
-		// 	catchError((error: AxiosError) => {
-		// 		console.log(error.response.data);
-		// 		throw 'An error happened!';
-		// 	}),)
-		// );
-		// console.log(data);
-		// return data;
+		const body = {
+			grant_type: 'authorization_code',
+			client_id: 'u-s4t2ud-e083e2d9e7bae04491cf6324a0737440768a688589004863f89febe248b86281',
+			client_secret: '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',
+			code: code,
+			redirect_uri: 'http://localhost:3000/auth/callback',
+		};
+
+		const response = await this.httpService.post(url, body).toPromise();
+		return response.data;
 	}
 
+	/**
+	 * Profile Properties
+	 * 
+	 * id, email, login, url, phone, displayname, image_url, ...
+	 */
 	async getFortyTwoProfile(token: string): Promise<any> {
 		const requestConfig: AxiosRequestConfig = {
-			headers: { 'Authorization': 'Bearer ' + token },
+			headers: { Authorization: 'Bearer ' + token },
 		}
 
 		const url = this.configService.get<string>('FT_API_ME_URL');
@@ -96,6 +99,7 @@ export class AuthService {
 					throw new HttpException(e.response.data, e.response.status);
 				}),
 			));
+		console.log(profile);
 		return profile;
 	}
 
@@ -117,6 +121,20 @@ export class AuthService {
 			console.log('JWT refresh token verification failed.');
 			return;
 		}
+	}
+
+	async issueLimitedAccessToken(userName: string): Promise<string> {
+		const bodyFormData = {
+			sub: userName,
+		};
+		const token = this.jwtService.signAsync(
+			bodyFormData,
+			{
+				secret: this.configService.get<string>('JWT_LIMITED_SECRET'),
+				expiresIn: this.configService.get<string>('JWT_LIMITED_EXPIRE_TIME'),
+			},
+		);
+		return token;
 	}
 
 	async issueAccessToken(userName: string, tfa: boolean): Promise<string> {
@@ -170,18 +188,22 @@ export class AuthService {
 		const code = await this.memberRepository.generateCode(name);
 		// // TODO: Implement issueLimitedTimeToken
 		// const limitedTimeToken = this.issueLimitedTimeToken(member.intraId);
-		try {
-			this.mailerService.sendMail({
+		const success = await this.mailerService.
+			sendMail({
 				to: email,
-				from: 'tspong42@gmail.com',
+				from: 'tspong@naver.com',
 				subject: 'Pong Two-factor Authentication Code',
-				html: 'code: [' + code + ']\n',
-			});
-			return true;
-		} catch (err) {
-			console.log('Failed to send email.');
+				html: `Your two-factor authentication code is [ ${code} ].`,
+			})
+			.then(() => { return true; })
+			.catch((err) => {
+				console.log('Failed to send email.');
+				return false;
+			}
+			);
+		if (!success)
 			return false;
-		}
+		return true;
 	}
 
 	async verifyTfaCode(name: string, code: string): Promise<boolean> {
