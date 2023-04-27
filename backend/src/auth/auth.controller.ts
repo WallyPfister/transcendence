@@ -1,19 +1,19 @@
 import {
 	Controller,
 	Get,
-	Post,
 	UseGuards,
 	Query,
 	HttpException,
+	Req,
+	ForbiddenException
 } from '@nestjs/common';
+import { Request } from 'express';
 import { Payload } from './decorators/payload';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { JwtRefreshAuthGuard } from './guards/jwt.refresh.guard';
-// import { FortyTwoAuthGuard, FortyTwoGuard } from './guards/ft.guard';
-import { FortyTwoGuard } from './guards/ft.guard';
+import { JwtLimitedAuthGuard } from './guards/jwt.limited.guard';
 import { AuthService } from './auth.service';
 import { RefreshJwtTokenDTO } from './dto/jwt.refresh.dto';
-// import { LoginMemberDTO } from './dto/member.login';
 import { JwtTokenInfo } from '../utils/type';
 import { JwtAccessTokenDTO } from './dto/jwt.access.dto';
 import { ConfigService } from '@nestjs/config';
@@ -24,6 +24,7 @@ import {
 	ApiTags,
 	ApiBearerAuth
 } from '@nestjs/swagger';
+import { UnauthorizedException } from '@nestjs/common';
 
 @ApiTags('Login')
 @Controller('auth')
@@ -61,15 +62,23 @@ export class AuthController {
 			'Not a registered member yet. Please redirect to signup page.',
 	})
 	@Get('callback')
-	async ft_login(@Query() code: string): Promise<JwtTokenInfo> {
-		const token = await this.authService.getFortyTwoToken(code);
-		console.log(token);
-		// const profile = this.authService.getFortyTwoProfile(data.);
-		// const atoken = await this.authService.issueAccessToken(member.name, member.twoFactor);
-		// const rtoken = await this.authService.issueRefreshToken(member.name, member.twoFactor);
-		// const time = +this.config.get<string>('JWT_ACCESS_EXPIRE_TIME');
-		// return { accessToken: atoken, refreshToken: rtoken, expiresIn: time, tfa: member.twoFactor }
-		return { accessToken: '1234', refreshToken: '1234', expiresIn: 123, tfa: true }
+	async ft_login(@Query() code: string): Promise<any> {
+		// const token = await this.authService.getFortyTwoToken(code);
+		// console.log(token);
+		// const profile = this.authService.getFortyTwoProfile(token);
+		// console.log(profile);
+		// const intraId = profile.login;
+		const intraId = 'sokim';
+		const member = await this.memberRepository.findOneByIntraId(intraId);
+		if (!member)
+			throw new ForbiddenException(intraId);
+		if (member.twoFactor) {
+			const token = await this.authService.issueLimitedAccessToken(member.name);
+			return { limitedToken: token }
+		}
+		const atoken = await this.authService.issueAccessToken(member.name, member.twoFactor);
+		const rtoken = await this.authService.issueRefreshToken(member.name, member.twoFactor);
+		return { accessToken: atoken, refreshToken: rtoken }
 	}
 
 	@ApiOperation({
@@ -88,8 +97,8 @@ export class AuthController {
 	})
 	@ApiBearerAuth()
 	@Get('tfa-send')
-	@UseGuards(FortyTwoGuard)
-	async sendTwoFactorAuthCode(@Payload() payload: JwtAccessTokenDTO): Promise<void> {
+	@UseGuards(JwtLimitedAuthGuard)
+	async sendTwoFactorAuthCode(@Payload() payload: any): Promise<void> {
 		const member = await this.memberRepository.getMemberInfo(payload.userName);
 		const result = await this.authService.sendTfaCode(member.name, member.email);
 		if (!result)
@@ -113,7 +122,7 @@ export class AuthController {
 	})
 	@ApiBearerAuth()
 	@Get('tfa-verify')
-	@UseGuards(FortyTwoGuard)
+	@UseGuards(JwtLimitedAuthGuard)
 	async twoFactorAuth(@Query() code: string, @Payload() payload: JwtAccessTokenDTO): Promise<void> {
 		const match = await this.authService.verifyTfaCode(payload.userName, code);
 		if (!match)
