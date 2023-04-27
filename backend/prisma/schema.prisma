@@ -12,35 +12,35 @@ datasource db {
 }
 
 model member {
-	name		 String		@id @db.VarChar(20) @unique
-	email		 String		@db.VarChar(50)
-	intraId		 String		@db.VarChar(20) @unique
-	avatar		 String		@db.VarChar(100)
-	status		 Int		@default(1)
-	win			 Int		@default(0)
-	lose		 Int		@default(0)
-	level		 Int		@default(0)
-	score		 Int		@default(1000)
-	achieve		 Int		@default(0)
-	socket		 Int		@default(-1)
-	friend   	 member[]	@relation("friend")
-	blackList	 member[]	@relation("friend")
-	history		 history[]
-	refreshToken String     @db.VarChar(512)
-	twoFactor	 Boolean	@default(false)
-	tfaCode		 String?	@db.VarChar(512)
-	tfaTime	 	 DateTime?
+	name			String		@id @db.VarChar(20) @unique
+	email			String		@db.VarChar(50)
+	intraId			String		@db.VarChar(20) @unique
+	avatar			String		@db.VarChar(100)
+	status			Int			@default(1)
+	win				Int			@default(0)
+	lose			Int			@default(0)
+	level			Int			@default(0)
+	score			Int			@default(1000)
+	achieve			Int			@default(0)
+	socket			Int			@default(-1)
+	friend			member[]	@relation("friend")
+	blackList		member[]	@relation("friend")
+	history			history[]
+	refreshToken	String		@db.VarChar(512)
+	twoFactor		Boolean		@default(false)
+	tfaCode			String?		@db.VarChar(512)
+	tfaTime			DateTime?
 }
 
 model history {
 	id			Int			@id @default(autoincrement())
-	player		String?
-	scoreA		Int?
-	scoreB		Int?
-	option		Int?
+	opponent	String
+	scoreA		Int
+	scoreB		Int
 	result		Boolean		@default(false)
+	type		Int
 	date		DateTime	@default(now())
-	memberName	member 		@relation(fields: [name], references: [name])
+	memberName	member		@relation(fields: [name], references: [name])
 	name		String
 }
 

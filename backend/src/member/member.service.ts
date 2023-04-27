@@ -1,79 +1,70 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { MemberConstants } from './memberConstants';
 import { MemberRepository } from './member.repository';
-import { CreateMemberDto } from './dto/create-member.dto';
-import { MemberProfileDto } from './dto/memberProfile.dto';
-import { FriendProfile } from './dto/friendProfile.dto';
 import { LoginMemberDTO } from 'src/auth/dto/loginMember.dto';
+import { ChUserProfileDto } from './dto/chUserProfile.dto';
+import { MemberGameInfoDto } from './dto/memberGameInfo.dto';
 
 @Injectable()
 export class MemberService {
-	constructor(private memberRepository: MemberRepository) { };
-
-	// async createMember(memberInfo: CreateMemberDto): Promise<string> {
-	// 	return await this.memberRepository.createMember(memberInfo);
-	// }
-
-	// async saveRefreshToken(name: string, refreshToken: string): Promise<boolean> {
-	// 	return await this.memberRepository.updateRefreshToken(name, refreshToken);
-	// }
-
-	async getMemberInfo(name: string): Promise<MemberProfileDto> {
-		const member: MemberProfileDto = await this.memberRepository.getMemberInfo(name);
-		if (!member)
-			throw new NotFoundException(`${name} 이름을 가진 멤버를 찾을 수 없습니다.`); // nestjs 에러 핸들러같은 것이 있는 지 확인 필요
-		return member;
-	}
+	constructor(private memberRepository: MemberRepository) {}
 
 	async findOneByIntraId(intraId: string): Promise<LoginMemberDTO> {
 		const member = await this.memberRepository.findOneByIntraId(intraId);
 		if (!member)
-			throw new UnauthorizedException(`[${intraId}]: 가입되지 않은 회원입니다.`)
+			throw new UnauthorizedException(`There is no member with Intra Id [${intraId}]`)
 		return member;
 	}
 
-	// async updateStatus(name: string, status: number): Promise<void> {
-	// 	this.memberRepository.updateStatus(name, status);
-	// }
-
-	async updateGameScore(name: string, result: boolean): Promise<void> {
-		const member = await this.memberRepository.getMemberInfo(name);
-		let win, lose, score, level: number;
-		if (result) {
-			win = member.win + 1;
-			lose = member.lose;
-			score = member.score + 5;
-		} else {
-			win = member.win;
-			lose = member.lose + 1;
-			score = member.score - 3;
-			if (score < 0)
-				score = 0;
-		}
-		level = Math.floor(score / 10);
-		this.memberRepository.updateGameScore(name, win, lose, score, level);
+	async checkAchieve(member: MemberGameInfoDto, score: number, opponentLevel: number): Promise<number> {
+		if (member.win === 5)
+			member.achieve = member.achieve | MemberConstants.FIVEWIN;
+		if (member.win === 10)
+			member.achieve = member.achieve | MemberConstants.TENWIN;
+		if (score === 3 && ((member.achieve & MemberConstants.PERFECTGAME) === 0))
+			member.achieve = member.achieve | MemberConstants.PERFECTGAME;
+		if ((opponentLevel - member.level > 3) && ((member.achieve & MemberConstants.BIGGAMEHUNTER) === 0))
+			member.achieve = member.achieve | MemberConstants.BIGGAMEHUNTER;
+		return member.achieve;
 	}
 
-	async updateAchieve(name: string) {
-		// 어떤 식으로 Achieve를 만들지?
+	async updateScoreAndLevel(member: MemberGameInfoDto, gameScore: number): Promise<MemberGameInfoDto>  {
+		member.score += gameScore;
+		if (member.score < 0)
+			member.score = 0;
+		member.level = Math.floor(member.score / 10);
+		return member;
 	}
 
-	// async deleteMember(name: string) {
-	// 	return this.memberRepository.deleteMember(name);
-	// }
+	async updateWinGameResult(name: string, type: number, gameScore: number, opponent: string): Promise<void> {
+		let member = await this.memberRepository.getGameInfo(name);
+		member.win += 1;
+		if (type === 1)
+			member = await this.updateScoreAndLevel(member, 5);
+		const opponentLevel = (await this.memberRepository.getGameInfo(opponent)).level;
+		member.achieve = await this.checkAchieve(member, gameScore, opponentLevel);	
+		this.memberRepository.updateGameResult(member);
+	}
 
-	// async addFriend(name: string, friendName: string): Promise<any> {
-	// 	return await this.memberRepository.addFriend(name, friendName);
-	// }
+	async updateLoseGameResult(name: string, type: number): Promise<void> {
+		let member = await this.memberRepository.getGameInfo(name);
+		member.lose += 1;
+		if (type === 1)
+			member = await this.updateScoreAndLevel(member, -3);
+		this.memberRepository.updateGameResult(member);
+	}
 
-	// async findOneFriend(name: string, friendName: string): Promise<FriendProfile[]> {
-	// 	return await this.memberRepository.findOneFriend(name, friendName);
-	// }
-
-	// async findAllFriend(name: string): Promise<any> {
-	// 	return await this.memberRepository.findAllFriend(name);
-	// }
-
-	// async deleteFriend(name: string, friendName: string): Promise<boolean> {
-	// 	return this.memberRepository.deleteFriend(name, friendName);
-	// }
+	async getChUserInfo(name: string, chUser: string): Promise<ChUserProfileDto> {
+		const user: ChUserProfileDto = await this.memberRepository.getChUserInfo(chUser);
+		if (!user)
+			return null;
+		console.log(user);
+		const isFriend = await this.memberRepository.isFriend(name, chUser);
+		user.name = chUser;
+		if (isFriend.length !== 0)
+			user.isFriend = true;
+		else
+			user.isFriend = false;
+		return user;
+	}
 }
