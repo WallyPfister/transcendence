@@ -3,15 +3,101 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { MemberRepository } from 'src/member/member.repository';
 import { MailerService } from '@nestjs-modules/mailer';
+import { AxiosRequestConfig } from 'axios';
+import { firstValueFrom, catchError } from 'rxjs';
+import FormData = require('form-data');
+import axios from 'axios';
+import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class AuthService {
 	constructor(
 		private readonly jwtService: JwtService,
-		private readonly config: ConfigService,
+		private readonly configService: ConfigService,
 		private readonly memberRepository: MemberRepository,
-		private readonly mailer: MailerService,
+		private readonly mailerService: MailerService,
+		private readonly httpService: HttpService,
 	) { }
+
+	async getFortyTwoToken(code: string): Promise<any> {
+		const url = this.configService.get<string>('FT_OAUTH_TOKEN_URL');
+		// (1) 문자열 통으로 시도
+		// const grant = 'authorization_code';
+		// const id = this.configService.get<string>('FT_OAUTH_CLIENT_ID');
+		// const secret = this.configService.get<string>('FT_OAUTH_SECRET');
+		// const callback = this.configService.get<string>('FT_OAUTH_CALLBACK');
+		// const formData = `grant_type=${grant}&client_id=${id}&client_secret=${secret}&code=${code}&redirect_uri=${callback}`;
+
+		// (2) FormData 로 시도
+		// const formData = new FormData();
+		// formData.append("grant_type", "authorization_code");
+		// formData.append("client_id", this.configService.get<string>('FT_OAUTH_CLIENT_ID'));
+		// formData.append("client_secret", this.configService.get<string>('FT_OAUTH_SECRET'));
+		// formData.append("code", code);
+		// formData.append("redirect_uri", this.configService.get<string>('FT_OAUTH_CALLBACK'));
+
+		// (3) JSON.stringify() 시도
+		// const formData = {
+		// 	name: JSON.stringify(
+		// 		{
+		// 			grant_type: 'authorization_code',
+		// 			client_id: this.configService.get<string>('FT_OAUTH_CLIENT_ID'),
+		// 			client_secret: this.configService.get<string>('FT_OAUTH_SECRET'),
+		// 			code: code,
+		// 			redirect_uri: this.configService.get<string>('FT_OAUTH_CALLBACK'),
+		// 		})
+		// }
+
+		// try {
+		// 	const response = await this.httpService.request({
+		// 		baseURL: url,
+		// 		method: "POST",
+		// 		data: formData,
+		// 		headers: { 'content-type': 'application/x-www-form-urlencoded' },
+		// 	}
+		// 	).toPromise();
+		// 	return response.data;
+		// } catch (e) {
+		// 	return e;
+		// }
+
+		const response = await axios.post('https://api.intra.42.fr/oauth/token', {
+			grant_type: 'authorization_code',
+			client_id: this.configService.get<string>('FT_OAUTH_CLIENT_ID'),
+			client_secret: this.configService.get<string>('FT_OAUTH_SECRET'),
+			code: code,
+			redirect_uri: this.configService.get<string>('FT_OAUTH_CALLBACK'),
+		});
+		return response.data.access_token;
+
+		// const { data } = await firstValueFrom(this.httpService.post(
+		// 	url,
+		// 	formData,
+		// 	{ headers: { "content-type": "application/x-www-form-urlencoded" } },
+		// ).pipe(
+		// 	catchError((error: AxiosError) => {
+		// 		console.log(error.response.data);
+		// 		throw 'An error happened!';
+		// 	}),)
+		// );
+		// console.log(data);
+		// return data;
+	}
+
+	async getFortyTwoProfile(token: string): Promise<any> {
+		const requestConfig: AxiosRequestConfig = {
+			headers: { 'Authorization': 'Bearer ' + token },
+		}
+
+		const url = this.configService.get<string>('FT_API_ME_URL');
+		const profile = await firstValueFrom(this.httpService.get(url, requestConfig)
+			.pipe(
+				catchError(e => {
+					throw new HttpException(e.response.data, e.response.status);
+				}),
+			));
+		return profile;
+	}
 
 	verifyAccessToken(token: string) {
 		try {
@@ -25,7 +111,7 @@ export class AuthService {
 	verifyRefreshToken(token: string) {
 		try {
 			return this.jwtService.verify(token, {
-				secret: this.config.get<string>('JWT_REFRESH_SECRET'),
+				secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
 			});
 		} catch (err) {
 			console.log('JWT refresh token verification failed.');
@@ -33,37 +119,31 @@ export class AuthService {
 		}
 	}
 
-	// TODO: RefreshToken의 변조 여부 검사(다른 유저의 토큰으로 바꿔치기 여부)
-	// 의문: 현재 로그인한 유저가 A라는 정보는 토큰의 payload 를 통해서 알 수 있는데,
-	// 토큰 자체가 다른 유저로 바꿔치기 되었다면 그냥 다른 유저가 로그인한거로 인식되는게 아닌지?
-	// 다른 유저의 토큰을 탈취했는지 여부는 애초에 판단 불가하고 유효/유효하지 않음만 판단 가능한게 아닌지...
-	// 그래서 토큰에 유효기간이 있는 것이라고 생각(탈취 당하더라도 금방 만료됨)
-
 	async issueAccessToken(userName: string, tfa: boolean): Promise<string> {
-		const payload = {
+		const bodyFormData = {
 			sub: userName,
 			tfaCheck: tfa,
 		};
 		const token = this.jwtService.signAsync(
-			payload,
+			bodyFormData,
 			{
-				secret: this.config.get<string>('JWT_ACCESS_SECRET'),
-				expiresIn: this.config.get<string>('JWT_ACCESS_EXPIRE_TIME'),
+				secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
+				expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRE_TIME'),
 			},
 		);
 		return token;
 	}
 
 	async issueRefreshToken(userName: string, tfa: boolean): Promise<string> {
-		const payload = {
+		const bodyFormData = {
 			sub: userName,
 			tfaCheck: tfa,
 		};
 		const token = this.jwtService.sign(
-			payload,
+			bodyFormData,
 			{
-				secret: this.config.get<string>('JWT_REFRESH_SECRET'),
-				expiresIn: this.config.get<string>('JWT_REFRESH_EXPIRE_TIME'),
+				secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+				expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRE_TIME'),
 			},
 		);
 		await this.memberRepository.updateRefreshToken(userName, token);
@@ -91,7 +171,7 @@ export class AuthService {
 		// // TODO: Implement issueLimitedTimeToken
 		// const limitedTimeToken = this.issueLimitedTimeToken(member.intraId);
 		try {
-			this.mailer.sendMail({
+			this.mailerService.sendMail({
 				to: email,
 				from: 'tspong42@gmail.com',
 				subject: 'Pong Two-factor Authentication Code',
