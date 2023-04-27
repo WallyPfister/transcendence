@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { MemberConstants } from './memberConstants';
 import { MemberRepository } from './member.repository';
-import { LoginMemberDTO } from 'src/auth/dto/loginMember.dto';
+import { LoginMemberDTO } from 'src/auth/dto/member.login';
 import { ChUserProfileDto } from './dto/chUserProfile.dto';
 import { MemberGameInfoDto } from './dto/memberGameInfo.dto';
 

@@ -1,4 +1,4 @@
-import { Injectable, HttpException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
 import { Strategy } from 'passport-42';
@@ -24,7 +24,7 @@ export class FTOauthStrategy extends PassportStrategy(Strategy, 'ft') {
 	) {
 		const member = await this.memberRepository.findOneByIntraId(profile.username);
 		if (!member)
-			throw new HttpException(`Not registered as a pong member yet(${profile.username}).`, 401);
+			throw new UnauthorizedException(profile.username);
 		return member;
 	}
 }

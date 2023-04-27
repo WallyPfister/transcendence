@@ -14,14 +14,17 @@ import oauthConfig from 'src/config/oauth.config';
 import jwtConfig from 'src/config/jwt.config';
 
 @Module({
-	imports: [JwtModule.register({
-		secret: process.env.JWT_SECRET,
-		signOptions: { expiresIn: process.env.JWT_ACCESS_EXPIRE_TIME }
-	}),
-		PassportModule, ConfigModule.forFeature(oauthConfig), ConfigModule.forFeature(jwtConfig), ConfigModule.forFeature(memberConfig)],
+	imports: [
+		JwtModule.register({
+			secret: process.env.JWT_ACCESS_SECRET,
+			signOptions: { expiresIn: process.env.JWT_ACCESS_EXPIRE_TIME }
+		}),
+		PassportModule,
+		ConfigModule.forFeature(oauthConfig), ConfigModule.forFeature(jwtConfig), ConfigModule.forFeature(memberConfig)
+	],
 	controllers: [AuthController],
 	providers: [AuthService, JwtStrategy, RefreshTokenStrategy, FTOauthStrategy,
-		ConfigService, PrismaService, MemberRepository],
+		ConfigService, PrismaService, MemberRepository,],
 	exports: [AuthService]
 })
 export class AuthModule { }
