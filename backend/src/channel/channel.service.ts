@@ -32,7 +32,7 @@ export class ChannelService {
 				roomName: 'lobby',
 				chiefId: null,
 				banList: [],
-				muteList: [],
+				muteList: {},
 			},
 		}
 	}
@@ -45,7 +45,7 @@ export class ChannelService {
 	@SubscribeMessage('setUser')
 	async setUser(@MessageBody() data: { nickname: string }, @ConnectedSocket() socket: Socket){
 		const nickname = data.nickname;
-	``
+	
 		socket.data.roomId = "lobby";
 		socket.data.roomName = "lobby";
 		socket.data.nickname = nickname;
@@ -68,15 +68,16 @@ export class ChannelService {
 		  }
 		  
 		  socket.leave(socket.data.roomId);
+		  this.isChief(this.chatRoomList[socket.data.roomId], socket);
+
 		  socket.data.roomId = roomName;
 		  socket.data.roomName = roomName;
-		  socket.data.chiefId = socket.id;
 		  this.chatRoomList[roomName] = { 
 				roomId: roomName,
 				roomName: roomName,
-				chiefId: socket.id,
+				chiefId: socket.data.nickname,
 				banList: [],
-				muteList: [],
+				muteList: {},
 		}
 		socket.join(roomName);
 	}
@@ -86,7 +87,6 @@ export class ChannelService {
 		const roomId = data.roomId;
 		const noRoom = Object.values(this.chatRoomList).find( (room) => room.roomId === roomId);
 
-		console.log(Object.values(this.chatRoomList));
 		if (noRoom == undefined){
 			this.server.emit("errorMessage", {
 				message : "존재하지 않는 방입니다.",
@@ -99,6 +99,8 @@ export class ChannelService {
 		}
 
 		socket.leave(socket.data.roomId);
+		this.isChief(this.chatRoomList[socket.data.roomId], socket);
+		
 		socket.data.roomId = roomId;
 		socket.data.roomName = roomId;
 		socket.join(roomId);
@@ -111,12 +113,63 @@ export class ChannelService {
 	async sendMessage(@MessageBody() data: {message: string}, @ConnectedSocket() socket: Socket) {
 		const nickname = socket.data.nickname;
 		const message = data.message;
+		const chatRoom = this.chatRoomList[socket.data.roomId];
+		
+		console.log("=====send=====");
+		console.log(this.chatRoomList);
+		console.log(socket.data.roomId);
+		if (chatRoom && Object.keys(chatRoom.muteList).includes(nickname)){
+			const now = new Date();
+			const diff = (now.getTime() - chatRoom.muteList[nickname].getTime()) / 1000 / 60;
+			console.log(diff);
+			if (diff < 4){
+				socket.emit("newMessage", {message: `your chat is blocked in ${socket.data.roomId}`});
+				return;
+			}
+			delete chatRoom.muteList[nickname];
+		}
 		this.server.to(socket.data.roomId).emit('newMessage', {nickname, message});
 	}
 
-	@SubscribeMessage("channel")
+	@SubscribeMessage("chatRoomList")
 	async channelList(){
-		this.server.emit("channelList", Object.keys(this.channelList));
+		this.server.emit("channelList", Object.keys(this.chatRoomList));
+	}
+
+	@SubscribeMessage("exitChannel")
+	async exitChannel(@ConnectedSocket() socket: Socket){
+		const chatRoom = this.chatRoomList[socket.data.roomId];
+
+		socket.leave(socket.data.roomId); // 되는지 확인해야함
+		this.isChief(chatRoom, socket);
+
+		socket.data.roomId = "lobby";
+		socket.data.roomName = "lobby";
+		socket.join("lobby");
+		socket.emit("newMessage", `채팅방을 나와 lobby로 나오셨습니다.`);
+	}
+
+	async isChief(chatRoom: ChatRoomListDTO, socket: Socket){
+		if (chatRoom.chiefId == socket.data.nickname){
+			const sockets = this.server.sockets.adapter.rooms.get(socket.data.roomId);
+			if (sockets)
+				chatRoom.chiefId = Array.from(sockets.values())[0];
+		}
+	}
+	@SubscribeMessage("mute")
+	async mute(@MessageBody() data:{nickname: string}, @ConnectedSocket() socket: Socket){
+		const chatRoom = this.chatRoomList[socket.data.roomId];
+
+		if (!chatRoom){
+			socket.emit("newMessage", `Room ${socket.data.roomId} not found`);
+			throw new Error(`Room ${socket.data.roomId} not found`);
+		}
+		if (chatRoom.chiefId != socket.data.nickname){
+			socket.emit("newMessage", `Room ${socket.data.roomId} admin is not you`);
+			throw new Error(`Room ${socket.data.roomId} admin is not you`);
+		}
+		chatRoom.muteList[data.nickname] = new Date();
+		socket.emit("newMessage", `${data.nickname} is mute`);
 	}
 
 	// banList에 사용자 추가
@@ -152,7 +205,11 @@ export class ChannelService {
 		socket.emit("newMessage", {message: `banlist에서 ${nickname}을 제외했습니다.`})
 	}
 
-	kick(nickname: string, roomId: string) {
+	@SubscribeMessage("kick")
+	kick(@MessageBody() nickname: string, @MessageBody() roomId: string) {
+		console.log("===== kick =====");
+		console.log(nickname);
+		console.log(roomId);
 		const sockets = this.server.sockets.adapter.rooms.get(roomId);
 
 		for(const socketId of sockets){
@@ -160,7 +217,6 @@ export class ChannelService {
 			console.log(target.data.nickname);
 			console.log(target.data.roomId);
 			if (target.data.nickname == nickname){
-				console.log("here we go");
 				target.leave(target.data.roomId);
 				target.data.roomId = "lobby";
 				target.data.roomName = "lobby";
@@ -180,12 +236,44 @@ export class ChannelService {
 			socket.emit("newMessage", `Room ${roomId} not found`);
 			throw new Error(`Room ${roomId} not found`);
 		}
-		if (chatRoom.chiefId != socket.id){
+		if (chatRoom.chiefId != socket.data.nickname){
 			socket.emit("newMessage", `Room ${roomId} admin is not you`);
 			throw new Error(`Room ${roomId} admin is not you`);
 		}
+		if (chatRoom.chiefId == nickname){
+			socket.emit("newMessage", `Room ${roomId} ban target is admin`);
+			throw new Error(`Room ${roomId} ban target is admin`);
+		}
 
 		return chatRoom.banList.includes(nickname);
+	}
+
+	// 다이렉트 메세지 만들기
+	@SubscribeMessage("privateMessage")
+	async privateMessage(@MessageBody() data: {nickname: string, message: string}){
+		const memberId = await prisma.member.findUnique({
+			where: {
+			  name: data.nickname,
+			},
+			select: {
+			  socket: true,
+			},
+		  }).then((result) => result?.socket);
+		  
+		  console.log(memberId); // 이거 나중에 emit으로 수정
+	}
+	
+	// 채널 유저 리스트
+	@SubscribeMessage("channelUserList")
+	async channelUserList(@ConnectedSocket() socket: Socket){
+		const users = [];
+		const sockets = this.server.sockets.adapter.rooms.get(socket.data.roomId);
+		
+		for (const socketId of sockets){
+			const user = this.server.sockets.sockets.get(socketId);
+			users.push(user.data.nickname);
+		}
+		socket.emit("channelUserList", users);
 	}
 }
 

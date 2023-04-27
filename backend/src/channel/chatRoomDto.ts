@@ -3,5 +3,5 @@ export interface ChatRoomListDTO {
 	  roomName: string;
 	  chiefId: string | null;
 	  banList: string[];
-	  muteList: string[];
+	  muteList: Record<string, Date>;
 }
