@@ -20,11 +20,14 @@ import { ConfigService } from '@nestjs/config';
 import { MemberRepository } from '../member/member.repository';
 import {
 	ApiOperation,
-	ApiResponse,
+	ApiOkResponse,
+	ApiUnauthorizedResponse,
+	ApiForbiddenResponse,
 	ApiTags,
-	ApiBearerAuth
+	ApiBearerAuth,
+	ApiQuery,
+	ApiParam,
 } from '@nestjs/swagger';
-import { UnauthorizedException } from '@nestjs/common';
 
 @ApiTags('Login')
 @Controller('auth')
@@ -51,13 +54,17 @@ export class AuthController {
 		summary: '42 OAuth callback url',
 		description: '42 OAuth will be redirected here.',
 	})
-	@ApiResponse({
-		status: 200,
+	@ApiQuery({
+		name: 'code',
+		description: 'Code received from 42 API.',
+		required: true,
+		type: String
+	})
+	@ApiOkResponse({
 		description:
 			'JWT token issued successfully. Redirect to homepage or tfa if checked.',
 	})
-	@ApiResponse({
-		status: 401,
+	@ApiUnauthorizedResponse({
 		description:
 			'Not a registered member yet. Please redirect to signup page.',
 	})
@@ -85,13 +92,11 @@ export class AuthController {
 		summary: 'Two-factor authentication sending code',
 		description: 'Send two-factor authentication code by e-mail.',
 	})
-	@ApiResponse({
-		status: 200,
+	@ApiOkResponse({
 		description:
 			'Two-factor authentication code has been sent.',
 	})
-	@ApiResponse({
-		status: 403,
+	@ApiForbiddenResponse({
 		description:
 			'Two-factor authentication code has failed to be sent.',
 	})
@@ -102,7 +107,7 @@ export class AuthController {
 		const member = await this.memberRepository.getMemberInfo(payload.userName);
 		const result = await this.authService.sendTfaCode(member.name, member.email);
 		if (!result)
-			throw new HttpException('Failed to send tfa code.', 403);
+			throw new ForbiddenException('Failed to send tfa code.');
 		console.log('TFA code sent.');
 	}
 
@@ -110,36 +115,39 @@ export class AuthController {
 		summary: 'Two-factor authentication',
 		description: 'Verify two-factor authentication code sent by e-mail.',
 	})
-	@ApiResponse({
-		status: 200,
+	@ApiQuery({
+		name: 'code',
+		description: 'Two-factor authentication code validate for 3 minutes.',
+		required: true,
+		type: String
+	})
+	@ApiOkResponse({
 		description:
 			'Two-factor authentication code has been verified.',
 	})
-	@ApiResponse({
-		status: 403,
+	@ApiForbiddenResponse({
 		description:
 			'Two-factor authentication has failed.',
 	})
 	@ApiBearerAuth()
 	@Get('tfa-verify')
 	@UseGuards(JwtLimitedAuthGuard)
-	async twoFactorAuth(@Query() code: string, @Payload() payload: JwtAccessTokenDTO): Promise<void> {
+	async verifyTwoFactorAuthCode(@Query() code: string, @Payload() payload: JwtAccessTokenDTO): Promise<void> {
 		const match = await this.authService.verifyTfaCode(payload.userName, code);
 		if (!match)
-			throw new HttpException('Two-factor authentication failed.', 403);
+			throw new ForbiddenException('Two-factor authentication failed.');
+
 	}
 
 	@ApiOperation({
 		summary: 'JWT Access Token verification',
 		description: 'Login if access token is validate.',
 	})
-	@ApiResponse({
-		status: 200,
+	@ApiOkResponse({
 		description:
 			'JWT access token verified. Login has been successful.',
 	})
-	@ApiResponse({
-		status: 401,
+	@ApiUnauthorizedResponse({
 		description:
 			'JWT access token is not validate. Try 42 login again.',
 	})
@@ -154,13 +162,11 @@ export class AuthController {
 		summary: 'JWT refresh',
 		description: 'Refresh JWT access token.',
 	})
-	@ApiResponse({
-		status: 200,
+	@ApiOkResponse({
 		description:
 			'JWT access token reissued successfully.',
 	})
-	@ApiResponse({
-		status: 401,
+	@ApiUnauthorizedResponse({
 		description:
 			'JWT refresh token is not validate.',
 	})
@@ -183,12 +189,10 @@ export class AuthController {
 		summary: 'logout',
 		description: 'Delete refresh token.',
 	})
-	@ApiResponse({
-		status: 200,
+	@ApiOkResponse({
 		description: 'Logout has been successful.',
 	})
-	@ApiResponse({
-		status: 401,
+	@ApiUnauthorizedResponse({
 		description:
 			'JWT access token is not validate.',
 	})
