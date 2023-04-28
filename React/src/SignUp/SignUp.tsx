@@ -5,7 +5,10 @@ function SignUp() {
         <div id="sign-up">
             <div id="title">Create Profile</div>
             <form id="profile-form">
-                <input id="nickname" placeholder="nickname"></input>
+                <form id="nick-form" className="info-form">
+                    <input id="nick-input" placeholder="nickname"></input>
+                    <button id="nick-button">check</button>
+                </form>
                 <form id="email-form" className="info-form">
                     <input id="email-input" placeholder="email"></input>
                     <button id="email-button">send</button>

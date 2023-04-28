@@ -34,14 +34,8 @@
     text-align: center;
 }
 
-#sign-up #profile-form #nickname {
-    width: 100%;
-    height: max(50px, 4vw);
-    background-color: #E0E0E0;
-    border: none;
-    padding: 0 10px 0 10px;
+#sign-up #profile-form #nick-form {
     margin-top: 30px;
-    box-sizing: border-box;
 }
 
 #sign-up #profile-form .info-form {
