@@ -38,18 +38,6 @@ export class AuthController {
 		private readonly memberRepository: MemberRepository,
 	) { }
 
-	// @ApiOperation({
-	// 	summary: 'Login Entrypoint',
-	// 	description: 'Redirect to callback page.',
-	// })
-	// @ApiResponse({
-	// 	status: 302,
-	// 	description: 'Redirect to callback URL if user agreed to authorize.',
-	// })
-	// @Get('ft_login')
-	// @UseGuards(FortyTwoAuthGuard)
-	// ft_login(): void { }
-
 	@ApiOperation({
 		summary: '42 OAuth callback url',
 		description: '42 OAuth will be redirected here.',
@@ -108,7 +96,6 @@ export class AuthController {
 		const result = await this.authService.sendTfaCode(member.name, member.email);
 		if (!result)
 			throw new ForbiddenException('Failed to send tfa code.');
-		console.log('TFA code sent.');
 	}
 
 	@ApiOperation({
@@ -132,11 +119,10 @@ export class AuthController {
 	@ApiBearerAuth()
 	@Get('tfa-verify')
 	@UseGuards(JwtLimitedAuthGuard)
-	async verifyTwoFactorAuthCode(@Query() code: string, @Payload() payload: JwtAccessTokenDTO): Promise<void> {
+	async verifyTwoFactorAuthCode(@Query('code') code: string, @Payload() payload: any): Promise<void> {
 		const match = await this.authService.verifyTfaCode(payload.userName, code);
 		if (!match)
 			throw new ForbiddenException('Two-factor authentication failed.');
-
 	}
 
 	@ApiOperation({
@@ -181,8 +167,7 @@ export class AuthController {
 			payload.refreshToken,
 			payload.tfa
 		);
-		const time = +this.config.get<string>('JWT_REFRESH_EXPIRE_TIME');
-		return { accessToken: token, expiresIn: time };
+		return { accessToken: token };
 	}
 
 	@ApiOperation({
