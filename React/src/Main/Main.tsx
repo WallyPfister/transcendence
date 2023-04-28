@@ -23,7 +23,7 @@ function Main() {
 
   useEffect(() => {
     setFriends(["yachoi", "ean", "sunghkim"]);
-    setChannelUser(["sokim", "sojoo", "captain"]);
+    // setChannelUser(["sokim", "sojoo", "captain"]);
   }); // test
 
   useEffect(() => {
@@ -31,6 +31,7 @@ function Main() {
 
     socket.on('connect', () => {
 		  console.log('Socket.IO connected!');
+      setNickname(Math.random().toString(36).substring(2, 7));
       socket.emit('setUser', { nickname })
 	  });
 
