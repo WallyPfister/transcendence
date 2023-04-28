@@ -43,20 +43,3 @@ model history {
 	memberName	member		@relation(fields: [name], references: [name])
 	name		String
 }
-
-model channel {
-	name		String		@unique @id
-	passwd		String?	
-	property	Int			@default(0)
-	list		chusers[]
-}
-
-model chusers {
-	id			Int			@id @default(autoincrement())
-	userName	String		@unique @db.VarChar(20)
-	userFd		Int			@unique
-	property	Int			@default(0)
-	mute		DateTime?	
-	channel		channel 	@relation(fields: [chName], references: [name])
-	chName		String
-}
