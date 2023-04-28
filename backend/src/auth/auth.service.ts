@@ -1,15 +1,14 @@
 import { HttpException, Inject, Injectable, Request } from '@nestjs/common';
-import { ConfigService, ConfigType } from '@nestjs/config';
+import { ConfigType } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { MemberRepository } from 'src/member/member.repository';
 import { MailerService } from '@nestjs-modules/mailer';
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { firstValueFrom, catchError, map, lastValueFrom, tap } from 'rxjs';
-import FormData = require('form-data');
-import axios from 'axios';
 import { HttpService } from '@nestjs/axios';
 import oauthConfig from 'src/config/oauth.config';
 import jwtConfig from 'src/config/jwt.config';
+import { MemberConstants } from '../member/memberConstants';
 
 @Injectable()
 export class AuthService {
@@ -106,10 +105,9 @@ export class AuthService {
 		return token;
 	}
 
-	async issueAccessToken(userName: string, tfa: boolean): Promise<string> {
+	async issueAccessToken(userName: string): Promise<string> {
 		const bodyFormData = {
 			sub: userName,
-			tfaCheck: tfa,
 		};
 		const token = this.jwtService.signAsync(
 			bodyFormData,
@@ -121,10 +119,9 @@ export class AuthService {
 		return token;
 	}
 
-	async issueRefreshToken(userName: string, tfa: boolean): Promise<string> {
+	async issueRefreshToken(userName: string): Promise<string> {
 		const bodyFormData = {
 			sub: userName,
-			tfaCheck: tfa,
 		};
 		const token = this.jwtService.sign(
 			bodyFormData,
@@ -140,16 +137,19 @@ export class AuthService {
 	async refreshAccessToken(
 		userName: string,
 		refreshToken: string,
-		tfa: boolean
 	): Promise<string> {
 		if (!this.verifyRefreshToken(refreshToken)) throw new HttpException('Refresh token is invalid.', 401);
-		const token = await this.issueAccessToken(userName, tfa);
+		const token = await this.issueAccessToken(userName);
 		return token;
+	}
+
+	async login(name: string): Promise<void> {
+		await this.memberRepository.updateStatus(name, MemberConstants.ONLINE);
 	}
 
 	async logout(name: string): Promise<void> {
 		await this.memberRepository.deleteRefreshToken(name);
-		await this.memberRepository.updateStatus(name, 0);
+		await this.memberRepository.updateStatus(name, MemberConstants.OFFLINE);
 	}
 
 	async sendTfaCode(name: string, email: string): Promise<boolean> {
