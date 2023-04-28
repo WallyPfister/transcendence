@@ -10,7 +10,6 @@ import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MemberRepository } from '../member/member.repository';
-import memberConfig from 'src/config/member.config';
 import oauthConfig from 'src/config/oauth.config';
 import jwtConfig from 'src/config/jwt.config';
 import { HttpModule } from '@nestjs/axios';
@@ -28,7 +27,6 @@ import { HttpModule } from '@nestjs/axios';
 		PassportModule,
 		ConfigModule.forFeature(oauthConfig),
 		ConfigModule.forFeature(jwtConfig),
-		ConfigModule.forFeature(memberConfig),
 	],
 	controllers: [AuthController],
 	providers: [AuthService, JwtLimitedStrategy, JwtStrategy, RefreshTokenStrategy, FTOauthStrategy,
