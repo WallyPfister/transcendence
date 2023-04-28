@@ -19,5 +19,6 @@
     border: none;
     margin-top: 60px;
     font-size: max(25px, 2.3vw);
+    cursor: pointer;
 }
 
