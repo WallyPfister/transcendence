@@ -4,10 +4,11 @@ import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { MemberModule } from './member/member.module';
+import { HistoryModule } from './history/history.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 
 @Module({
-  imports: [PrismaModule, AuthModule, MemberModule,
+  imports: [PrismaModule, AuthModule, MemberModule, HistoryModule,
     MailerModule.forRoot({
       transport: {
         service: 'Naver',
@@ -22,4 +23,4 @@ import { MailerModule } from '@nestjs-modules/mailer';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}
