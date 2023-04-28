@@ -11,9 +11,9 @@ import { MailerModule } from '@nestjs-modules/mailer';
   imports: [PrismaModule, AuthModule, MemberModule, HistoryModule,
     MailerModule.forRoot({
       transport: {
-        service: 'Google',
-        host: 'smtp.google.com',
-        port: 465, // for SSL. 587 for TLS
+        service: 'Naver',
+        host: 'smtp.naver.com',
+        port: 587, // for TLS
         auth: {
           user: process.env.MAILER_NAME,
           pass: process.env.MAILER_PASS,

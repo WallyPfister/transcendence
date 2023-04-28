@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { JwtLimitedStrategy } from './strategies/jwt.limited.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { RefreshTokenStrategy } from './strategies/jwt.refresh.strategy';
 import { FTOauthStrategy } from './strategies/ft.strategy';
@@ -12,6 +13,7 @@ import { MemberRepository } from '../member/member.repository';
 import memberConfig from 'src/config/member.config';
 import oauthConfig from 'src/config/oauth.config';
 import jwtConfig from 'src/config/jwt.config';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
 	imports: [
@@ -19,11 +21,17 @@ import jwtConfig from 'src/config/jwt.config';
 			secret: process.env.JWT_ACCESS_SECRET,
 			signOptions: { expiresIn: process.env.JWT_ACCESS_EXPIRE_TIME }
 		}),
+		HttpModule.register({
+			timeout: 5000,
+			maxRedirects: 5,
+		}),
 		PassportModule,
-		ConfigModule.forFeature(oauthConfig), ConfigModule.forFeature(jwtConfig), ConfigModule.forFeature(memberConfig)
+		ConfigModule.forFeature(oauthConfig),
+		ConfigModule.forFeature(jwtConfig),
+		ConfigModule.forFeature(memberConfig),
 	],
 	controllers: [AuthController],
-	providers: [AuthService, JwtStrategy, RefreshTokenStrategy, FTOauthStrategy,
+	providers: [AuthService, JwtLimitedStrategy, JwtStrategy, RefreshTokenStrategy, FTOauthStrategy,
 		ConfigService, PrismaService, MemberRepository,],
 	exports: [AuthService]
 })

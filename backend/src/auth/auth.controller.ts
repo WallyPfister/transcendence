@@ -4,14 +4,16 @@ import {
 	UseGuards,
 	Query,
 	HttpException,
+	Req,
+	ForbiddenException
 } from '@nestjs/common';
+import { Request } from 'express';
 import { Payload } from './decorators/payload';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { JwtRefreshAuthGuard } from './guards/jwt.refresh.guard';
-import { FortyTwoAuthGuard } from './guards/ft.guard';
+import { JwtLimitedAuthGuard } from './guards/jwt.limited.guard';
 import { AuthService } from './auth.service';
 import { RefreshJwtTokenDTO } from './dto/jwt.refresh.dto';
-import { LoginMemberDTO } from './dto/member.login';
 import { JwtTokenInfo } from '../utils/type';
 import { JwtAccessTokenDTO } from './dto/jwt.access.dto';
 import { ConfigService } from '@nestjs/config';
@@ -22,6 +24,7 @@ import {
 	ApiTags,
 	ApiBearerAuth
 } from '@nestjs/swagger';
+import { UnauthorizedException } from '@nestjs/common';
 
 @ApiTags('Login')
 @Controller('auth')
@@ -32,17 +35,17 @@ export class AuthController {
 		private readonly memberRepository: MemberRepository,
 	) { }
 
-	@ApiOperation({
-		summary: 'Login Entrypoint',
-		description: 'Redirect to callback page.',
-	})
-	@ApiResponse({
-		status: 302,
-		description: 'Redirect to callback URL if user agreed to authorize.',
-	})
-	@Get('ft_login')
-	@UseGuards(FortyTwoAuthGuard)
-	ft_login(): void { }
+	// @ApiOperation({
+	// 	summary: 'Login Entrypoint',
+	// 	description: 'Redirect to callback page.',
+	// })
+	// @ApiResponse({
+	// 	status: 302,
+	// 	description: 'Redirect to callback URL if user agreed to authorize.',
+	// })
+	// @Get('ft_login')
+	// @UseGuards(FortyTwoAuthGuard)
+	// ft_login(): void { }
 
 	@ApiOperation({
 		summary: '42 OAuth callback url',
@@ -59,16 +62,23 @@ export class AuthController {
 			'Not a registered member yet. Please redirect to signup page.',
 	})
 	@Get('callback')
-	@UseGuards(FortyTwoAuthGuard)
-	async login(@Payload() member: LoginMemberDTO): Promise<JwtTokenInfo> {
-		// if (member.twoFactor) {
-		// 	if (!this.authService.sendTfaCode(member.name, member.email))
-		// 		console.log('Failed to send mail.');
-		// }
+	async ft_login(@Query() code: string): Promise<any> {
+		// const token = await this.authService.getFortyTwoToken(code);
+		// console.log(token);
+		// const profile = this.authService.getFortyTwoProfile(token);
+		// console.log(profile);
+		// const intraId = profile.login;
+		const intraId = 'sokim';
+		const member = await this.memberRepository.findOneByIntraId(intraId);
+		if (!member)
+			throw new ForbiddenException(intraId);
+		if (member.twoFactor) {
+			const token = await this.authService.issueLimitedAccessToken(member.name);
+			return { limitedToken: token }
+		}
 		const atoken = await this.authService.issueAccessToken(member.name, member.twoFactor);
 		const rtoken = await this.authService.issueRefreshToken(member.name, member.twoFactor);
-		const time = +this.config.get<string>('JWT_ACCESS_EXPIRE_TIME');
-		return { accessToken: atoken, refreshToken: rtoken, expiresIn: time, tfa: member.twoFactor }
+		return { accessToken: atoken, refreshToken: rtoken }
 	}
 
 	@ApiOperation({
@@ -86,9 +96,9 @@ export class AuthController {
 			'Two-factor authentication code has failed to be sent.',
 	})
 	@ApiBearerAuth()
-	@Get('tfa')
-	@UseGuards(JwtAuthGuard)
-	async sendTwoFactorAuthCode(@Payload() payload: JwtAccessTokenDTO): Promise<void> {
+	@Get('tfa-send')
+	@UseGuards(JwtLimitedAuthGuard)
+	async sendTwoFactorAuthCode(@Payload() payload: any): Promise<void> {
 		const member = await this.memberRepository.getMemberInfo(payload.userName);
 		const result = await this.authService.sendTfaCode(member.name, member.email);
 		if (!result)
@@ -111,13 +121,12 @@ export class AuthController {
 			'Two-factor authentication has failed.',
 	})
 	@ApiBearerAuth()
-	@Get('tfa_verify')
-	@UseGuards(JwtAuthGuard)
+	@Get('tfa-verify')
+	@UseGuards(JwtLimitedAuthGuard)
 	async twoFactorAuth(@Query() code: string, @Payload() payload: JwtAccessTokenDTO): Promise<void> {
 		const match = await this.authService.verifyTfaCode(payload.userName, code);
 		if (!match)
 			throw new HttpException('Two-factor authentication failed.', 403);
-
 	}
 
 	@ApiOperation({
@@ -135,7 +144,7 @@ export class AuthController {
 			'JWT access token is not validate. Try 42 login again.',
 	})
 	@ApiBearerAuth()
-	@Get('verify')
+	@Get('jwt-verify')
 	@UseGuards(JwtAuthGuard)
 	async verifyAccessToken(
 		@Payload() payload: JwtAccessTokenDTO
@@ -156,7 +165,7 @@ export class AuthController {
 			'JWT refresh token is not validate.',
 	})
 	@ApiBearerAuth()
-	@Get('refresh')
+	@Get('jwt-refresh')
 	@UseGuards(JwtRefreshAuthGuard)
 	async refreshJwtToken(
 		@Payload() payload: RefreshJwtTokenDTO,
