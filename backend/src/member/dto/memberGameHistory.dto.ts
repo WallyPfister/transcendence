@@ -18,4 +18,10 @@ export class MemberGameHistoryDto {
 
 	@ApiProperty({ description: 'type of the game' })
 	type: number;
+
+	@ApiProperty({ description: 'the date of the game' })
+	date: Date;
+
+	@ApiProperty({ description: 'the date of the game to string' })
+	time?: string;
 }

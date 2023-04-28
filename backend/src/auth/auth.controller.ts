@@ -7,7 +7,6 @@ import {
 	Req,
 	ForbiddenException
 } from '@nestjs/common';
-import { Request } from 'express';
 import { Payload } from './decorators/payload';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { JwtRefreshAuthGuard } from './guards/jwt.refresh.guard';
@@ -57,13 +56,9 @@ export class AuthController {
 			'Not a registered member yet. Please redirect to signup page.',
 	})
 	@Get('callback')
-	async ft_login(@Query() code: string): Promise<any> {
-		// const token = await this.authService.getFortyTwoToken(code);
-		// console.log(token);
-		// const profile = this.authService.getFortyTwoProfile(token);
-		// console.log(profile);
-		// const intraId = profile.login;
-		const intraId = 'sokim';
+	async ft_login(@Query('code') code: string): Promise<any> {
+		const token = await this.authService.getFortyTwoToken(code);
+		const intraId = await this.authService.getFortyTwoProfile(token);
 		const member = await this.memberRepository.findOneByIntraId(intraId);
 		if (!member)
 			throw new ForbiddenException(intraId);
