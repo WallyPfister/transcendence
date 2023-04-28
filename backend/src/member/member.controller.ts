@@ -1,10 +1,13 @@
-import { Body, Controller, Delete, Get, Param, ParseBoolPipe, ParseIntPipe, Post, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
+import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { MemberService } from './member.service';
+import { MemberRepository } from './member.repository';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { MemberProfileDto } from './dto/memberProfile.dto';
-import { FriendProfile } from './dto/friendProfile.dto';
-import { MemberRepository } from './member.repository';
-import { ApiBody, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { MemberGameInfoDto } from './dto/memberGameInfo.dto';
+import { MemberGameHistoryDto } from './dto/memberGameHistory.dto';
+import { ChUserProfileDto } from './dto/chUserProfile.dto';
+import { FriendProfileDto } from './dto/friendProfile.dto';
 
 @ApiTags("Member")
 @Controller('member')
@@ -25,11 +28,39 @@ export class MemberController {
 		type: CreateMemberDto
 	})
 	@ApiCreatedResponse({
-		description: `Member created successfully.`
+		description: `Member created successfully.`,
+		type: String
 	})
-	@Post('member')
+	@ApiBadRequestResponse({
+		description: 'There is a member with the same Intra Id.'
+	})
+	@Post()
 	createMember(@Body() memberInfo: CreateMemberDto): Promise<string> {
 		return this.memberRepository.createMember(memberInfo);
+	}
+
+	@ApiOperation({
+		summary: 'Check for duplicate name.',
+		description: 'Checks whether a user-entered name is duplicated or not. \
+			Returns true if there is no member with the given name, \
+			and false if there is already a member with the same name.'
+	})
+	@ApiQuery({
+		name: 'name',
+		description: 'The name that the user wants to use',
+		required: true,
+		type: String
+	})
+	@ApiOkResponse({
+		description: 'Whether the given name is available or not',
+		type: Boolean
+	})
+	@Get('checkName')
+	async checkDuplicateName(@Query('name') name: string): Promise<boolean> {
+		const check = await this.memberRepository.checkDuplicateName(name);
+		if (check)
+			return false;
+		return true;
 	}
 
 	@ApiOperation({
@@ -37,22 +68,18 @@ export class MemberController {
 		description: 'It returns the currently authenticated member\'s own profile information.'
 	})
 	@ApiQuery({
-		name: 'name', // 나중에 accessToken으로 조회?
+		name: 'name',
 		description: 'The member name.',
 		required: true,
 		type: String
 	})
 	@ApiOkResponse({
 		description: 'The profile information for the authenticated member.',
-		type: CreateMemberDto
+		type: MemberProfileDto
 	})
-	@ApiNotFoundResponse({
-		status: 404,
-		description: 'Cannot find a memeber.'
-	})
-	@Get('member')
+	@Get()
 	async getMemberInfo(@Query('name') name: string): Promise<MemberProfileDto> {
-		return await this.memberService.getMemberInfo(name);
+		return await this.memberRepository.getMemberInfo(name);
 	}
 
 	@ApiOperation({
@@ -80,30 +107,45 @@ export class MemberController {
 	}
 
 	@ApiOperation({
-		summary: 'Update member ping game information',
-		description: 'It updates member information related to the ping game. \
-					When a member wins a game, the win column is incremented by 1 and the score column is incremented by 5. \
-					Conversely, when a member loses a game, the lose column is incremented by 1 and the score column is decremented by 3. \
-					The level column is the quotient obtained by dividing the score column by 10.'
+		summary: 'Get member\'s game history.',
+		description: 'It gets member\'s game history what sorted in aescending order of created time. '
 	})
-	@ApiParam({
+	@ApiQuery({
 		name: 'name',
 		description: 'The member name.',
 		required: true,
 		type: String
 	})
-	@ApiParam({
-		name: 'result',
-		description: 'The game result of the member.',
-		required: true,
-		type: Boolean
+	@ApiOkResponse({
+		description: 'The profile information for the authenticated member.',
+		type: MemberGameHistoryDto,
+		isArray: true
+	})
+	@Get('history')
+	async getGameHistory(@Query('name') name: string): Promise<MemberGameHistoryDto[]> {
+		return await this.memberRepository.getMemberHistory(name);
+	}
+
+	@ApiOperation({
+		summary: 'Get ranking information.',
+		description: 'It brings game ranking information of all members. \
+			They are sorted in descending order of level. \
+			If the levels are the same, they are sorted in ascending alphabetical order of name.'
 	})
 	@ApiOkResponse({
-		description: 'Update the member status successfully.'
+		description: 'Get ranking information successfully.',
+		type: MemberGameInfoDto,
+		isArray: true
 	})
-	@Post('score/:name/:result')
-	async updateGameScore(@Param('name') name: string, @Param('result', ParseBoolPipe) result: boolean): Promise<void> {
-		await this.memberService.updateGameScore(name, result);
+	@ApiBadRequestResponse({
+		description: 'There is no member.'
+	})
+	@Get('ranking')
+	getRangkingInfo(): Promise<MemberGameInfoDto[]> {
+		const ranking = this.memberRepository.getRankingInfo();
+		if (!ranking)
+			throw new BadRequestException(`There is no member.`);
+		return ranking;
 	}
 
 	@ApiOperation({
@@ -119,10 +161,49 @@ export class MemberController {
 	@ApiOkResponse({
 		description: 'Delete a member successfully.'
 	})
-	@Delete('member/:name')
+	@ApiBadRequestResponse({
+		description: 'There is no such member with the given name.'
+	})
+	@Delete('/:name')
 	async deleteMember(@Param('name') name: string): Promise<void> {
 		return await this.memberRepository.deleteMember(name);
 	}
+
+	@ApiOperation({
+		summary: 'Get channel user information.',
+		description: 'It gets a channel user information.'
+	})
+	@ApiQuery({
+		name: 'name',
+		description: 'The requester name.',
+		required: true,
+		type: String
+	})
+	// @ApiBody({
+	// 	description: 'List of the channel user names.',
+	// 	required: true,
+		
+	// 	examples: {
+			
+	// 	}
+
+	// })
+	@ApiOkResponse({
+		description: 'List of the channel users information.',
+		type: ChUserProfileDto,
+		isArray: true
+	})
+	@Get('chUser')
+	async getChUserInfo(@Body() data: { name: string, chUsers: string[] }): Promise<ChUserProfileDto[]> {
+		let ret: ChUserProfileDto[] = [];
+		for (let i = 0; i < data.chUsers.length; i++) {
+			const chUserInfo = await this.memberService.getChUserInfo(data.name, data.chUsers[i]);
+			if (!chUserInfo)
+				continue;
+			ret.push(chUserInfo);
+		}
+		return ret;
+	} // 프론트: 따로 이름 솔팅은 하지 않고 있는데 필요한지 확인
 
 	@ApiOperation({
 		summary: 'Add a friend',
@@ -143,10 +224,13 @@ export class MemberController {
 	@ApiResponse({
 		description: 'Add a friend successfully.'
 	})
+	@ApiBadRequestResponse({
+		description: 'There is no such member with the given name.'
+	})
 	@Post('friend/:name/:friendName')
 	async addFriend(@Param('name') name: string, @Param('friendName') friendName: string): Promise<void> {
 		return await this.memberRepository.addFriend(name, friendName);
-	}
+	} // 프론트: 배열로 받아서 한꺼번에 여러명을 삭제 해줘야 하는지 확인 필요.
 
 	@ApiOperation({
 		summary: 'Get a friend information',
@@ -164,23 +248,32 @@ export class MemberController {
 		required: true,
 		type: String
 	})
+	@ApiOkResponse({
+		description: 'The requester\'s friend information.',
+		type: FriendProfileDto
+	})
 	@Get('friend')
-	async findOneFriend(@Query('name') name: string, @Query('friendName') friendName: string): Promise<FriendProfile[]> {
+	async findOneFriend(@Query('name') name: string, @Query('friendName') friendName: string): Promise<FriendProfileDto[]> {
 		return await this.memberRepository.findOneFriend(name, friendName);
 	}
 
 	@ApiOperation({
 		summary: 'Get all friends information',
-		description: 'It returns all friends\' informations.'
+		description: 'It returns all friends information sorted in ascending alphabetical order of name.'
 	})
-	@ApiParam({
+	@ApiQuery({
 		name: 'name',
 		description: 'The requester name.',
 		required: true,
 		type: String
 	})
+	@ApiOkResponse({
+		description: 'The requester\'s all friends information.',
+		type: FriendProfileDto,
+		isArray: true
+	})
 	@Get('friend/all')
-	async findAllFriends(@Query('name') name: string): Promise<any> {
+	async findAllFriends(@Query('name') name: string): Promise<FriendProfileDto[]> {
 		return await this.memberRepository.findAllFriends(name);
 	}
 
@@ -200,8 +293,23 @@ export class MemberController {
 		required: true,
 		type: String
 	})
+	@ApiResponse({
+		description: 'Delete a friend successfully.'
+	})
 	@Delete('friend/:name/:friendName')
 	async deleteFriend(@Param('name') name: string, @Param('friendName') friendName: string): Promise<void> {
 		return await this.memberRepository.deleteFriend(name, friendName);
+	} // 프론트: 배열로 받아서 한꺼번에 여러명을 삭제 해줘야 하는지 확인 필요.
+
+	// 테스트용 api
+	@Post('tfa/:name')
+	generateTfaCode(@Param('name') name: string): Promise<string> {
+		return this.memberRepository.generateTfaCode(name);
+	}
+
+	// 테스트용 api
+	@Get('tfa/:name')
+	getTfaCode(@Query('name') name: string): Promise<string> {
+		return this.memberRepository.getTfaCode(name);
 	}
 }

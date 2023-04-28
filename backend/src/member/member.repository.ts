@@ -1,33 +1,53 @@
-import { Inject, Injectable } from "@nestjs/common";
-import { CreateMemberDto } from "./dto/create-member.dto";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
-import { MemberProfileDto } from "./dto/memberProfile.dto";
-import { FriendProfile } from "./dto/friendProfile.dto";
+import { MemberConstants } from "./memberConstants";
+import { CreateMemberDto } from "./dto/create-member.dto";
 import { LoginMemberDTO } from "src/auth/dto/member.login";
-import { ConfigType } from "@nestjs/config";
-import memberConfig from "src/config/member.config";
+import { MemberProfileDto } from "./dto/memberProfile.dto";
+import { MemberGameInfoDto } from "./dto/memberGameInfo.dto";
+import { MemberGameHistoryDto } from "./dto/memberGameHistory.dto";
+import { ChUserProfileDto } from "./dto/chUserProfile.dto";
+import { FriendProfileDto } from "./dto/friendProfile.dto";
 
 @Injectable()
 export class MemberRepository {
-	constructor(private prisma: PrismaService,
-		@Inject(memberConfig.KEY)
-		private config: ConfigType<typeof memberConfig>) { }
+	constructor(private prisma: PrismaService) { }
 
 	async createMember(memberInfo: CreateMemberDto): Promise<any> {
-		return await this.prisma.member.create({
-			data: {
-				...memberInfo,
-				status: this.config.offline,
-				win: 0,
-				lose: 0,
-				level: 0,
-				score: 0,
-				achieve: 0,
-				socket: 0,
-				refreshToken: ""
-			},
+		try {
+			return await this.prisma.member.create({
+				data: {
+					...memberInfo,
+					status: MemberConstants.OFFLINE,
+					win: 0,
+					lose: 0,
+					level: 0,
+					score: 0,
+					achieve: 0,
+					socket: 0,
+					refreshToken: ""
+				},
+				select: { name: true }
+			});
+		} catch (err) {
+			throw new BadRequestException(`There is a member with the same Intra Id as ${memberInfo.intraId}.`);
+		}
+	}
+
+	async checkDuplicateName(name: string): Promise<any> {
+		return await this.prisma.member.findUnique({
+			where: { name: name },
+			select: { name: true }
+		});
+	}
+
+	async findOneByIntraId(intraId: string): Promise<LoginMemberDTO> {
+		return this.prisma.member.findUnique({
+			where: { intraId: intraId },
 			select: {
 				name: true,
+				email: true,
+				twoFactor: true
 			}
 		});
 	}
@@ -46,6 +66,26 @@ export class MemberRepository {
 		});
 	}
 
+	async generateTfaCode(name: string): Promise<string> {
+		// TODO: 상수 대신 랜덤 OTP로 교체 필요
+		const code = "1234";
+		await this.prisma.member.update({
+			where: { name: name },
+			data: { 
+				tfaCode: code,
+				tfaTime: new Date()
+			}
+		});
+		return code;
+	}
+
+	async getTfaCode(name: string): Promise<any> {
+		return await this.prisma.member.findUnique({
+			where: { name: name },
+			select: { tfaCode: true }
+		});
+	}
+
 	async getMemberInfo(name: string): Promise<MemberProfileDto> {
 		return await this.prisma.member.findUnique({
 			where: { name: name },
@@ -58,18 +98,7 @@ export class MemberRepository {
 				lose: true,
 				level: true,
 				score: true,
-				achieve: true,
-			}
-		});
-	}
-
-	async findOneByIntraId(intraId: string): Promise<LoginMemberDTO> {
-		return this.prisma.member.findUnique({
-			where: { intraId: intraId },
-			select: {
-				name: true,
-				email: true,
-				twoFactor: true
+				achieve: true
 			}
 		});
 	}
@@ -81,49 +110,139 @@ export class MemberRepository {
 		});
 	}
 
-	async updateGameScore(name: string, win: number, lose: number, score: number, level: number): Promise<void> {
+	async updateGameResult(member: MemberGameInfoDto): Promise<void> {
 		await this.prisma.member.update({
-			where: { name: name },
+			where: { name: member.name },
 			data: {
-				win: win,
-				lose: lose,
-				score: score,
-				level: level,
+				win: member.win,
+				lose: member.lose,
+				score: member.score,
+				level: member.level,
+				achieve: member.achieve
 			}
 		});
 	}
 
-	async updateAchieve(name: string, achieve: number): Promise<void> {
-		await this.prisma.member.update({
+	async getGameInfo(name: string): Promise<MemberGameInfoDto> {
+		return await this.prisma.member.findUnique({
 			where: { name: name },
-			data: { achieve: achieve }
+			select: {
+				name: true,
+				win: true,
+				lose: true,
+				score: true,
+				level: true,
+				achieve: true
+			}
+		})
+	}
+
+	async getMemberHistory(name: string): Promise<MemberGameHistoryDto[]> {
+		return await this.prisma.member.findUnique({
+			where: { name: name }
+		}).history({
+			where: {name: name},
+			orderBy: { date: 'asc' },
+			select: {
+				name: true,
+				opponent: true,
+				scoreA: true,
+				scoreB: true,
+				result: true,
+				type: true,
+				date: true
+			}
 		});
+	}
+
+	async getRankingInfo(): Promise<MemberGameInfoDto[]> {
+		return await this.prisma.member.findMany({
+			orderBy: [
+				{ level: 'desc' },
+				{ name: 'asc' }
+			],
+			select: {
+				name: true,
+				win: true,
+				lose: true,
+				level: true,
+				score: true,
+				achieve: true
+			}
+		})
 	}
 
 	async deleteMember(name: string): Promise<void> {
-		await this.prisma.member.delete({
-			where: {
-				name: name
-			}
-		});
+		try {
+			await this.prisma.member.delete({
+				where: { name: name }
+			});
+		} catch (err) {
+			throw new BadRequestException(`There is no such member with name ${name}.`);
+		}
 	}
 
-	async addFriend(name: string, friendName: string): Promise<void> {
-		await this.prisma.member.update({
-			where: { name: name },
-			data: {
-				friend: {
-					connect: { name: friendName }
-				}
-			}
-		});
-	}
-
-	async findOneFriend(name: string, friendName: string): Promise<FriendProfile[]> {
+	async isFriend(name: string, checkMember: string): Promise<any> {
 		return await this.prisma.member.findUnique({
 			where: { name: name },
 		}).friend({
-			where: { name: friendName },
+			where: { name: checkMember },
+			select: { name: true }
+		})
+	}
+
+	async getChUserInfo(name: string): Promise<ChUserProfileDto> {
+		return await this.prisma.member.findUnique({
+			where: { name: name },
+			select: {
+				name: true,
+				win: true,
+				lose: true,
+				level: true,
+				score: true
+			}
+		})
+	}
+
+	async addFriend(name: string, friendName: string): Promise<void> {
+		try {
+			await this.prisma.member.update({
+				where: { name: name },
+				data: {
+					friend: {
+						connect: { name: friendName }
+					}
+				}
+			});
+		} catch (err) {
+			throw new BadRequestException(`There is no such member with name ${friendName}.`);
+		}
+	}
+
+	async findOneFriend(name: string, friendName: string): Promise<FriendProfileDto[]> {
+		try {
+			return await this.prisma.member.findUnique({
+				where: { name: name },
+			}).friend({
+				where: { name: friendName },
+				select: {
+					name: true,
+					avatar: true,
+					status: true,
+					level: true,
+					achieve: true
+				}
+			})
+		} catch (err) {
+			throw new BadRequestException(`There is no friend with name ${friendName}.`)
+		}
+	}
+
+	async findAllFriends(name: string): Promise<FriendProfileDto[]> {
+		return await this.prisma.member.findUnique({
+			where: { name: name },
+		}).friend({
+			orderBy: { name: 'asc' },
 			select: {
 				name: true,
 				avatar: true,
@@ -131,67 +250,17 @@ export class MemberRepository {
 				level: true,
 				achieve: true
 			}
-		})
-	}
-
-	async findAllFriends(name: string): Promise<any> {
-		console.log(`hello`);
-		return this.prisma.member.findUnique({
-			where: { name: name },
-			select: {
-				friend: {
-					orderBy: {
-						name: 'asc',
-					},
-					select: {
-						name: true,
-						avatar: true,
-						status: true,
-						level: true,
-						achieve: true
-					}
-				},
-			},
-		}).friend;
+		});
 	}
 
 	async deleteFriend(name: string, friendName: string): Promise<void> {
 		await this.prisma.member.update({
-			where: {
-				name: name
-			},
+			where: { name: name },
 			data: {
 				friend: {
-					disconnect: {
-						name: friendName
-					}
+					disconnect: { name: friendName }
 				}
-			},
+			}
 		});
 	}
-
-	async generateCode(name: string): Promise<string> {
-		// TODO: 상수 대신 랜덤 OTP로 교체 필요
-		const code = '1234';
-		// 	const time = new Date();
-		// 	await this.prisma.member.update({
-		// 		where: {
-		// 			name: name
-		// 		},
-		// 		data: {
-		// 			tfaCode: code,
-		// 			tfaTime: time,
-		// 		},
-		// 	});
-		return code;
-	}
-
-	// async getTfaCode(name: string): Promise<any> {
-	// 	return await this.prisma.member.findUnique({
-	// 		where: { name: name },
-	// 		select: {
-	// 			tfaCode: true,
-	// 		}
-	// 	});
-	// }
 }
