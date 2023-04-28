@@ -80,7 +80,7 @@ export class MemberRepository {
 		return code;
 	}
 
-	async getTfaCode(name: string): Promise<any> {
+	async getTfaCode(name: string): Promise<{ tfaCode: string }> {
 		return await this.prisma.member.findUnique({
 			where: { name: name },
 			select: { tfaCode: true }
