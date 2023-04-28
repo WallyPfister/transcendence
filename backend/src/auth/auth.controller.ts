@@ -3,8 +3,6 @@ import {
 	Get,
 	UseGuards,
 	Query,
-	HttpException,
-	Req,
 	ForbiddenException
 } from '@nestjs/common';
 import { Payload } from './decorators/payload';
@@ -13,7 +11,6 @@ import { JwtRefreshAuthGuard } from './guards/jwt.refresh.guard';
 import { JwtLimitedAuthGuard } from './guards/jwt.limited.guard';
 import { AuthService } from './auth.service';
 import { RefreshJwtTokenDTO } from './dto/jwt.refresh.dto';
-import { JwtTokenInfo } from '../utils/type';
 import { JwtAccessTokenDTO } from './dto/jwt.access.dto';
 import { ConfigService } from '@nestjs/config';
 import { MemberRepository } from '../member/member.repository';
@@ -25,7 +22,6 @@ import {
 	ApiTags,
 	ApiBearerAuth,
 	ApiQuery,
-	ApiParam,
 } from '@nestjs/swagger';
 
 @ApiTags('Login')
@@ -66,8 +62,9 @@ export class AuthController {
 			const token = await this.authService.issueLimitedAccessToken(member.name);
 			return { limitedToken: token }
 		}
-		const atoken = await this.authService.issueAccessToken(member.name, member.twoFactor);
-		const rtoken = await this.authService.issueRefreshToken(member.name, member.twoFactor);
+		const atoken = await this.authService.issueAccessToken(member.name);
+		const rtoken = await this.authService.issueRefreshToken(member.name);
+		await this.authService.login(member.name);
 		return { accessToken: atoken, refreshToken: rtoken }
 	}
 
@@ -114,10 +111,14 @@ export class AuthController {
 	@ApiBearerAuth()
 	@Get('tfa-verify')
 	@UseGuards(JwtLimitedAuthGuard)
-	async verifyTwoFactorAuthCode(@Query('code') code: string, @Payload() payload: any): Promise<void> {
+	async verifyTwoFactorAuthCode(@Query('code') code: string, @Payload() payload: any): Promise<any> {
 		const match = await this.authService.verifyTfaCode(payload.userName, code);
 		if (!match)
 			throw new ForbiddenException('Two-factor authentication failed.');
+		const atoken = await this.authService.issueAccessToken(payload.userName);
+		const rtoken = await this.authService.issueRefreshToken(payload.userName);
+		await this.authService.login(payload.userName);
+		return { accessToken: atoken, refreshToken: rtoken }
 	}
 
 	@ApiOperation({
@@ -160,7 +161,6 @@ export class AuthController {
 		const token = await this.authService.refreshAccessToken(
 			payload.userName,
 			payload.refreshToken,
-			payload.tfa
 		);
 		return { accessToken: token };
 	}
