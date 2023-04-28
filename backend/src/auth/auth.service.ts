@@ -184,8 +184,7 @@ export class AuthService {
 	}
 
 	async sendTfaCode(name: string, email: string): Promise<boolean> {
-		// TODO: Implement generateCode()
-		const code = await this.memberRepository.generateCode(name);
+		const code = await this.memberRepository.generateTfaCode(name);
 		// // TODO: Implement issueLimitedTimeToken
 		// const limitedTimeToken = this.issueLimitedTimeToken(member.intraId);
 		const success = await this.mailerService.
@@ -207,9 +206,9 @@ export class AuthService {
 	}
 
 	async verifyTfaCode(name: string, code: string): Promise<boolean> {
-		// const info = await this.memberRepository.getTfaCode(name);
-		// if (info.tfaCode != code)
-		// 	return false;
+		const info = await this.memberRepository.getTfaCode(name);
+		if (info.tfaCode != code)
+			return false;
 		return true;
 	}
 }
