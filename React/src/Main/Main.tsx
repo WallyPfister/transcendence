@@ -31,8 +31,12 @@ function Main() {
 
     socket.on('connect', () => {
 		  console.log('Socket.IO connected!');
-
+      socket.emit('setUser', { nickname })
 	  });
+
+    socket.on('userList', (userList: string[]) => {
+      setChannelList(userList);
+    });
 
     // Listen for new messages in the room
     socket.on('newMessage', (data: Message) => {
@@ -40,12 +44,18 @@ function Main() {
     });
 
     // Listen for userJoined events
-    socket.on('userJoined', (data: { nickname: string }) => {
-      console.log(`${data.nickname} has joined the room`);
+    socket.on('addUser', (nickname: string) => {
+      console.log(`${nickname} has joined the room`);
+      const newMessage: Message = {
+        nickname: nickname,
+        message: `${nickname} has joined the room`,
+      };
+      setMessages([...messages, newMessage]);
     });
 
-    socket.on('errorMessage', (data: {message: string}) => {
-      console.log(message);
+
+    socket.on('errorMessage', (data: string) => {
+      console.log(data);
     });
 
 
