@@ -49,8 +49,11 @@ export class ChannelService {
 		socket.data.roomId = "lobby";
 		socket.data.roomName = "lobby";
 		socket.data.nickname = nickname;
+		console.log("====setUser====");
+		console.log(nickname);
 		socket.join(socket.data.roomId);
-		this.server.to(socket.data.roomId).emit('newMessage', { nickname, message: `${nickname}님이 입장하셨습니다.` });
+		this.server.to(socket.data.roomId).emit('addUser', nickname);
+		this.channelUserList(socket);
 	}
 
 	@SubscribeMessage('createRoom')
@@ -88,25 +91,25 @@ export class ChannelService {
 		const noRoom = Object.values(this.chatRoomList).find( (room) => room.roomId === roomId);
 
 		if (noRoom == undefined){
-			this.server.emit("errorMessage", {
-				message : "존재하지 않는 방입니다.",
-			})
+			this.server.emit("errorMessage", {message : "존재하지 않는 방입니다.",})
 			return ;
 		}
 		if (noRoom.banList.includes(socket.data.nickname) == true){
 			socket.emit("newMessage", {message: "입장이 제한된 방입니다."});
 			return ;
 		}
-
+		if (noRoom.roomId == socket.data.roomId){
+			socket.emit("newMessage", {message: "이미 입장한 방입니다."});
+			return ;
+		}
 		socket.leave(socket.data.roomId);
 		this.isChief(this.chatRoomList[socket.data.roomId], socket);
 		
 		socket.data.roomId = roomId;
 		socket.data.roomName = roomId;
 		socket.join(roomId);
-	  	this.server.to(roomId).emit('newMessage', {
-			message: `${socket.data.nickname} 님이 입장하셨습니다.`,
-		});
+		this.server.to(socket.data.roomId).emit('addUser', socket.data.nickname);
+		this.channelUserList(socket);
 	}
 
 	@SubscribeMessage("sendMessage")
@@ -140,7 +143,7 @@ export class ChannelService {
 	async exitChannel(@ConnectedSocket() socket: Socket){
 		const chatRoom = this.chatRoomList[socket.data.roomId];
 
-		socket.leave(socket.data.roomId); // 되는지 확인해야함
+		socket.leave(socket.data.roomId); 
 		this.isChief(chatRoom, socket);
 
 		socket.data.roomId = "lobby";
@@ -205,8 +208,22 @@ export class ChannelService {
 		socket.emit("newMessage", {message: `banlist에서 ${nickname}을 제외했습니다.`})
 	}
 
-	@SubscribeMessage("kick")
-	kick(@MessageBody() nickname: string, @MessageBody() roomId: string) {
+	// 다이렉트 메세지 만들기
+	@SubscribeMessage("privateMessage")
+	async privateMessage(@MessageBody() data: {nickname: string, message: string}){
+		const memberId = await prisma.member.findUnique({
+			where: {
+				name: data.nickname,
+			},
+			select: {
+				socket: true,
+			},
+		}).then((result) => result?.socket);
+		
+		console.log(memberId); // 이거 나중에 emit으로 수정
+	}
+	
+	kick(nickname: string, roomId: string) {
 		console.log("===== kick =====");
 		console.log(nickname);
 		console.log(roomId);
@@ -248,32 +265,20 @@ export class ChannelService {
 		return chatRoom.banList.includes(nickname);
 	}
 
-	// 다이렉트 메세지 만들기
-	@SubscribeMessage("privateMessage")
-	async privateMessage(@MessageBody() data: {nickname: string, message: string}){
-		const memberId = await prisma.member.findUnique({
-			where: {
-			  name: data.nickname,
-			},
-			select: {
-			  socket: true,
-			},
-		  }).then((result) => result?.socket);
-		  
-		  console.log(memberId); // 이거 나중에 emit으로 수정
-	}
 	
 	// 채널 유저 리스트
-	@SubscribeMessage("channelUserList")
-	async channelUserList(@ConnectedSocket() socket: Socket){
+	async channelUserList(socket: Socket){
 		const users = [];
 		const sockets = this.server.sockets.adapter.rooms.get(socket.data.roomId);
 		
+		console.log("=====here!!!!=====");
 		for (const socketId of sockets){
 			const user = this.server.sockets.sockets.get(socketId);
+			console.log(user.data.nickname);
 			users.push(user.data.nickname);
 		}
-		socket.emit("channelUserList", users);
+		console.log(users);
+		socket.emit("userList", users);
 	}
 }
 
