@@ -8,6 +8,7 @@ import { MemberGameInfoDto } from "./dto/memberGameInfo.dto";
 import { MemberGameHistoryDto } from "./dto/memberGameHistory.dto";
 import { ChUserProfileDto } from "./dto/chUserProfile.dto";
 import { FriendProfileDto } from "./dto/friendProfile.dto";
+import { customAlphabet } from "nanoid";
 
 @Injectable()
 export class MemberRepository {
@@ -67,11 +68,11 @@ export class MemberRepository {
 	}
 
 	async generateTfaCode(name: string): Promise<string> {
-		// TODO: 상수 대신 랜덤 OTP로 교체 필요
-		const code = "1234";
+		const charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+		const code = customAlphabet(charset, 6)();
 		await this.prisma.member.update({
 			where: { name: name },
-			data: { 
+			data: {
 				tfaCode: code,
 				tfaTime: new Date()
 			}
@@ -141,7 +142,7 @@ export class MemberRepository {
 		return await this.prisma.member.findUnique({
 			where: { name: name }
 		}).history({
-			where: {name: name},
+			where: { name: name },
 			orderBy: { date: 'asc' },
 			select: {
 				name: true,
