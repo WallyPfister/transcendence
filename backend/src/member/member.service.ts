@@ -1,13 +1,13 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { MemberConstants } from './memberConstants';
 import { MemberRepository } from './member.repository';
-import { LoginMemberDTO } from 'src/auth/dto/member.login';
+import { LoginMemberDTO } from 'src/auth/dto/member.login.dto';
 import { ChUserProfileDto } from './dto/chUserProfile.dto';
 import { MemberGameInfoDto } from './dto/memberGameInfo.dto';
 
 @Injectable()
 export class MemberService {
-	constructor(private memberRepository: MemberRepository) {}
+	constructor(private memberRepository: MemberRepository) { }
 
 	async findOneByIntraId(intraId: string): Promise<LoginMemberDTO> {
 		const member = await this.memberRepository.findOneByIntraId(intraId);
@@ -28,7 +28,7 @@ export class MemberService {
 		return member.achieve;
 	}
 
-	async updateScoreAndLevel(member: MemberGameInfoDto, gameScore: number): Promise<MemberGameInfoDto>  {
+	async updateScoreAndLevel(member: MemberGameInfoDto, gameScore: number): Promise<MemberGameInfoDto> {
 		member.score += gameScore;
 		if (member.score < 0)
 			member.score = 0;
@@ -42,7 +42,7 @@ export class MemberService {
 		if (type === 1)
 			member = await this.updateScoreAndLevel(member, 5);
 		const opponentLevel = (await this.memberRepository.getGameInfo(opponent)).level;
-		member.achieve = await this.checkAchieve(member, gameScore, opponentLevel);	
+		member.achieve = await this.checkAchieve(member, gameScore, opponentLevel);
 		this.memberRepository.updateGameResult(member);
 	}
 
