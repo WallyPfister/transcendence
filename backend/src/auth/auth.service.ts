@@ -8,6 +8,7 @@ import { firstValueFrom, catchError, map, lastValueFrom, tap } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import oauthConfig from 'src/config/oauth.config';
 import jwtConfig from 'src/config/jwt.config';
+import tfaConfig from 'src/config/tfa.config';
 import { MemberConstants } from '../member/memberConstants';
 import { LoginMemberDTO } from './dto/member.login.dto';
 
@@ -21,7 +22,9 @@ export class AuthService {
 		@Inject(oauthConfig.KEY)
 		private oauth: ConfigType<typeof oauthConfig>,
 		@Inject(jwtConfig.KEY)
-		private jwt: ConfigType<typeof jwtConfig>
+		private jwt: ConfigType<typeof jwtConfig>,
+		@Inject(tfaConfig.KEY)
+		private tfa: ConfigType<typeof tfaConfig>
 	) { }
 
 	async getFortyTwoToken(code: string): Promise<any> {
@@ -149,6 +152,13 @@ export class AuthService {
 		return token;
 	}
 
+	async issueJwtTokens(name: string): Promise<{ accessToken: string, refreshToken: string }> {
+		const atoken = await this.issueAccessToken(name);
+		const rtoken = await this.issueRefreshToken(name);
+		await this.login(name);
+		return { accessToken: atoken, refreshToken: rtoken };
+	}
+
 	async login(name: string): Promise<void> {
 		await this.memberRepository.updateStatus(name, MemberConstants.ONLINE);
 	}
@@ -179,6 +189,11 @@ export class AuthService {
 	}
 
 	async verifyTfaCode(name: string, code: string): Promise<boolean> {
+		const time = await this.memberRepository.getTfaTime(name);
+		const now = new Date();
+		const diff = (now.getTime() - time.tfaTime.getTime()) / 1000;
+		if (diff > +this.tfa.tfaExpireTime)
+			throw new UnauthorizedException('The code has been expired.');
 		const info = await this.memberRepository.getTfaCode(name);
 		if (info.tfaCode != code)
 			return false;
