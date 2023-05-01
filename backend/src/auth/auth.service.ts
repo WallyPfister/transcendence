@@ -160,8 +160,6 @@ export class AuthService {
 
 	async sendTfaCode(name: string, email: string): Promise<boolean> {
 		const code = await this.memberRepository.generateTfaCode(name);
-		// // TODO: Implement issueLimitedTimeToken
-		// const limitedTimeToken = this.issueLimitedTimeToken(member.intraId);
 		const success = await this.mailerService.
 			sendMail({
 				to: email,
