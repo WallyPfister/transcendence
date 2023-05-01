@@ -87,6 +87,13 @@ export class MemberRepository {
 		});
 	}
 
+	async getTfaTime(name: string): Promise<{ tfaTime: Date }> {
+		return await this.prisma.member.findUnique({
+			where: { name: name },
+			select: { tfaTime: true }
+		});
+	}
+
 	async getMemberInfo(name: string): Promise<MemberProfileDto> {
 		return await this.prisma.member.findUnique({
 			where: { name: name },
