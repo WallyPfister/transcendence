@@ -1,4 +1,4 @@
-import { ForbiddenException, HttpException, Inject, Injectable, Request, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, HttpException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { MemberRepository } from 'src/member/member.repository';
@@ -146,19 +146,6 @@ export class AuthService {
 			},
 		);
 		await this.memberRepository.updateRefreshToken(userName, token);
-		return token;
-	}
-
-	async refreshAccessToken(
-		userName: string
-	): Promise<string> {
-		const { refreshToken } = await this.memberRepository.getRefreshToken(userName);
-		try {
-			this.verifyRefreshToken(refreshToken)
-		} catch (err) {
-			throw new UnauthorizedException('Refresh token is invalid.');
-		}
-		const token = await this.issueAccessToken(userName);
 		return token;
 	}
 
