@@ -11,6 +11,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { MemberRepository } from '../member/member.repository';
 import oauthConfig from 'src/config/oauth.config';
 import jwtConfig from 'src/config/jwt.config';
+import tfaConfig from 'src/config/tfa.config';
 import { HttpModule } from '@nestjs/axios';
 
 @Module({
@@ -26,6 +27,7 @@ import { HttpModule } from '@nestjs/axios';
 		PassportModule,
 		ConfigModule.forFeature(oauthConfig),
 		ConfigModule.forFeature(jwtConfig),
+		ConfigModule.forFeature(tfaConfig),
 	],
 	controllers: [AuthController],
 	providers: [AuthService, JwtLimitedStrategy, JwtStrategy, RefreshTokenStrategy,
