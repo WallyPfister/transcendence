@@ -13,7 +13,6 @@ import { JwtRefreshAuthGuard } from './guards/jwt.refresh.guard';
 import { JwtLimitedAuthGuard } from './guards/jwt.limited.guard';
 import { AuthService } from './auth.service';
 import { JwtTokenDTO } from './dto/jwt.dto';
-import { ConfigService } from '@nestjs/config';
 import { MemberRepository } from '../member/member.repository';
 import {
 	ApiOperation,
@@ -30,7 +29,6 @@ import {
 export class AuthController {
 	constructor(
 		private readonly authService: AuthService,
-		private readonly config: ConfigService,
 		private readonly memberRepository: MemberRepository,
 	) { }
 
@@ -59,10 +57,7 @@ export class AuthController {
 		if (info.member.twoFactor)
 			return { limitedToken: info.token };
 		else {
-			const atoken = await this.authService.issueAccessToken(info.member.name);
-			const rtoken = await this.authService.issueRefreshToken(info.member.name);
-			this.authService.login(info.member.name);
-			return { accessToken: atoken, refreshToken: rtoken };
+			return await this.authService.issueJwtTokens(info.member.name);
 		}
 	}
 
@@ -106,6 +101,10 @@ export class AuthController {
 		description:
 			'Two-factor authentication has failed.',
 	})
+	@ApiUnauthorizedResponse({
+		description:
+			'Two-factor authentication code has been expired.',
+	})
 	@ApiBearerAuth()
 	@Get('tfa-verify')
 	@UseGuards(JwtLimitedAuthGuard)
@@ -114,10 +113,7 @@ export class AuthController {
 		if (!match)
 			throw new ForbiddenException('Two-factor authentication failed.');
 		else {
-			const atoken = await this.authService.issueAccessToken(payload.userName);
-			const rtoken = await this.authService.issueRefreshToken(payload.userName);
-			await this.authService.login(payload.userName);
-			return { accessToken: atoken, refreshToken: rtoken };
+			return await this.authService.issueJwtTokens(payload.userName);
 		}
 	}
 
@@ -182,8 +178,8 @@ export class AuthController {
 	@ApiBearerAuth()
 	@Get('logout')
 	@UseGuards(JwtAuthGuard)
-	async logout(@Payload() payload: JwtTokenDTO): Promise<void> {
-		await this.authService.logout(payload.userName);
+	async logout(@Req() req: Request): Promise<void> {
+		await this.authService.logout(req.user['sub']);
 	}
 }
 
