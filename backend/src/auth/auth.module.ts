@@ -4,7 +4,6 @@ import { AuthService } from './auth.service';
 import { JwtLimitedStrategy } from './strategies/jwt.limited.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { RefreshTokenStrategy } from './strategies/jwt.refresh.strategy';
-import { FTOauthStrategy } from './strategies/ft.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -29,7 +28,7 @@ import { HttpModule } from '@nestjs/axios';
 		ConfigModule.forFeature(jwtConfig),
 	],
 	controllers: [AuthController],
-	providers: [AuthService, JwtLimitedStrategy, JwtStrategy, RefreshTokenStrategy, FTOauthStrategy,
+	providers: [AuthService, JwtLimitedStrategy, JwtStrategy, RefreshTokenStrategy,
 		ConfigService, PrismaService, MemberRepository,],
 	exports: [AuthService]
 })
