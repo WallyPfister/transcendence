@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { MemberConstants } from "./memberConstants";
 import { CreateMemberDto } from "./dto/create-member.dto";
-import { LoginMemberDTO } from "src/auth/dto/member.login";
+import { LoginMemberDTO } from "src/auth/dto/member.login.dto";
 import { MemberProfileDto } from "./dto/memberProfile.dto";
 import { MemberGameInfoDto } from "./dto/memberGameInfo.dto";
 import { MemberGameHistoryDto } from "./dto/memberGameHistory.dto";
