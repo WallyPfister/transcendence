@@ -1,4 +1,4 @@
-import { HttpException, Inject, Injectable, Request } from '@nestjs/common';
+import { ForbiddenException, HttpException, Inject, Injectable, Request, UnauthorizedException } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { MemberRepository } from 'src/member/member.repository';
@@ -9,6 +9,7 @@ import { HttpService } from '@nestjs/axios';
 import oauthConfig from 'src/config/oauth.config';
 import jwtConfig from 'src/config/jwt.config';
 import { MemberConstants } from '../member/memberConstants';
+import { LoginMemberDTO } from './dto/member.login.dto';
 
 @Injectable()
 export class AuthService {
@@ -71,23 +72,37 @@ export class AuthService {
 		return profile.data.login;
 	}
 
-	verifyAccessToken(token: string) {
+	async getMemberInfo(code: string): Promise<{ member: LoginMemberDTO, token: string }> {
+		const token = await this.getFortyTwoToken(code);
+		const intraId = await this.getFortyTwoProfile(token);
+		const member = await this.memberRepository.findOneByIntraId(intraId);
+		if (!member)
+			throw new ForbiddenException(intraId);
+		else if (member.twoFactor) {
+			const token = await this.issueLimitedAccessToken(member.name);
+			return { member: member, token: token };
+		}
+		else
+			return { member: member, token: "" };
+	}
+
+	verifyAccessToken(token: string): any {
 		try {
-			return this.jwtService.verify(token);
+			return this.jwtService.verify(token, {
+				secret: this.jwt.accessSecret,
+			});
 		} catch (err) {
-			console.log('JWT access token verification failed.');
-			return;
+			throw err;
 		}
 	}
 
-	verifyRefreshToken(token: string) {
+	verifyRefreshToken(token: string): any {
 		try {
 			return this.jwtService.verify(token, {
 				secret: this.jwt.refreshSecret,
 			});
 		} catch (err) {
-			console.log('JWT refresh token verification failed.');
-			return;
+			throw new UnauthorizedException('JWT refresh token verification failed.');
 		}
 	}
 
@@ -109,7 +124,7 @@ export class AuthService {
 		const bodyFormData = {
 			sub: userName,
 		};
-		const token = this.jwtService.signAsync(
+		const token = await this.jwtService.signAsync(
 			bodyFormData,
 			{
 				secret: this.jwt.accessSecret,
@@ -123,7 +138,7 @@ export class AuthService {
 		const bodyFormData = {
 			sub: userName,
 		};
-		const token = this.jwtService.sign(
+		const token = await this.jwtService.signAsync(
 			bodyFormData,
 			{
 				secret: this.jwt.refreshSecret,
@@ -135,10 +150,14 @@ export class AuthService {
 	}
 
 	async refreshAccessToken(
-		userName: string,
-		refreshToken: string,
+		userName: string
 	): Promise<string> {
-		if (!this.verifyRefreshToken(refreshToken)) throw new HttpException('Refresh token is invalid.', 401);
+		const { refreshToken } = await this.memberRepository.getRefreshToken(userName);
+		try {
+			this.verifyRefreshToken(refreshToken)
+		} catch (err) {
+			throw new UnauthorizedException('Refresh token is invalid.');
+		}
 		const token = await this.issueAccessToken(userName);
 		return token;
 	}
