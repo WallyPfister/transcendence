@@ -3,7 +3,8 @@ import {
 	Get,
 	UseGuards,
 	Query,
-	ForbiddenException,
+	InternalServerErrorException,
+	UnauthorizedException,
 	Req
 } from '@nestjs/common';
 import { Request } from 'express';
@@ -22,6 +23,8 @@ import {
 	ApiTags,
 	ApiBearerAuth,
 	ApiQuery,
+	ApiTooManyRequestsResponse,
+	ApiInternalServerErrorResponse,
 } from '@nestjs/swagger';
 
 @ApiTags('Login')
@@ -47,9 +50,15 @@ export class AuthController {
 			'(1) { limitedToken: ___ } Two-factor authentication is needed. \
 			(2) { accessToken: ___, refreshToken: ___ } JWT token issued successfully. Login completed.',
 	})
-	@ApiForbiddenResponse({
+	@ApiUnauthorizedResponse({
 		description:
 			'Not a registered member yet. Please redirect to signup page.',
+	})
+	@ApiTooManyRequestsResponse({
+		description: 'Too many requests in a given amount of time(2 per second).',
+	})
+	@ApiInternalServerErrorResponse({
+		description: 'Internal server error.',
 	})
 	@Get('callback')
 	async ft_login(@Query('code') code: string): Promise<any> {
@@ -69,7 +78,7 @@ export class AuthController {
 		description:
 			'Two-factor authentication code has been sent.',
 	})
-	@ApiForbiddenResponse({
+	@ApiInternalServerErrorResponse({
 		description:
 			'Two-factor authentication code has failed to be sent.',
 	})
@@ -80,7 +89,7 @@ export class AuthController {
 		const member = await this.memberRepository.getMemberInfo(payload.userName);
 		const result = await this.authService.sendTfaCode(member.name, member.email);
 		if (!result)
-			throw new ForbiddenException('Failed to send tfa code.');
+			throw new InternalServerErrorException('Failed to send tfa code.');
 	}
 
 	@ApiOperation({
@@ -97,11 +106,11 @@ export class AuthController {
 		description:
 			'Two-factor authentication code has been verified. JWT token issued.',
 	})
-	@ApiForbiddenResponse({
-		description:
-			'Two-factor authentication has failed.',
-	})
 	@ApiUnauthorizedResponse({
+		description:
+			'Two-factor authentication code does not match.',
+	})
+	@ApiForbiddenResponse({
 		description:
 			'Two-factor authentication code has been expired.',
 	})
@@ -111,10 +120,9 @@ export class AuthController {
 	async verifyTwoFactorAuthCode(@Query('code') code: string, @Payload() payload: any): Promise<{ accessToken: string, refreshToken: string }> {
 		const match = await this.authService.verifyTfaCode(payload.userName, code);
 		if (!match)
-			throw new ForbiddenException('Two-factor authentication failed.');
-		else {
+			throw new UnauthorizedException('Two-factor authentication code does not match.');
+		else
 			return await this.authService.issueJwtTokens(payload.userName);
-		}
 	}
 
 	@ApiOperation({
@@ -131,7 +139,7 @@ export class AuthController {
 	})
 	@ApiForbiddenResponse({
 		description:
-			'JWT access token is expired. Try refreshing the token.',
+			'JWT access token is expired. Please refresh the token.',
 	})
 	@ApiBearerAuth()
 	@Get('jwt-verify')
@@ -166,7 +174,7 @@ export class AuthController {
 
 	@ApiOperation({
 		summary: 'logout',
-		description: 'Delete refresh token.',
+		description: 'Member status changed to be offline.',
 	})
 	@ApiOkResponse({
 		description: 'Logout has been successful.',
@@ -174,6 +182,10 @@ export class AuthController {
 	@ApiUnauthorizedResponse({
 		description:
 			'JWT access token is not validate.',
+	})
+	@ApiForbiddenResponse({
+		description:
+			'JWT access token is expired. Please refresh the token.',
 	})
 	@ApiBearerAuth()
 	@Get('logout')
