@@ -9,9 +9,9 @@ COPY . .
 RUN apt-get update && apt-get install -y wait-for-it
 
 RUN set -eux && \
-	npm install && \
-	npm install @prisma/client && \
-	npm install prisma --save-dev
+	npm install
+# npm install @prisma/client && \
+# npm install prisma --save-dev
 
 # RUN npx prisma migrate dev --name init && \
 # 	npx prisma generate

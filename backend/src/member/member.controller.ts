@@ -18,14 +18,14 @@ export class MemberController {
 	constructor(
 		private readonly memberService: MemberService,
 		private memberRepository: MemberRepository,
-	) {};
+	) { };
 
 	@ApiOperation({
 		summary: 'Create a member',
 		description: 'Create a member with information. \
 					Except \'CreateMemberDto\' information, all other columns of the member are initialized to their default values.'
 	})
-	@ApiBody({ 
+	@ApiBody({
 		description: 'The information of the user to be made into a member.',
 		required: true,
 		type: CreateMemberDto
@@ -185,9 +185,9 @@ export class MemberController {
 	// @ApiBody({
 	// 	description: 'List of the channel user names.',
 	// 	required: true,
-		
+
 	// 	examples: {
-			
+
 	// 	}
 
 	// })
@@ -303,17 +303,5 @@ export class MemberController {
 	@Delete('friend/:name/:friendName')
 	async deleteFriend(@Param('name') name: string, @Param('friendName') friendName: string): Promise<void> {
 		return await this.memberRepository.deleteFriend(name, friendName);
-	}
-
-	// 테스트용 api
-	@Post('tfa/:name')
-	generateTfaCode(@Param('name') name: string): Promise<string> {
-		return this.memberRepository.generateTfaCode(name);
-	}
-
-	// 테스트용 api
-	@Get('tfa/:name')
-	getTfaCode(@Query('name') name: string): Promise<string> {
-		return this.memberRepository.getTfaCode(name);
 	}
 }

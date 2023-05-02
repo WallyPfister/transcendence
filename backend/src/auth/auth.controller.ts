@@ -3,90 +3,82 @@ import {
 	Get,
 	UseGuards,
 	Query,
-	HttpException,
-	Req,
-	ForbiddenException
+	InternalServerErrorException,
+	UnauthorizedException,
+	Req
 } from '@nestjs/common';
+import { Request } from 'express';
 import { Payload } from './decorators/payload';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { JwtRefreshAuthGuard } from './guards/jwt.refresh.guard';
 import { JwtLimitedAuthGuard } from './guards/jwt.limited.guard';
 import { AuthService } from './auth.service';
-import { RefreshJwtTokenDTO } from './dto/jwt.refresh.dto';
-import { JwtTokenInfo } from '../utils/type';
-import { JwtAccessTokenDTO } from './dto/jwt.access.dto';
-import { ConfigService } from '@nestjs/config';
+import { JwtTokenDTO } from './dto/jwt.dto';
 import { MemberRepository } from '../member/member.repository';
 import {
 	ApiOperation,
-	ApiResponse,
+	ApiOkResponse,
+	ApiUnauthorizedResponse,
+	ApiForbiddenResponse,
 	ApiTags,
-	ApiBearerAuth
+	ApiBearerAuth,
+	ApiQuery,
+	ApiTooManyRequestsResponse,
+	ApiInternalServerErrorResponse,
 } from '@nestjs/swagger';
-import { UnauthorizedException } from '@nestjs/common';
 
 @ApiTags('Login')
 @Controller('auth')
 export class AuthController {
 	constructor(
 		private readonly authService: AuthService,
-		private readonly config: ConfigService,
 		private readonly memberRepository: MemberRepository,
 	) { }
-
-	// @ApiOperation({
-	// 	summary: 'Login Entrypoint',
-	// 	description: 'Redirect to callback page.',
-	// })
-	// @ApiResponse({
-	// 	status: 302,
-	// 	description: 'Redirect to callback URL if user agreed to authorize.',
-	// })
-	// @Get('ft_login')
-	// @UseGuards(FortyTwoAuthGuard)
-	// ft_login(): void { }
 
 	@ApiOperation({
 		summary: '42 OAuth callback url',
 		description: '42 OAuth will be redirected here.',
 	})
-	@ApiResponse({
-		status: 200,
-		description:
-			'JWT token issued successfully. Redirect to homepage or tfa if checked.',
+	@ApiQuery({
+		name: 'code',
+		description: 'Code received from 42 API.',
+		required: true,
+		type: String
 	})
-	@ApiResponse({
-		status: 401,
+	@ApiOkResponse({
+		description:
+			'(1) { limitedToken: ___ } Two-factor authentication is needed. \
+			(2) { accessToken: ___, refreshToken: ___ } JWT token issued successfully. Login completed.',
+	})
+	@ApiUnauthorizedResponse({
 		description:
 			'Not a registered member yet. Please redirect to signup page.',
 	})
+	@ApiTooManyRequestsResponse({
+		description: 'Too many requests in a given amount of time(2 per second).',
+	})
+	@ApiInternalServerErrorResponse({
+		description: 'Internal server error.',
+	})
 	@Get('callback')
 	async ft_login(@Query('code') code: string): Promise<any> {
-		const token = await this.authService.getFortyTwoToken(code);
-		const intraId = await this.authService.getFortyTwoProfile(token);
-		const member = await this.memberRepository.findOneByIntraId(intraId);
-		if (!member)
-			throw new ForbiddenException(intraId);
-		if (member.twoFactor) {
-			const token = await this.authService.issueLimitedAccessToken(member.name);
-			return { limitedToken: token }
+		const info = await this.authService.getMemberInfo(code);
+		if (info.member.twoFactor)
+			return { limitedToken: info.token };
+		else {
+			return await this.authService.issueJwtTokens(info.member.name);
 		}
-		const atoken = await this.authService.issueAccessToken(member.name, member.twoFactor);
-		const rtoken = await this.authService.issueRefreshToken(member.name, member.twoFactor);
-		return { accessToken: atoken, refreshToken: rtoken }
 	}
 
 	@ApiOperation({
 		summary: 'Two-factor authentication sending code',
 		description: 'Send two-factor authentication code by e-mail.',
 	})
-	@ApiResponse({
-		status: 200,
+	@ApiOkResponse({
 		description:
 			'Two-factor authentication code has been sent.',
 	})
-	@ApiResponse({
-		status: 403,
+	@ApiInternalServerErrorResponse({
 		description:
 			'Two-factor authentication code has failed to be sent.',
 	})
@@ -97,101 +89,109 @@ export class AuthController {
 		const member = await this.memberRepository.getMemberInfo(payload.userName);
 		const result = await this.authService.sendTfaCode(member.name, member.email);
 		if (!result)
-			throw new HttpException('Failed to send tfa code.', 403);
-		console.log('TFA code sent.');
+			throw new InternalServerErrorException('Failed to send tfa code.');
 	}
 
 	@ApiOperation({
 		summary: 'Two-factor authentication',
 		description: 'Verify two-factor authentication code sent by e-mail.',
 	})
-	@ApiResponse({
-		status: 200,
-		description:
-			'Two-factor authentication code has been verified.',
+	@ApiQuery({
+		name: 'code',
+		description: 'Two-factor authentication code validate for 3 minutes.',
+		required: true,
+		type: String
 	})
-	@ApiResponse({
-		status: 403,
+	@ApiOkResponse({
 		description:
-			'Two-factor authentication has failed.',
+			'Two-factor authentication code has been verified. JWT token issued.',
+	})
+	@ApiUnauthorizedResponse({
+		description:
+			'Two-factor authentication code does not match.',
+	})
+	@ApiForbiddenResponse({
+		description:
+			'Two-factor authentication code has been expired.',
 	})
 	@ApiBearerAuth()
 	@Get('tfa-verify')
 	@UseGuards(JwtLimitedAuthGuard)
-	async twoFactorAuth(@Query() code: string, @Payload() payload: JwtAccessTokenDTO): Promise<void> {
+	async verifyTwoFactorAuthCode(@Query('code') code: string, @Payload() payload: any): Promise<{ accessToken: string, refreshToken: string }> {
 		const match = await this.authService.verifyTfaCode(payload.userName, code);
 		if (!match)
-			throw new HttpException('Two-factor authentication failed.', 403);
+			throw new UnauthorizedException('Two-factor authentication code does not match.');
+		else
+			return await this.authService.issueJwtTokens(payload.userName);
 	}
 
 	@ApiOperation({
 		summary: 'JWT Access Token verification',
 		description: 'Login if access token is validate.',
 	})
-	@ApiResponse({
-		status: 200,
+	@ApiOkResponse({
 		description:
 			'JWT access token verified. Login has been successful.',
 	})
-	@ApiResponse({
-		status: 401,
+	@ApiUnauthorizedResponse({
 		description:
-			'JWT access token is not validate. Try 42 login again.',
+			'JWT access token is not validate. Redirect to 42 login.',
+	})
+	@ApiForbiddenResponse({
+		description:
+			'JWT access token is expired. Please refresh the token.',
 	})
 	@ApiBearerAuth()
 	@Get('jwt-verify')
 	@UseGuards(JwtAuthGuard)
 	async verifyAccessToken(
-		@Payload() payload: JwtAccessTokenDTO
-	): Promise<any> { }
+		@Req() req: Request
+	): Promise<void> {
+		await this.authService.login(req.user['sub']);
+	}
 
 	@ApiOperation({
 		summary: 'JWT refresh',
-		description: 'Refresh JWT access token.',
+		description: 'Refresh access token.',
 	})
-	@ApiResponse({
-		status: 200,
+	@ApiOkResponse({
 		description:
 			'JWT access token reissued successfully.',
 	})
-	@ApiResponse({
-		status: 401,
+	@ApiUnauthorizedResponse({
 		description:
-			'JWT refresh token is not validate.',
+			'JWT access token is invalid.',
 	})
 	@ApiBearerAuth()
 	@Get('jwt-refresh')
 	@UseGuards(JwtRefreshAuthGuard)
 	async refreshJwtToken(
-		@Payload() payload: RefreshJwtTokenDTO,
-	): Promise<any> {
-		const token = await this.authService.refreshAccessToken(
-			payload.userName,
-			payload.refreshToken,
-			payload.tfa
-		);
-		const time = +this.config.get<string>('JWT_REFRESH_EXPIRE_TIME');
-		return { accessToken: token, expiresIn: time };
+		@Payload() payload: JwtTokenDTO,
+	): Promise<{ accessToken: string }> {
+		const token = await this.authService.issueAccessToken(payload.userName);
+		return { accessToken: token };
 	}
 
 	@ApiOperation({
 		summary: 'logout',
-		description: 'Delete refresh token.',
+		description: 'Member status changed to be offline.',
 	})
-	@ApiResponse({
-		status: 200,
+	@ApiOkResponse({
 		description: 'Logout has been successful.',
 	})
-	@ApiResponse({
-		status: 401,
+	@ApiUnauthorizedResponse({
 		description:
 			'JWT access token is not validate.',
+	})
+	@ApiForbiddenResponse({
+		description:
+			'JWT access token is expired. Please refresh the token.',
 	})
 	@ApiBearerAuth()
 	@Get('logout')
 	@UseGuards(JwtAuthGuard)
-	async logout(@Payload() payload: JwtAccessTokenDTO): Promise<void> {
-		this.authService.logout(payload.userName);
+	async logout(@Req() req: Request): Promise<void> {
+		await this.authService.logout(req.user['sub']);
 	}
 }
 

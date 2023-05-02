@@ -4,15 +4,14 @@ import { AuthService } from './auth.service';
 import { JwtLimitedStrategy } from './strategies/jwt.limited.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { RefreshTokenStrategy } from './strategies/jwt.refresh.strategy';
-import { FTOauthStrategy } from './strategies/ft.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MemberRepository } from '../member/member.repository';
-import memberConfig from 'src/config/member.config';
 import oauthConfig from 'src/config/oauth.config';
 import jwtConfig from 'src/config/jwt.config';
+import tfaConfig from 'src/config/tfa.config';
 import { HttpModule } from '@nestjs/axios';
 
 @Module({
@@ -28,10 +27,10 @@ import { HttpModule } from '@nestjs/axios';
 		PassportModule,
 		ConfigModule.forFeature(oauthConfig),
 		ConfigModule.forFeature(jwtConfig),
-		ConfigModule.forFeature(memberConfig),
+		ConfigModule.forFeature(tfaConfig),
 	],
 	controllers: [AuthController],
-	providers: [AuthService, JwtLimitedStrategy, JwtStrategy, RefreshTokenStrategy, FTOauthStrategy,
+	providers: [AuthService, JwtLimitedStrategy, JwtStrategy, RefreshTokenStrategy,
 		ConfigService, PrismaService, MemberRepository,],
 	exports: [AuthService]
 })
