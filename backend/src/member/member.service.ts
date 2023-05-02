@@ -4,6 +4,7 @@ import { MemberRepository } from './member.repository';
 import { LoginMemberDTO } from 'src/auth/dto/member.login';
 import { ChUserProfileDto } from './dto/chUserProfile.dto';
 import { MemberGameInfoDto } from './dto/memberGameInfo.dto';
+import { MemberGameHistoryDto } from './dto/memberGameHistory.dto';
 
 @Injectable()
 export class MemberService {
@@ -66,5 +67,13 @@ export class MemberService {
 		else
 			user.isFriend = false;
 		return user;
+	}
+
+	async getMemberHistory(name: string): Promise<MemberGameHistoryDto> {
+		const history = await this.memberRepository.getMemberHistory(name);
+		const month = (history[0].date.getMonth() + 1).toString();
+		const day = history[0].date.getDate().toString();
+		history[0].time = month.padStart(2, '0')  + '.' + day.padStart(2, '0') ;
+		return history[0];
 	}
 }

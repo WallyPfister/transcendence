@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { Exclude } from "class-transformer";
 
 export class MemberGameHistoryDto {
 	@ApiProperty({ description: 'user-set name' })
@@ -20,6 +21,7 @@ export class MemberGameHistoryDto {
 	type: number;
 
 	@ApiProperty({ description: 'the date of the game' })
+	@Exclude()
 	date: Date;
 
 	@ApiProperty({ description: 'the date of the game to string' })
