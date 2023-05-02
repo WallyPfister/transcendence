@@ -35,7 +35,7 @@ export class MemberRepository {
 		}
 	}
 
-	async checkDuplicateName(name: string): Promise<any> {
+	async checkDuplicateName(name: string): Promise<{ name: string }> {
 		return await this.prisma.member.findUnique({
 			where: { name: name },
 			select: { name: true }
@@ -115,6 +115,13 @@ export class MemberRepository {
 		await this.prisma.member.update({
 			where: { name: name },
 			data: { status: status }
+		});
+	}
+
+	async getStatus(name: string): Promise<{ status: number }> {
+		return await this.prisma.member.findUnique({
+			where: { name: name },
+			select: { status: true }
 		});
 	}
 
