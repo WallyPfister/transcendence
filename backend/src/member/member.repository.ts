@@ -2,12 +2,13 @@ import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { MemberConstants } from "./memberConstants";
 import { CreateMemberDto } from "./dto/create-member.dto";
-import { LoginMemberDTO } from "src/auth/dto/member.login";
+import { LoginMemberDTO } from "src/auth/dto/member.login.dto";
 import { MemberProfileDto } from "./dto/memberProfile.dto";
 import { MemberGameInfoDto } from "./dto/memberGameInfo.dto";
 import { MemberGameHistoryDto } from "./dto/memberGameHistory.dto";
 import { ChUserProfileDto } from "./dto/chUserProfile.dto";
 import { FriendProfileDto } from "./dto/friendProfile.dto";
+import { customAlphabet } from "nanoid";
 
 @Injectable()
 export class MemberRepository {
@@ -67,11 +68,11 @@ export class MemberRepository {
 	}
 
 	async generateTfaCode(name: string): Promise<string> {
-		// TODO: 상수 대신 랜덤 OTP로 교체 필요
-		const code = "1234";
+		const charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+		const code = customAlphabet(charset, 6)();
 		await this.prisma.member.update({
 			where: { name: name },
-			data: { 
+			data: {
 				tfaCode: code,
 				tfaTime: new Date()
 			}
@@ -79,10 +80,17 @@ export class MemberRepository {
 		return code;
 	}
 
-	async getTfaCode(name: string): Promise<any> {
+	async getTfaCode(name: string): Promise<{ tfaCode: string }> {
 		return await this.prisma.member.findUnique({
 			where: { name: name },
 			select: { tfaCode: true }
+		});
+	}
+
+	async getTfaTime(name: string): Promise<{ tfaTime: Date }> {
+		return await this.prisma.member.findUnique({
+			where: { name: name },
+			select: { tfaTime: true }
 		});
 	}
 
@@ -141,7 +149,7 @@ export class MemberRepository {
 		return await this.prisma.member.findUnique({
 			where: { name: name }
 		}).history({
-			where: {name: name},
+			where: { name: name },
 			orderBy: { date: 'asc' },
 			select: {
 				name: true,

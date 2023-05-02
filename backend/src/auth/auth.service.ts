@@ -1,16 +1,16 @@
-import { HttpException, Inject, Injectable, Request } from '@nestjs/common';
-import { ConfigService, ConfigType } from '@nestjs/config';
+import { ForbiddenException, HttpException, Inject, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { MemberRepository } from 'src/member/member.repository';
 import { MailerService } from '@nestjs-modules/mailer';
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
-import { firstValueFrom, catchError, map, lastValueFrom, tap } from 'rxjs';
-import FormData = require('form-data');
-import axios from 'axios';
+import { firstValueFrom, map, lastValueFrom, tap } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
-import { HttpHeaders } from '@angular/common/http'
 import oauthConfig from 'src/config/oauth.config';
 import jwtConfig from 'src/config/jwt.config';
+import tfaConfig from 'src/config/tfa.config';
+import { MemberConstants } from '../member/memberConstants';
+import { LoginMemberDTO } from './dto/member.login.dto';
 
 @Injectable()
 export class AuthService {
@@ -22,11 +22,13 @@ export class AuthService {
 		@Inject(oauthConfig.KEY)
 		private oauth: ConfigType<typeof oauthConfig>,
 		@Inject(jwtConfig.KEY)
-		private jwt: ConfigType<typeof jwtConfig>
+		private jwt: ConfigType<typeof jwtConfig>,
+		@Inject(tfaConfig.KEY)
+		private tfa: ConfigType<typeof tfaConfig>
 	) { }
 
 	async getFortyTwoToken(code: string): Promise<any> {
-		const headers = {'Content-type': 'application/x-www-form-urlencoded;charset=utf-8'};
+		const headers = { 'Content-type': 'application/x-www-form-urlencoded;charset=utf-8' };
 		const params = new URLSearchParams();
 		params.append('grant_type', 'authorization_code');
 		params.append('client_id', this.oauth.clientId);
@@ -39,18 +41,21 @@ export class AuthService {
 
 		return lastValueFrom(
 			this.httpService
-			  .post(url, data, config)
-			  .pipe(
-				tap((response: AxiosResponse) => {
-				  if (response.status !== 200) {
-					throw new Error(`HTTP Error: ${response.status}`);
-				  }
-				}),
-				map((response: AxiosResponse) => response.data.access_token),
-			)
+				.post(url, data, config)
+				.pipe(
+					tap((response: AxiosResponse) => {
+						if (response.status == 429) {
+							throw new HttpException('Too many requests.', 429);
+						}
+						else if (response.status !== 200) {
+							throw new InternalServerErrorException('Failed to get 42 token.');
+						}
+					}),
+					map((response: AxiosResponse) => response.data.access_token),
+				)
 		);
 	}
-	
+
 	/**
 	 * Profile Properties
 	 * 
@@ -58,36 +63,57 @@ export class AuthService {
 	 */
 	async getFortyTwoProfile(token: string): Promise<any> {
 		const requestConfig: AxiosRequestConfig = {
-			headers: { Authorization: 'Bearer ' + token,
-						"Content-Type": 'application/json;charset=utf-8' },
+			headers: {
+				Authorization: 'Bearer ' + token,
+				"Content-Type": 'application/json;charset=utf-8'
+			},
 		}
 		const url = this.oauth.me;
 		const profile = await firstValueFrom(this.httpService.get(url, requestConfig)
 			.pipe(
-				catchError(e => {
-					throw new HttpException(e.response.data, e.response.status);
+				tap((response: AxiosResponse) => {
+					if (response.status == 429) {
+						throw new HttpException('Too many requests.', 429);
+					}
+					else if (response.status !== 200) {
+						throw new InternalServerErrorException('Failed to get 42 profile.');
+					}
 				}),
 			));
 		return profile.data.login;
 	}
 
-	verifyAccessToken(token: string) {
+	async getMemberInfo(code: string): Promise<{ member: LoginMemberDTO, token: string }> {
+		const token = await this.getFortyTwoToken(code);
+		const intraId = await this.getFortyTwoProfile(token);
+		const member = await this.memberRepository.findOneByIntraId(intraId);
+		if (!member)
+			throw new ForbiddenException(intraId);
+		else if (member.twoFactor) {
+			const token = await this.issueLimitedAccessToken(member.name);
+			return { member: member, token: token };
+		}
+		else
+			return { member: member, token: "" };
+	}
+
+	verifyAccessToken(token: string): any {
 		try {
-			return this.jwtService.verify(token);
+			return this.jwtService.verify(token, {
+				secret: this.jwt.accessSecret,
+			});
 		} catch (err) {
-			console.log('JWT access token verification failed.');
-			return;
+			throw err;
 		}
 	}
 
-	verifyRefreshToken(token: string) {
+	verifyRefreshToken(token: string): any {
 		try {
 			return this.jwtService.verify(token, {
 				secret: this.jwt.refreshSecret,
 			});
 		} catch (err) {
-			console.log('JWT refresh token verification failed.');
-			return;
+			throw new UnauthorizedException('JWT refresh token verification failed.');
 		}
 	}
 
@@ -105,12 +131,11 @@ export class AuthService {
 		return token;
 	}
 
-	async issueAccessToken(userName: string, tfa: boolean): Promise<string> {
+	async issueAccessToken(userName: string): Promise<string> {
 		const bodyFormData = {
 			sub: userName,
-			tfaCheck: tfa,
 		};
-		const token = this.jwtService.signAsync(
+		const token = await this.jwtService.signAsync(
 			bodyFormData,
 			{
 				secret: this.jwt.accessSecret,
@@ -120,12 +145,11 @@ export class AuthService {
 		return token;
 	}
 
-	async issueRefreshToken(userName: string, tfa: boolean): Promise<string> {
+	async issueRefreshToken(userName: string): Promise<string> {
 		const bodyFormData = {
 			sub: userName,
-			tfaCheck: tfa,
 		};
-		const token = this.jwtService.sign(
+		const token = await this.jwtService.signAsync(
 			bodyFormData,
 			{
 				secret: this.jwt.refreshSecret,
@@ -136,26 +160,24 @@ export class AuthService {
 		return token;
 	}
 
-	async refreshAccessToken(
-		userName: string,
-		refreshToken: string,
-		tfa: boolean
-	): Promise<string> {
-		if (!this.verifyRefreshToken(refreshToken)) throw new HttpException('Refresh token is invalid.', 401);
-		const token = await this.issueAccessToken(userName, tfa);
-		return token;
+	async issueJwtTokens(name: string): Promise<{ accessToken: string, refreshToken: string }> {
+		const atoken = await this.issueAccessToken(name);
+		const rtoken = await this.issueRefreshToken(name);
+		await this.login(name);
+		return { accessToken: atoken, refreshToken: rtoken };
+	}
+
+	async login(name: string): Promise<void> {
+		await this.memberRepository.updateStatus(name, MemberConstants.ONLINE);
 	}
 
 	async logout(name: string): Promise<void> {
 		await this.memberRepository.deleteRefreshToken(name);
-		await this.memberRepository.updateStatus(name, 0);
+		await this.memberRepository.updateStatus(name, MemberConstants.OFFLINE);
 	}
 
 	async sendTfaCode(name: string, email: string): Promise<boolean> {
-		// TODO: Implement generateCode()
 		const code = await this.memberRepository.generateTfaCode(name);
-		// // TODO: Implement issueLimitedTimeToken
-		// const limitedTimeToken = this.issueLimitedTimeToken(member.intraId);
 		const success = await this.mailerService.
 			sendMail({
 				to: email,
@@ -175,9 +197,14 @@ export class AuthService {
 	}
 
 	async verifyTfaCode(name: string, code: string): Promise<boolean> {
-		// const info = await this.memberRepository.getTfaCode(name);
-		// if (info.tfaCode != code)
-		// 	return false;
+		const time = await this.memberRepository.getTfaTime(name);
+		const now = new Date();
+		const diff = (now.getTime() - time.tfaTime.getTime()) / 1000;
+		if (diff > +this.tfa.tfaExpireTime)
+			throw new ForbiddenException('The code has been expired.');
+		const info = await this.memberRepository.getTfaCode(name);
+		if (info.tfaCode != code)
+			return false;
 		return true;
 	}
 }
