@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { MemberService } from './member.service';
 import { MemberRepository } from './member.repository';
@@ -8,6 +8,9 @@ import { MemberGameInfoDto } from './dto/memberGameInfo.dto';
 import { MemberGameHistoryDto } from './dto/memberGameHistory.dto';
 import { ChUserProfileDto } from './dto/chUserProfile.dto';
 import { FriendProfileDto } from './dto/friendProfile.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
+import { Payload } from 'src/auth/decorators/payload';
+import { JwtAccessTokenDTO } from 'src/auth/dto/jwt.access.dto';
 
 @ApiTags("Member")
 @Controller('member')
@@ -122,8 +125,8 @@ export class MemberController {
 		isArray: true
 	})
 	@Get('history')
-	async getGameHistory(@Query('name') name: string): Promise<MemberGameHistoryDto[]> {
-		return await this.memberRepository.getMemberHistory(name);
+	async getGameHistory(@Query('name') name: string): Promise<MemberGameHistoryDto> {
+		return await this.memberService.getMemberHistory(name);
 	}
 
 	@ApiOperation({
@@ -227,10 +230,11 @@ export class MemberController {
 	@ApiBadRequestResponse({
 		description: 'There is no such member with the given name.'
 	})
+	@UseGuards(JwtAuthGuard)
 	@Post('friend/:name/:friendName')
-	async addFriend(@Param('name') name: string, @Param('friendName') friendName: string): Promise<void> {
-		return await this.memberRepository.addFriend(name, friendName);
-	} // 프론트: 배열로 받아서 한꺼번에 여러명을 삭제 해줘야 하는지 확인 필요.
+	async addFriend(@Payload() payload: JwtAccessTokenDTO, @Param('name') name: string, @Param('friendName') friendName: string): Promise<void> {
+		return await this.memberRepository.addFriend(payload.userName, friendName);
+	}
 
 	@ApiOperation({
 		summary: 'Get a friend information',
@@ -299,5 +303,5 @@ export class MemberController {
 	@Delete('friend/:name/:friendName')
 	async deleteFriend(@Param('name') name: string, @Param('friendName') friendName: string): Promise<void> {
 		return await this.memberRepository.deleteFriend(name, friendName);
-	} // 프론트: 배열로 받아서 한꺼번에 여러명을 삭제 해줘야 하는지 확인 필요.
+	}
 }
