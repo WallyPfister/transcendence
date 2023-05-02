@@ -1,10 +1,10 @@
-import { ForbiddenException, HttpException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, HttpException, Inject, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { MemberRepository } from 'src/member/member.repository';
 import { MailerService } from '@nestjs-modules/mailer';
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
-import { firstValueFrom, catchError, map, lastValueFrom, tap } from 'rxjs';
+import { firstValueFrom, map, lastValueFrom, tap } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import oauthConfig from 'src/config/oauth.config';
 import jwtConfig from 'src/config/jwt.config';
@@ -44,8 +44,11 @@ export class AuthService {
 				.post(url, data, config)
 				.pipe(
 					tap((response: AxiosResponse) => {
-						if (response.status !== 200) {
-							throw new Error(`HTTP Error: ${response.status}`);
+						if (response.status == 429) {
+							throw new HttpException('Too many requests.', 429);
+						}
+						else if (response.status !== 200) {
+							throw new InternalServerErrorException('Failed to get 42 token.');
 						}
 					}),
 					map((response: AxiosResponse) => response.data.access_token),
@@ -68,8 +71,13 @@ export class AuthService {
 		const url = this.oauth.me;
 		const profile = await firstValueFrom(this.httpService.get(url, requestConfig)
 			.pipe(
-				catchError(e => {
-					throw new HttpException(e.response.data, e.response.status);
+				tap((response: AxiosResponse) => {
+					if (response.status == 429) {
+						throw new HttpException('Too many requests.', 429);
+					}
+					else if (response.status !== 200) {
+						throw new InternalServerErrorException('Failed to get 42 profile.');
+					}
 				}),
 			));
 		return profile.data.login;
@@ -193,7 +201,7 @@ export class AuthService {
 		const now = new Date();
 		const diff = (now.getTime() - time.tfaTime.getTime()) / 1000;
 		if (diff > +this.tfa.tfaExpireTime)
-			throw new UnauthorizedException('The code has been expired.');
+			throw new ForbiddenException('The code has been expired.');
 		const info = await this.memberRepository.getTfaCode(name);
 		if (info.tfaCode != code)
 			return false;
