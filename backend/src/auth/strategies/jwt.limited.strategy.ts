@@ -17,12 +17,3 @@ export class JwtLimitedStrategy extends PassportStrategy(Strategy, 'limited') {
 		return { userName: payload.sub };
 	}
 }
-
-/* JWT strategy options
-*
-* `jwtFromRequest` (REQUIRED) Function that accepts a request as the only
-  parameter and returns either the JWT as a string or *null*.
-* `secretOrKey` is a string or buffer containing the secret (symmetric) or
-  PEM-encoded public key (asymmetric) for verifying the token's signature.
-  REQUIRED unless `secretOrKeyProvider` is provided.
-*/

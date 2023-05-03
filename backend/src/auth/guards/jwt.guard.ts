@@ -1,4 +1,4 @@
-import { ExecutionContext, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ExecutionContext, Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from '../auth.service';
 
@@ -12,7 +12,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 		const request = context.switchToHttp().getRequest();
 		const { authorization } = request.headers;
 		if (authorization === undefined) {
-			throw new UnauthorizedException('Token was not sent.');
+			throw new UnauthorizedException('Invalid access token.');
 		}
 		const token = authorization.replace('Bearer ', '')
 		request.user = this.validateToken(token);
@@ -26,7 +26,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 		} catch (e) {
 			switch (e.message) {
 				case 'EXPIRED_TOKEN':
-					throw new ForbiddenException('Expired access token.');
+					throw new UnauthorizedException('Expired access token.');
 				default:
 					throw new UnauthorizedException('Invalid access token.');
 			}

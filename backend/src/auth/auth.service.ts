@@ -88,7 +88,7 @@ export class AuthService {
 		const intraId = await this.getFortyTwoProfile(token);
 		const member = await this.memberRepository.findOneByIntraId(intraId);
 		if (!member)
-			throw new ForbiddenException(intraId);
+			throw new UnauthorizedException(intraId);
 		else if (member.twoFactor) {
 			const token = await this.issueLimitedAccessToken(member.name);
 			return { member: member, token: token };
@@ -201,7 +201,7 @@ export class AuthService {
 		const now = new Date();
 		const diff = (now.getTime() - time.tfaTime.getTime()) / 1000;
 		if (diff > +this.tfa.tfaExpireTime)
-			throw new ForbiddenException('The code has been expired.');
+			throw new UnauthorizedException('The code has been expired.');
 		const info = await this.memberRepository.getTfaCode(name);
 		if (info.tfaCode != code)
 			return false;

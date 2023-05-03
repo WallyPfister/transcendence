@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from "src/prisma/prisma.service";
 import { MemberConstants } from "./memberConstants";
 import { CreateMemberDto } from "./dto/create-member.dto";
@@ -30,7 +30,7 @@ export class MemberRepository {
 				},
 			});
 		} catch (err) {
-			throw new NotFoundException(`There is a member with the same Intra Id as ${memberInfo.intraId}.`);
+			throw new ConflictException(`There is a member with the same Intra Id as ${memberInfo.intraId}.`);
 		}
 	}
 

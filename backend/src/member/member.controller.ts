@@ -1,5 +1,5 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards, Req, NotFoundException } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards, Req, UnauthorizedException, NotFoundException } from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiUnauthorizedResponse, ApiConflictResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { MemberService } from './member.service';
 import { MemberRepository } from './member.repository';
 import { CreateMemberDto } from './dto/create-member.dto';
@@ -11,6 +11,8 @@ import { FriendProfileDto } from './dto/friendProfile.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { AuthService } from '../auth/auth.service';
 import { Request } from 'express';
+import { JwtLimitedAuthGuard } from 'src/auth/guards/jwt.limited.guard';
+import { Payload } from 'src/auth/decorators/payload';
 
 @ApiTags("Member")
 @Controller('member')
@@ -36,12 +38,23 @@ export class MemberController {
 		description: `Member created successfully.`,
 		type: String
 	})
-	@ApiNotFoundResponse({
+	@ApiConflictResponse({
 		description: 'There is a member with the same Intra Id.'
 	})
+	@ApiUnauthorizedResponse({
+		description: '(1) [Unauthorized] Invalid limited jwt token is used. Redirect to 42 login page. \
+					(2) [token] Two-factor authentication is needed. Redirect to tfa page.',
+	})
+	@ApiBearerAuth()
 	@Post()
-	async createMember(@Body() memberInfo: CreateMemberDto): Promise<{ accessToken: string, refreshToken: string }> {
+	@UseGuards(JwtLimitedAuthGuard)
+	async createMember(@Payload() payload: any, @Body() memberInfo: CreateMemberDto): Promise<{ accessToken: string, refreshToken: string }> {
+		memberInfo.intraId = payload.userName;
 		await this.memberRepository.createMember(memberInfo);
+		if (memberInfo.twoFactor) {
+			const token = await this.authService.issueLimitedAccessToken(memberInfo.name);
+			throw new UnauthorizedException(`${token}`);
+		}
 		await this.authService.login(memberInfo.name);
 		return await this.authService.issueJwtTokens(memberInfo.name);
 	}
@@ -163,6 +176,11 @@ export class MemberController {
 	@ApiNotFoundResponse({
 		description: 'There is no such member with the given name.'
 	})
+	@ApiUnauthorizedResponse({
+		description:
+			'(1) [Invalid access token] Redirect to 42 login. \
+			(2) [Expired access token] Refresh the access token.',
+	})
 	@ApiBearerAuth()
 	@Delete('/:name')
 	@UseGuards(JwtAuthGuard)
@@ -184,6 +202,11 @@ export class MemberController {
 		description: 'List of the channel users information.',
 		type: ChUserProfileDto,
 		isArray: true
+	})
+	@ApiUnauthorizedResponse({
+		description:
+			'(1) [Invalid access token] Redirect to 42 login. \
+			(2) [Expired access token] Refresh the access token.',
 	})
 	@ApiBearerAuth()
 	@Get('chUser')
@@ -215,6 +238,11 @@ export class MemberController {
 	@ApiNotFoundResponse({
 		description: 'There is no such member with the given name.'
 	})
+	@ApiUnauthorizedResponse({
+		description:
+			'(1) [Invalid access token] Redirect to 42 login. \
+			(2) [Expired access token] Refresh the access token.',
+	})
 	@ApiBearerAuth()
 	@Post('friend/:friendName')
 	@UseGuards(JwtAuthGuard)
@@ -239,6 +267,11 @@ export class MemberController {
 	@ApiNotFoundResponse({
 		description: 'There is no such friend with the given name.'
 	})
+	@ApiUnauthorizedResponse({
+		description:
+			'(1) [Invalid access token] Redirect to 42 login. \
+			(2) [Expired access token] Refresh the access token.',
+	})
 	@ApiBearerAuth()
 	@Get('friend')
 	@UseGuards(JwtAuthGuard)
@@ -258,6 +291,11 @@ export class MemberController {
 		type: FriendProfileDto,
 		isArray: true
 	})
+	@ApiUnauthorizedResponse({
+		description:
+			'(1) [Invalid access token] Redirect to 42 login. \
+			(2) [Expired access token] Refresh the access token.',
+	})
 	@ApiBearerAuth()
 	@Get('friend/all')
 	@UseGuards(JwtAuthGuard)
@@ -275,8 +313,13 @@ export class MemberController {
 		required: true,
 		type: String
 	})
-	@ApiResponse({
+	@ApiOkResponse({
 		description: 'Delete a friend successfully.'
+	})
+	@ApiUnauthorizedResponse({
+		description:
+			'(1) [Invalid access token] Redirect to 42 login. \
+			(2) [Expired access token] Refresh the access token.',
 	})
 	@ApiBearerAuth()
 	@Delete('friend/:friendName')
