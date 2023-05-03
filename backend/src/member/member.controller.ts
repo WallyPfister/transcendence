@@ -1,5 +1,5 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards } from '@nestjs/common';
-import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards, Req } from '@nestjs/common';
+import { ApiBadRequestResponse, ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { MemberService } from './member.service';
 import { MemberRepository } from './member.repository';
 import { CreateMemberDto } from './dto/create-member.dto';
@@ -9,8 +9,8 @@ import { MemberGameHistoryDto } from './dto/memberGameHistory.dto';
 import { ChUserProfileDto } from './dto/chUserProfile.dto';
 import { FriendProfileDto } from './dto/friendProfile.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
-import { Payload } from 'src/auth/decorators/payload';
-import { JwtAccessTokenDTO } from 'src/auth/dto/jwt.access.dto';
+import { AuthService } from '../auth/auth.service';
+import { Request } from 'express';
 
 @ApiTags("Member")
 @Controller('member')
@@ -18,12 +18,14 @@ export class MemberController {
 	constructor(
 		private readonly memberService: MemberService,
 		private memberRepository: MemberRepository,
+		private readonly authService: AuthService,
 	) { };
 
 	@ApiOperation({
 		summary: 'Create a member',
 		description: 'Create a member with information. \
-					Except \'CreateMemberDto\' information, all other columns of the member are initialized to their default values.'
+					Except \'CreateMemberDto\' information, all other columns of the member are initialized to their default values. \
+					JWT token has been issued and login has been automatically completed.'
 	})
 	@ApiBody({
 		description: 'The information of the user to be made into a member.',
@@ -38,8 +40,10 @@ export class MemberController {
 		description: 'There is a member with the same Intra Id.'
 	})
 	@Post()
-	createMember(@Body() memberInfo: CreateMemberDto): Promise<string> {
-		return this.memberRepository.createMember(memberInfo);
+	async createMember(@Body() memberInfo: CreateMemberDto): Promise<{ accessToken: string, refreshToken: string }> {
+		await this.memberRepository.createMember(memberInfo);
+		await this.authService.login(memberInfo.name);
+		return await this.authService.issueJwtTokens(memberInfo.name);
 	}
 
 	@ApiOperation({
@@ -58,7 +62,9 @@ export class MemberController {
 		description: 'Whether the given name is available or not',
 		type: Boolean
 	})
+	@ApiBearerAuth()
 	@Get('checkName')
+	@UseGuards(JwtAuthGuard)
 	async checkDuplicateName(@Query('name') name: string): Promise<boolean> {
 		const check = await this.memberRepository.checkDuplicateName(name);
 		if (check)
@@ -70,30 +76,20 @@ export class MemberController {
 		summary: 'Get the member information by name',
 		description: 'It returns the currently authenticated member\'s own profile information.'
 	})
-	@ApiQuery({
-		name: 'name',
-		description: 'The member name.',
-		required: true,
-		type: String
-	})
 	@ApiOkResponse({
 		description: 'The profile information for the authenticated member.',
 		type: MemberProfileDto
 	})
+	@ApiBearerAuth()
 	@Get()
-	async getMemberInfo(@Query('name') name: string): Promise<MemberProfileDto> {
-		return await this.memberRepository.getMemberInfo(name);
+	@UseGuards(JwtAuthGuard)
+	async getMemberInfo(@Req() req: Request): Promise<MemberProfileDto> {
+		return await this.memberRepository.getMemberInfo(req.user['sub']);
 	}
 
 	@ApiOperation({
 		summary: 'Update the member status',
 		description: 'It updates status based on the member connection status.'
-	})
-	@ApiParam({
-		name: 'name',
-		description: 'The member name.',
-		required: true,
-		type: String
 	})
 	@ApiParam({
 		name: 'status',
@@ -104,29 +100,27 @@ export class MemberController {
 	@ApiOkResponse({
 		description: 'Update the member status successfully.'
 	})
-	@Post('status/:name/:status')
-	async updateStatus(@Param('name') name: string, @Param('status', ParseIntPipe) status: number): Promise<void> {
-		await this.memberRepository.updateStatus(name, status);
+	@ApiBearerAuth()
+	@Post('status/:status')
+	@UseGuards(JwtAuthGuard)
+	async updateStatus(@Req() req: Request, @Param('status', ParseIntPipe) status: number): Promise<void> {
+		await this.memberRepository.updateStatus(req.user['sub'], status);
 	}
 
 	@ApiOperation({
 		summary: 'Get member\'s game history.',
 		description: 'It gets member\'s game history what sorted in aescending order of created time. '
 	})
-	@ApiQuery({
-		name: 'name',
-		description: 'The member name.',
-		required: true,
-		type: String
-	})
 	@ApiOkResponse({
 		description: 'The profile information for the authenticated member.',
 		type: MemberGameHistoryDto,
 		isArray: true
 	})
+	@ApiBearerAuth()
 	@Get('history')
-	async getGameHistory(@Query('name') name: string): Promise<MemberGameHistoryDto> {
-		return await this.memberService.getMemberHistory(name);
+	@UseGuards(JwtAuthGuard)
+	async getGameHistory(@Req() req: Request): Promise<MemberGameHistoryDto> {
+		return await this.memberService.getMemberHistory(req.user['sub']);
 	}
 
 	@ApiOperation({
@@ -143,7 +137,9 @@ export class MemberController {
 	@ApiBadRequestResponse({
 		description: 'There is no member.'
 	})
+	@ApiBearerAuth()
 	@Get('ranking')
+	@UseGuards(JwtAuthGuard)
 	getRangkingInfo(): Promise<MemberGameInfoDto[]> {
 		const ranking = this.memberRepository.getRankingInfo();
 		if (!ranking)
@@ -155,32 +151,22 @@ export class MemberController {
 		summary: 'Delete a member',
 		description: 'It deletes a member.'
 	})
-	@ApiParam({
-		name: 'name',
-		description: 'The member name.',
-		required: true,
-		type: String
-	})
 	@ApiOkResponse({
 		description: 'Delete a member successfully.'
 	})
 	@ApiBadRequestResponse({
 		description: 'There is no such member with the given name.'
 	})
-	@Delete('/:name')
-	async deleteMember(@Param('name') name: string): Promise<void> {
-		return await this.memberRepository.deleteMember(name);
+	@ApiBearerAuth()
+	@Delete()
+	@UseGuards(JwtAuthGuard)
+	async deleteMember(@Req() req: Request): Promise<void> {
+		return await this.memberRepository.deleteMember(req.user['sub']);
 	}
 
 	@ApiOperation({
 		summary: 'Get channel user information.',
 		description: 'It gets a channel user information.'
-	})
-	@ApiQuery({
-		name: 'name',
-		description: 'The requester name.',
-		required: true,
-		type: String
 	})
 	// @ApiBody({
 	// 	description: 'List of the channel user names.',
@@ -196,11 +182,13 @@ export class MemberController {
 		type: ChUserProfileDto,
 		isArray: true
 	})
+	@ApiBearerAuth()
 	@Get('chUser')
-	async getChUserInfo(@Body() data: { name: string, chUsers: string[] }): Promise<ChUserProfileDto[]> {
+	@UseGuards(JwtAuthGuard)
+	async getChUserInfo(@Req() req: Request, @Body() data: { chUsers: string[] }): Promise<ChUserProfileDto[]> {
 		let ret: ChUserProfileDto[] = [];
 		for (let i = 0; i < data.chUsers.length; i++) {
-			const chUserInfo = await this.memberService.getChUserInfo(data.name, data.chUsers[i]);
+			const chUserInfo = await this.memberService.getChUserInfo(req.user['sub'], data.chUsers[i]);
 			if (!chUserInfo)
 				continue;
 			ret.push(chUserInfo);
@@ -211,12 +199,6 @@ export class MemberController {
 	@ApiOperation({
 		summary: 'Add a friend',
 		description: 'It adds a friend to the requester.'
-	})
-	@ApiParam({
-		name: 'name',
-		description: 'The requester name.',
-		required: true,
-		type: String
 	})
 	@ApiParam({
 		name: 'friendName',
@@ -230,21 +212,16 @@ export class MemberController {
 	@ApiBadRequestResponse({
 		description: 'There is no such member with the given name.'
 	})
+	@ApiBearerAuth()
+	@Post('friend/:friendName')
 	@UseGuards(JwtAuthGuard)
-	@Post('friend/:name/:friendName')
-	async addFriend(@Payload() payload: JwtAccessTokenDTO, @Param('name') name: string, @Param('friendName') friendName: string): Promise<void> {
-		return await this.memberRepository.addFriend(payload.userName, friendName);
+	async addFriend(@Req() req: Request, @Param('friendName') friendName: string): Promise<void> {
+		return await this.memberRepository.addFriend(req.user['sub'], friendName);
 	}
 
 	@ApiOperation({
 		summary: 'Get a friend information',
 		description: 'It returns one friend\'s information'
-	})
-	@ApiParam({
-		name: 'name',
-		description: 'The requester name.',
-		required: true,
-		type: String
 	})
 	@ApiParam({
 		name: 'friendName',
@@ -256,40 +233,32 @@ export class MemberController {
 		description: 'The requester\'s friend information.',
 		type: FriendProfileDto
 	})
-	@Get('friend')
-	async findOneFriend(@Query('name') name: string, @Query('friendName') friendName: string): Promise<FriendProfileDto[]> {
-		return await this.memberRepository.findOneFriend(name, friendName);
+	@ApiBearerAuth()
+	@Get('friend/:friendName')
+	@UseGuards(JwtAuthGuard)
+	async findOneFriend(@Req() req: Request, @Query('friendName') friendName: string): Promise<FriendProfileDto[]> {
+		return await this.memberRepository.findOneFriend(req.user['sub'], friendName);
 	}
 
 	@ApiOperation({
 		summary: 'Get all friends information',
 		description: 'It returns all friends information sorted in ascending alphabetical order of name.'
 	})
-	@ApiQuery({
-		name: 'name',
-		description: 'The requester name.',
-		required: true,
-		type: String
-	})
 	@ApiOkResponse({
 		description: 'The requester\'s all friends information.',
 		type: FriendProfileDto,
 		isArray: true
 	})
+	@ApiBearerAuth()
 	@Get('friend/all')
-	async findAllFriends(@Query('name') name: string): Promise<FriendProfileDto[]> {
-		return await this.memberRepository.findAllFriends(name);
+	@UseGuards(JwtAuthGuard)
+	async findAllFriends(@Req() req: Request): Promise<FriendProfileDto[]> {
+		return await this.memberRepository.findAllFriends(req.user['sub']);
 	}
 
 	@ApiOperation({
 		summary: 'Delete a friend',
 		description: 'It deletes a friend from the requester.'
-	})
-	@ApiParam({
-		name: 'name',
-		description: 'The requester name.',
-		required: true,
-		type: String
 	})
 	@ApiParam({
 		name: 'friendName',
@@ -300,8 +269,10 @@ export class MemberController {
 	@ApiResponse({
 		description: 'Delete a friend successfully.'
 	})
-	@Delete('friend/:name/:friendName')
-	async deleteFriend(@Param('name') name: string, @Param('friendName') friendName: string): Promise<void> {
-		return await this.memberRepository.deleteFriend(name, friendName);
+	@ApiBearerAuth()
+	@Delete('friend/:friendName')
+	@UseGuards(JwtAuthGuard)
+	async deleteFriend(@Req() req: Request, @Param('friendName') friendName: string): Promise<void> {
+		return await this.memberRepository.deleteFriend(req.user['sub'], friendName);
 	}
 }
