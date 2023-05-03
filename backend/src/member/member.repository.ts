@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { MemberConstants } from "./memberConstants";
 import { CreateMemberDto } from "./dto/create-member.dto";
@@ -30,11 +30,11 @@ export class MemberRepository {
 				},
 			});
 		} catch (err) {
-			throw new BadRequestException(`There is a member with the same Intra Id as ${memberInfo.intraId}.`);
+			throw new NotFoundException(`There is a member with the same Intra Id as ${memberInfo.intraId}.`);
 		}
 	}
 
-	async checkDuplicateName(name: string): Promise<any> {
+	async checkDuplicateName(name: string): Promise<{ name: string }> {
 		return await this.prisma.member.findUnique({
 			where: { name: name },
 			select: { name: true }
@@ -117,6 +117,13 @@ export class MemberRepository {
 		});
 	}
 
+	async getStatus(name: string): Promise<{ status: number }> {
+		return await this.prisma.member.findUnique({
+			where: { name: name },
+			select: { status: true }
+		});
+	}
+
 	async updateGameResult(member: MemberGameInfoDto): Promise<void> {
 		await this.prisma.member.update({
 			where: { name: member.name },
@@ -185,7 +192,7 @@ export class MemberRepository {
 				where: { name: name }
 			});
 		} catch (err) {
-			throw new BadRequestException(`There is no such member with name ${name}.`);
+			throw new NotFoundException(`There is no such member with name ${name}.`);
 		}
 	}
 
@@ -222,27 +229,23 @@ export class MemberRepository {
 				}
 			});
 		} catch (err) {
-			throw new BadRequestException(`There is no such member with name ${friendName}.`);
+			throw new NotFoundException(`There is no such member with name ${friendName}.`);
 		}
 	}
 
-	async findOneFriend(name: string, friendName: string): Promise<FriendProfileDto[]> {
-		try {
-			return await this.prisma.member.findUnique({
-				where: { name: name },
-			}).friend({
-				where: { name: friendName },
-				select: {
-					name: true,
-					avatar: true,
-					status: true,
-					level: true,
-					achieve: true
-				}
-			})
-		} catch (err) {
-			throw new BadRequestException(`There is no friend with name ${friendName}.`)
-		}
+	async findOneFriend(name: string, friendName: string): Promise<FriendProfileDto> {
+		return await this.prisma.member.findUnique({
+			where: { name: name },
+		}).friend({
+			where: { name: friendName },
+			select: {
+				name: true,
+				avatar: true,
+				status: true,
+				level: true,
+				achieve: true
+			}
+		})[0]
 	}
 
 	async findAllFriends(name: string): Promise<FriendProfileDto[]> {

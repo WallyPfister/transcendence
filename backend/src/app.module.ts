@@ -6,9 +6,11 @@ import { AuthModule } from './auth/auth.module';
 import { MemberModule } from './member/member.module';
 import { HistoryModule } from './history/history.module';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { GameModule } from './game/game.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
-  imports: [PrismaModule, AuthModule, MemberModule, HistoryModule,
+  imports: [PrismaModule, AuthModule, MemberModule, HistoryModule, GameModule,
     MailerModule.forRoot({
       transport: {
         service: 'Naver',
@@ -19,7 +21,8 @@ import { MailerModule } from '@nestjs-modules/mailer';
           pass: process.env.MAILER_PASS,
         },
       },
-    }),],
+    }),
+    ScheduleModule.forRoot()],
   controllers: [AppController],
   providers: [AppService],
 })
