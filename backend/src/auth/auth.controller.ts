@@ -67,6 +67,9 @@ export class AuthController {
 		description:
 			'Two-factor authentication code has been sent.',
 	})
+	@ApiUnauthorizedResponse({
+		description: 'Invalid limited jwt token',
+	})
 	@ApiInternalServerErrorResponse({
 		description:
 			'Two-factor authentication code has failed to be sent.',
@@ -170,10 +173,6 @@ export class AuthController {
 		description:
 			'(1) [Invalid access token] Redirect to 42 login. \
 			(2) [Expired access token] Refresh the access token.',
-	})
-	@ApiForbiddenResponse({
-		description:
-			'JWT access token is expired. Please refresh the token.',
 	})
 	@ApiBearerAuth()
 	@Get('logout')
