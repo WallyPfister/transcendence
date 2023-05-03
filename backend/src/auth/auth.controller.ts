@@ -1,5 +1,5 @@
-import { Controller, Get, UseGuards, Query, InternalServerErrorException, UnauthorizedException, Req } from '@nestjs/common';
-import { ApiOperation, ApiOkResponse, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiTags, ApiBearerAuth, ApiQuery, ApiTooManyRequestsResponse, ApiInternalServerErrorResponse, } from '@nestjs/swagger';
+import { Controller, Get, UseGuards, Query, InternalServerErrorException, UnauthorizedException, ConflictException, Req } from '@nestjs/common';
+import { ApiOperation, ApiOkResponse, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiTags, ApiBearerAuth, ApiQuery, ApiTooManyRequestsResponse, ApiInternalServerErrorResponse, ApiConflictResponse } from '@nestjs/swagger';
 import { Request } from 'express';
 import { Payload } from './decorators/payload';
 import { JwtAuthGuard } from './guards/jwt.guard';
@@ -34,7 +34,7 @@ export class AuthController {
 	})
 	@ApiUnauthorizedResponse({
 		description:
-			'Not a registered member yet. Please redirect to signup page.',
+			'[Limited Token] Not a registered member yet. Redirect to signup page.',
 	})
 	@ApiTooManyRequestsResponse({
 		description: 'Too many requests in a given amount of time(2 per second).',
@@ -44,11 +44,18 @@ export class AuthController {
 	})
 	@Get('callback')
 	async ft_login(@Query('code') code: string): Promise<any> {
-		const info = await this.authService.getMemberInfo(code);
-		if (info.member.twoFactor)
-			return { limitedToken: info.token };
-		else {
-			return await this.authService.issueJwtTokens(info.member.name);
+		try {
+			const info = await this.authService.getMemberInfo(code);
+			if (info.member.twoFactor)
+				return { limitedToken: info.token };
+			else {
+				await this.authService.login(info.member.name);
+				return await this.authService.issueJwtTokens(info.member.name);
+			}
+		} catch (err) {
+			const intraId = (err as Error).message;
+			const token = await this.authService.issueLimitedAccessToken(intraId);
+			throw new UnauthorizedException(`${token}`);
 		}
 	}
 
@@ -67,7 +74,7 @@ export class AuthController {
 	@ApiBearerAuth()
 	@Get('tfa-send')
 	@UseGuards(JwtLimitedAuthGuard)
-	async sendTwoFactorAuthCode(@Payload() payload: any): Promise<void> {
+	async sendTfaCode(@Payload() payload: any): Promise<void> {
 		const member = await this.memberRepository.getMemberInfo(payload.userName);
 		const result = await this.authService.sendTfaCode(member.name, member.email);
 		if (!result)
@@ -88,13 +95,14 @@ export class AuthController {
 		description:
 			'Two-factor authentication code has been verified. JWT token issued.',
 	})
-	@ApiUnauthorizedResponse({
+	@ApiConflictResponse({
 		description:
 			'Two-factor authentication code does not match.',
 	})
-	@ApiForbiddenResponse({
+	@ApiUnauthorizedResponse({
 		description:
-			'Two-factor authentication code has been expired.',
+			'(1) [Unauthorized] The limited jwt token has been expired. \
+			(2) [The code has been expired.] Two-factor authentication code has been expired.',
 	})
 	@ApiBearerAuth()
 	@Get('tfa-verify')
@@ -102,7 +110,7 @@ export class AuthController {
 	async verifyTwoFactorAuthCode(@Query('code') code: string, @Payload() payload: any): Promise<{ accessToken: string, refreshToken: string }> {
 		const match = await this.authService.verifyTfaCode(payload.userName, code);
 		if (!match)
-			throw new UnauthorizedException('Two-factor authentication code does not match.');
+			throw new ConflictException('Two-factor authentication code does not match.');
 		else
 			return await this.authService.issueJwtTokens(payload.userName);
 	}
@@ -117,11 +125,8 @@ export class AuthController {
 	})
 	@ApiUnauthorizedResponse({
 		description:
-			'JWT access token is not validate. Redirect to 42 login.',
-	})
-	@ApiForbiddenResponse({
-		description:
-			'JWT access token is expired. Please refresh the token.',
+			'(1) [Invalid access token] Redirect to 42 login. \
+			(2) [Expired access token] Refresh the access token.',
 	})
 	@ApiBearerAuth()
 	@Get('jwt-verify')
@@ -142,7 +147,7 @@ export class AuthController {
 	})
 	@ApiUnauthorizedResponse({
 		description:
-			'JWT access token is invalid.',
+			'JWT refresh token is invalid.',
 	})
 	@ApiBearerAuth()
 	@Get('jwt-refresh')
@@ -163,7 +168,8 @@ export class AuthController {
 	})
 	@ApiUnauthorizedResponse({
 		description:
-			'JWT access token is not validate.',
+			'(1) [Invalid access token] Redirect to 42 login. \
+			(2) [Expired access token] Refresh the access token.',
 	})
 	@ApiForbiddenResponse({
 		description:
