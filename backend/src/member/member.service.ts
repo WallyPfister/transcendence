@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { MemberConstants } from './memberConstants';
 import { MemberRepository } from './member.repository';
 import { LoginMemberDTO } from 'src/auth/dto/member.login.dto';
@@ -71,6 +71,10 @@ export class MemberService {
 
 	async getMemberHistory(name: string): Promise<MemberGameHistoryDto> {
 		const history = await this.memberRepository.getMemberHistory(name);
+		if (history === null)
+			throw new NotFoundException(`There is no such member with name ${name}.`);
+		if (history.length === 0)
+			return null;
 		const month = (history[0].date.getMonth() + 1).toString();
 		const day = history[0].date.getDate().toString();
 		history[0].time = month.padStart(2, '0')  + '.' + day.padStart(2, '0') ;

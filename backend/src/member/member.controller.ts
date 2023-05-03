@@ -1,5 +1,5 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards, Req } from '@nestjs/common';
-import { ApiBadRequestResponse, ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards, Req, NotFoundException } from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { MemberService } from './member.service';
 import { MemberRepository } from './member.repository';
 import { CreateMemberDto } from './dto/create-member.dto';
@@ -36,7 +36,7 @@ export class MemberController {
 		description: `Member created successfully.`,
 		type: String
 	})
-	@ApiBadRequestResponse({
+	@ApiNotFoundResponse({
 		description: 'There is a member with the same Intra Id.'
 	})
 	@Post()
@@ -62,9 +62,7 @@ export class MemberController {
 		description: 'Whether the given name is available or not',
 		type: Boolean
 	})
-	@ApiBearerAuth()
 	@Get('checkName')
-	@UseGuards(JwtAuthGuard)
 	async checkDuplicateName(@Query('name') name: string): Promise<boolean> {
 		const check = await this.memberRepository.checkDuplicateName(name);
 		if (check)
@@ -93,7 +91,7 @@ export class MemberController {
 	})
 	@ApiParam({
 		name: 'status',
-		description: 'The current status of the member',
+		description: 'The current status of the member.',
 		required: true,
 		type: Number
 	})
@@ -111,16 +109,24 @@ export class MemberController {
 		summary: 'Get member\'s game history.',
 		description: 'It gets member\'s game history what sorted in aescending order of created time. '
 	})
+	@ApiParam({
+		name: 'name',
+		description: 'The name of the member that the requester wants to know the history.',
+		required: true,
+		type: String
+	})
 	@ApiOkResponse({
 		description: 'The profile information for the authenticated member.',
-		type: MemberGameHistoryDto,
-		isArray: true
+		type: MemberGameHistoryDto
+	})
+	@ApiNotFoundResponse({
+		description: 'There is no such member with given name.'
 	})
 	@ApiBearerAuth()
 	@Get('history')
 	@UseGuards(JwtAuthGuard)
-	async getGameHistory(@Req() req: Request): Promise<MemberGameHistoryDto> {
-		return await this.memberService.getMemberHistory(req.user['sub']);
+	async getGameHistory(@Req() req: Request, @Query('name') name: string): Promise<MemberGameHistoryDto> {
+		return await this.memberService.getMemberHistory(name);
 	}
 
 	@ApiOperation({
@@ -134,49 +140,46 @@ export class MemberController {
 		type: MemberGameInfoDto,
 		isArray: true
 	})
-	@ApiBadRequestResponse({
-		description: 'There is no member.'
-	})
 	@ApiBearerAuth()
 	@Get('ranking')
 	@UseGuards(JwtAuthGuard)
 	getRangkingInfo(): Promise<MemberGameInfoDto[]> {
-		const ranking = this.memberRepository.getRankingInfo();
-		if (!ranking)
-			throw new BadRequestException(`There is no member.`);
-		return ranking;
+		return this.memberRepository.getRankingInfo();
 	}
 
 	@ApiOperation({
 		summary: 'Delete a member',
 		description: 'It deletes a member.'
 	})
+	@ApiParam({
+		name: 'name',
+		description: 'The name of the member that the requester wants to delete',
+		required: true,
+		type: String
+	})
 	@ApiOkResponse({
 		description: 'Delete a member successfully.'
 	})
-	@ApiBadRequestResponse({
+	@ApiNotFoundResponse({
 		description: 'There is no such member with the given name.'
 	})
 	@ApiBearerAuth()
-	@Delete()
+	@Delete('/:name')
 	@UseGuards(JwtAuthGuard)
-	async deleteMember(@Req() req: Request): Promise<void> {
-		return await this.memberRepository.deleteMember(req.user['sub']);
+	async deleteMember(@Req() req: Request, @Param('name') name: string): Promise<void> {
+		return await this.memberRepository.deleteMember(name);
 	}
 
 	@ApiOperation({
 		summary: 'Get channel user information.',
 		description: 'It gets a channel user information.'
 	})
-	// @ApiBody({
-	// 	description: 'List of the channel user names.',
-	// 	required: true,
-
-	// 	examples: {
-
-	// 	}
-
-	// })
+	@ApiBody({
+		description: 'List of the channel user names.',
+		required: true,
+		type: String,
+		isArray: true
+	})
 	@ApiOkResponse({
 		description: 'List of the channel users information.',
 		type: ChUserProfileDto,
@@ -194,7 +197,7 @@ export class MemberController {
 			ret.push(chUserInfo);
 		}
 		return ret;
-	} // 프론트: 따로 이름 솔팅은 하지 않고 있는데 필요한지 확인
+	} // 프론트: 따로 이름 솔팅은 하지 않고 있는데 필요한지 확인, 없는 멤버일 경우 걍 건너뜀 에러 반환 안함.
 
 	@ApiOperation({
 		summary: 'Add a friend',
@@ -206,10 +209,10 @@ export class MemberController {
 		required: true,
 		type: String
 	})
-	@ApiResponse({
+	@ApiOkResponse({
 		description: 'Add a friend successfully.'
 	})
-	@ApiBadRequestResponse({
+	@ApiNotFoundResponse({
 		description: 'There is no such member with the given name.'
 	})
 	@ApiBearerAuth()
@@ -233,11 +236,17 @@ export class MemberController {
 		description: 'The requester\'s friend information.',
 		type: FriendProfileDto
 	})
+	@ApiNotFoundResponse({
+		description: 'There is no such friend with the given name.'
+	})
 	@ApiBearerAuth()
-	@Get('friend/:friendName')
+	@Get('friend')
 	@UseGuards(JwtAuthGuard)
-	async findOneFriend(@Req() req: Request, @Query('friendName') friendName: string): Promise<FriendProfileDto[]> {
-		return await this.memberRepository.findOneFriend(req.user['sub'], friendName);
+	async findOneFriend(@Req() req: Request, @Query('friendName') friendName: string): Promise<FriendProfileDto> {
+		const friend = await this.memberRepository.findOneFriend(req.user['sub'], friendName);
+		if (friend === undefined)
+			throw new NotFoundException(`There is no friend with name ${friendName}.`);
+		return friend;
 	}
 
 	@ApiOperation({
