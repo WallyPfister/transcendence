@@ -28,7 +28,6 @@ export class MemberRepository {
 					socket: 0,
 					refreshToken: ""
 				},
-				select: { name: true }
 			});
 		} catch (err) {
 			throw new BadRequestException(`There is a member with the same Intra Id as ${memberInfo.intraId}.`);
