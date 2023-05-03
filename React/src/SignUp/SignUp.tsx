@@ -1,22 +1,37 @@
+import CustomAxios from '../Etc/CustomAxios';
+import Timer from '../Etc/Timer';
 import './SignUp.css';
 
 function SignUp() {
+    const nickCheck = (event: React.MouseEvent<HTMLButtonElement>): void => {
+        event.preventDefault();
+        CustomAxios.get('/member/checkName', {params: {name: 'sojoo'}}).then((res) => {
+            if (res.data === true)
+                console.log('true');
+        });
+    }
+
+    const emailCheck = (event: React.MouseEvent<HTMLButtonElement>): void => {
+        event.preventDefault();
+
+    }
+
     return (
         <div id="sign-up">
             <div id="title">Create Profile</div>
             <form id="profile-form">
-                <form id="nick-form" className="info-form">
-                    <input id="nick-input" placeholder="nickname"></input>
-                    <button id="nick-button">check</button>
-                </form>
-                <form id="email-form" className="info-form">
-                    <input id="email-input" placeholder="email"></input>
-                    <button id="email-button">send</button>
-                </form>
-                <form id="code-form" className="info-form">
-                    <input id="code-input" placeholder="code"></input>
+                <div id="nick-form" className="info-form">
+                    <input id="nick-input" placeholder="nickname" autoComplete="off"></input>
+                    <button id="nick-button" onClick={nickCheck}>check</button>
+                </div>
+                <div id="email-form" className="info-form">
+                    <input id="email-input" placeholder="email" autoComplete="off"></input>
+                    <Timer/>
+                </div>
+                <div id="code-form" className="info-form">
+                    <input id="code-input" placeholder="code" autoComplete="off"></input>
                     <button id="code-button">confirm</button>
-                </form>
+                </div>
                 <div id="file-wrapper">
                     <label htmlFor="avatar">
                         <div id="upload-button"></div>

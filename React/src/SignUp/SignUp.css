@@ -21,6 +21,15 @@
     margin: 10px 0 10px 0;
 }
 
+#sign-up #profile-form button {
+    cursor: pointer;
+}
+
+#sign-up #profile-form button:disabled {
+    cursor: not-allowed;
+    color: black;
+}
+
 #sign-up #profile-form input, label, button {
     font-family: pixopedia;
 }
