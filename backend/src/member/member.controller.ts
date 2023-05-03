@@ -1,5 +1,5 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards, Req } from '@nestjs/common';
-import { ApiBadRequestResponse, ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards, Req, UnauthorizedException } from '@nestjs/common';
+import { ApiBadRequestResponse, ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { MemberService } from './member.service';
 import { MemberRepository } from './member.repository';
 import { CreateMemberDto } from './dto/create-member.dto';
@@ -11,6 +11,8 @@ import { FriendProfileDto } from './dto/friendProfile.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { AuthService } from '../auth/auth.service';
 import { Request } from 'express';
+import { JwtLimitedAuthGuard } from 'src/auth/guards/jwt.limited.guard';
+import { Payload } from 'src/auth/decorators/payload';
 
 @ApiTags("Member")
 @Controller('member')
@@ -37,11 +39,21 @@ export class MemberController {
 		type: String
 	})
 	@ApiBadRequestResponse({
-		description: 'There is a member with the same Intra Id.'
+		description: 'There is a member with the same Intra Id.',
 	})
+	@ApiUnauthorizedResponse({
+		description: 'Two-factor authentication is needed.',
+	})
+	@ApiBearerAuth()
 	@Post()
-	async createMember(@Body() memberInfo: CreateMemberDto): Promise<{ accessToken: string, refreshToken: string }> {
+	@UseGuards(JwtLimitedAuthGuard)
+	async createMember(@Payload() payload: any, @Body() memberInfo: CreateMemberDto): Promise<{ accessToken: string, refreshToken: string }> {
+		memberInfo.intraId = payload.userName;
 		await this.memberRepository.createMember(memberInfo);
+		if (memberInfo.twoFactor) {
+			const token = await this.authService.issueLimitedAccessToken(memberInfo.name);
+			throw new UnauthorizedException(`${token}`);
+		}
 		await this.authService.login(memberInfo.name);
 		return await this.authService.issueJwtTokens(memberInfo.name);
 	}
@@ -62,9 +74,7 @@ export class MemberController {
 		description: 'Whether the given name is available or not',
 		type: Boolean
 	})
-	@ApiBearerAuth()
 	@Get('checkName')
-	@UseGuards(JwtAuthGuard)
 	async checkDuplicateName(@Query('name') name: string): Promise<boolean> {
 		const check = await this.memberRepository.checkDuplicateName(name);
 		if (check)
