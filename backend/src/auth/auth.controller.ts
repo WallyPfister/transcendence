@@ -120,7 +120,7 @@ export class AuthController {
 	})
 	@ApiOkResponse({
 		description:
-			'Two-factor authentication code has been verified. JWT token issued.',
+			'Two-factor authentication code has been verified. Temporary JWT token for signup issued.',
 	})
 	@ApiConflictResponse({
 		description:
@@ -128,7 +128,7 @@ export class AuthController {
 	})
 	@ApiUnauthorizedResponse({
 		description:
-			'(1) [Unauthorized] The limited jwt token has been expired. \
+			'(1) [Unauthorized] The limited jwt token is invalid. \
 			(2) [The code has been expired.] Two-factor authentication code has been expired.',
 	})
 	@ApiBearerAuth()
@@ -154,7 +154,7 @@ export class AuthController {
 	})
 	@ApiOkResponse({
 		description:
-			'Two-factor authentication code has been verified. JWT token issued.',
+			'Two-factor authentication code has been verified. JWT token is issued.',
 	})
 	@ApiConflictResponse({
 		description:
@@ -162,7 +162,7 @@ export class AuthController {
 	})
 	@ApiUnauthorizedResponse({
 		description:
-			'(1) [Unauthorized] The limited jwt token has been expired. \
+			'(1) [Unauthorized] The limited jwt token is invalid. \
 			(2) [The code has been expired.] Two-factor authentication code has been expired.',
 	})
 	@ApiBearerAuth()
