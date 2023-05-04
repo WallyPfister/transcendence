@@ -176,7 +176,7 @@ export class AuthService {
 		await this.memberRepository.updateStatus(name, MemberConstants.OFFLINE);
 	}
 
-	async sendTfaCode(name: string, email: string): Promise<boolean> {
+	async sendTfaCode(name: string, email: string): Promise<string> {
 		const code = await this.memberRepository.generateTfaCode(name);
 		const success = await this.mailerService.
 			sendMail({
@@ -185,18 +185,24 @@ export class AuthService {
 				subject: 'Pong Two-factor Authentication Code',
 				html: `Your two-factor authentication code is [ ${code} ].`,
 			})
-			.then(() => { return true; })
+			.then(() => { return code; })
 			.catch((err) => {
 				console.log('Failed to send email.');
-				return false;
+				return "";
 			}
 			);
 		if (!success)
+			return "";
+		return code;
+	}
+
+	verifyTfaCodeForSignUp(savedCode: string, inputCode: string): boolean {
+		if (savedCode != inputCode)
 			return false;
 		return true;
 	}
 
-	async verifyTfaCode(name: string, code: string): Promise<boolean> {
+	async verifyTfaCodeForSignIn(name: string, code: string): Promise<boolean> {
 		const time = await this.memberRepository.getTfaTime(name);
 		const now = new Date();
 		const diff = (now.getTime() - time.tfaTime.getTime()) / 1000;

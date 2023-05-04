@@ -1,5 +1,5 @@
-import { Controller, Get, UseGuards, Query, InternalServerErrorException, UnauthorizedException, ConflictException, Req } from '@nestjs/common';
-import { ApiOperation, ApiOkResponse, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiTags, ApiBearerAuth, ApiQuery, ApiTooManyRequestsResponse, ApiInternalServerErrorResponse, ApiConflictResponse } from '@nestjs/swagger';
+import { Controller, Get, Post, UseGuards, Query, Body, InternalServerErrorException, UnauthorizedException, ConflictException, Req, Session } from '@nestjs/common';
+import { ApiOperation, ApiOkResponse, ApiUnauthorizedResponse, ApiTags, ApiBearerAuth, ApiQuery, ApiTooManyRequestsResponse, ApiInternalServerErrorResponse, ApiConflictResponse } from '@nestjs/swagger';
 import { Request } from 'express';
 import { Payload } from './decorators/payload';
 import { JwtAuthGuard } from './guards/jwt.guard';
@@ -60,7 +60,7 @@ export class AuthController {
 	}
 
 	@ApiOperation({
-		summary: 'Two-factor authentication sending code',
+		summary: 'Two-factor authentication sending code for signup',
 		description: 'Send two-factor authentication code by e-mail.',
 	})
 	@ApiOkResponse({
@@ -75,7 +75,31 @@ export class AuthController {
 			'Two-factor authentication code has failed to be sent.',
 	})
 	@ApiBearerAuth()
-	@Get('tfa-send')
+	@Post('/signup/tfa-send')
+	@UseGuards(JwtLimitedAuthGuard)
+	async sendTfaCodeForSignUp(@Payload() payload: any, @Body() body: { email: string }, @Session() session: { code?: string }): Promise<void> {
+		session.code = await this.authService.sendTfaCode(payload.userName, body.email);
+		if (session.code === "")
+			throw new InternalServerErrorException('Failed to send tfa code.');
+	}
+
+	@ApiOperation({
+		summary: 'Two-factor authentication sending code for signin',
+		description: 'Send two-factor authentication code by e-mail.',
+	})
+	@ApiOkResponse({
+		description:
+			'Two-factor authentication code has been sent.',
+	})
+	@ApiUnauthorizedResponse({
+		description: 'Invalid limited jwt token',
+	})
+	@ApiInternalServerErrorResponse({
+		description:
+			'Two-factor authentication code has failed to be sent.',
+	})
+	@ApiBearerAuth()
+	@Post('/signin/tfa-send')
 	@UseGuards(JwtLimitedAuthGuard)
 	async sendTfaCode(@Payload() payload: any): Promise<void> {
 		const member = await this.memberRepository.getMemberInfo(payload.userName);
@@ -108,10 +132,42 @@ export class AuthController {
 			(2) [The code has been expired.] Two-factor authentication code has been expired.',
 	})
 	@ApiBearerAuth()
-	@Get('tfa-verify')
+	@Get('/signup/tfa-verify')
 	@UseGuards(JwtLimitedAuthGuard)
-	async verifyTwoFactorAuthCode(@Query('code') code: string, @Payload() payload: any): Promise<{ accessToken: string, refreshToken: string }> {
-		const match = await this.authService.verifyTfaCode(payload.userName, code);
+	verifyTfaCodeForSignUp(@Query('code') code: string, @Session() session: { code?: string }): void {
+		const match = this.authService.verifyTfaCodeForSignUp(session.code, code);
+		if (!match)
+			throw new ConflictException('Two-factor authentication code does not match.');
+	}
+
+	@ApiOperation({
+		summary: 'Two-factor authentication',
+		description: 'Verify two-factor authentication code sent by e-mail.',
+	})
+	@ApiQuery({
+		name: 'code',
+		description: 'Two-factor authentication code validate for 3 minutes.',
+		required: true,
+		type: String
+	})
+	@ApiOkResponse({
+		description:
+			'Two-factor authentication code has been verified. JWT token issued.',
+	})
+	@ApiConflictResponse({
+		description:
+			'Two-factor authentication code does not match.',
+	})
+	@ApiUnauthorizedResponse({
+		description:
+			'(1) [Unauthorized] The limited jwt token has been expired. \
+			(2) [The code has been expired.] Two-factor authentication code has been expired.',
+	})
+	@ApiBearerAuth()
+	@Post('/signin/tfa-verify')
+	@UseGuards(JwtLimitedAuthGuard)
+	async verifyTfaCodeForSignIn(@Query('code') code: string, @Payload() payload: any): Promise<{ accessToken: string, refreshToken: string }> {
+		const match = await this.authService.verifyTfaCodeForSignIn(payload.userName, code);
 		if (!match)
 			throw new ConflictException('Two-factor authentication code does not match.');
 		else
