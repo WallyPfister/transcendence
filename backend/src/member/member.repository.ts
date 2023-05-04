@@ -154,7 +154,7 @@ export class MemberRepository {
 	async getMemberHistory(name: string): Promise<MemberGameHistoryDto[]> {
 		return await this.prisma.member.findUnique({
 			where: { name: name }
-		}).history({
+		}).game({
 			where: { name: name },
 			orderBy: { date: 'asc' },
 			select: {

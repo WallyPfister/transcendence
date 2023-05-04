@@ -25,14 +25,14 @@ model member {
 	socket			Int			@default(-1)
 	friend			member[]	@relation("friend")
 	blackList		member[]	@relation("friend")
-	history			history[]
+	game			game[]
 	refreshToken	String		@db.VarChar(512)
 	twoFactor		Boolean		@default(false)
 	tfaCode			String?		@db.VarChar(512)
 	tfaTime			DateTime?
 }
 
-model history {
+model game {
 	id			Int			@id @default(autoincrement())
 	opponent	String
 	scoreA		Int
