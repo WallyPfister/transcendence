@@ -280,6 +280,15 @@ export class ChannelService {
 		console.log(users);
 		socket.emit("userList", users);
 	}
+
+	async findSocketByName(name: string): Promise<Socket> {
+		const sockets = this.server.sockets.sockets;
+		for (const [_, socket] of sockets){
+			if (socket.data.nickname === name)
+				return socket;
+		}
+		return null;
+	}
 }
 
   
