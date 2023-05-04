@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards, Req, UnauthorizedException, NotFoundException, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards, Req, NotFoundException } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiUnauthorizedResponse, ApiConflictResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags, ApiBadRequestResponse } from '@nestjs/swagger';
 import { MemberService } from './member.service';
 import { MemberRepository } from './member.repository';
@@ -11,7 +11,6 @@ import { FriendProfileDto } from './dto/friendProfile.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { AuthService } from '../auth/auth.service';
 import { Request } from 'express';
-import { JwtLimitedAuthGuard } from 'src/auth/guards/jwt.limited.guard';
 import { Payload } from 'src/auth/decorators/payload';
 import { JwtSignUpAuthGuard } from 'src/auth/guards/jwt.signup.guard';
 
@@ -36,7 +35,7 @@ export class MemberController {
 		type: CreateMemberDto
 	})
 	@ApiCreatedResponse({
-		description: `Member created successfully.`,
+		description: `A member has been created successfully.`,
 		type: String
 	})
 	@ApiConflictResponse({
@@ -49,7 +48,7 @@ export class MemberController {
 	@ApiBearerAuth()
 	@Post()
 	@UseGuards(JwtSignUpAuthGuard)
-	async createMember(@Payload() payload: any, @Body(new ValidationPipe({ transform: true })) memberInfo: CreateMemberDto): Promise<{ accessToken: string, refreshToken: string }> {
+	async createMember(@Payload() payload: any, @Body() memberInfo: CreateMemberDto): Promise<{ accessToken: string, refreshToken: string }> {
 		memberInfo.intraId = payload.userName;
 		await this.memberRepository.createMember(memberInfo);
 		await this.authService.login(memberInfo.name);
