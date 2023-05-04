@@ -1,5 +1,5 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards, Req, UnauthorizedException, NotFoundException } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiUnauthorizedResponse, ApiConflictResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards, Req, UnauthorizedException, NotFoundException, ValidationPipe } from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiUnauthorizedResponse, ApiConflictResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags, ApiBadRequestResponse } from '@nestjs/swagger';
 import { MemberService } from './member.service';
 import { MemberRepository } from './member.repository';
 import { CreateMemberDto } from './dto/create-member.dto';
@@ -48,7 +48,7 @@ export class MemberController {
 	@ApiBearerAuth()
 	@Post()
 	@UseGuards(JwtLimitedAuthGuard)
-	async createMember(@Payload() payload: any, @Body() memberInfo: CreateMemberDto): Promise<{ accessToken: string, refreshToken: string }> {
+	async createMember(@Payload() payload: any, @Body(new ValidationPipe({transform: true})) memberInfo: CreateMemberDto): Promise<{ accessToken: string, refreshToken: string }> {
 		memberInfo.intraId = payload.userName;
 		await this.memberRepository.createMember(memberInfo);
 		if (memberInfo.twoFactor) {
@@ -75,9 +75,12 @@ export class MemberController {
 		description: 'Whether the given name is available or not',
 		type: Boolean
 	})
+	@ApiBadRequestResponse({
+		description: "The name don't match with regualr express \'/^[a-zA-Z0-9]{2,16}$/\'."
+	})
 	@Get('checkName')
-	async checkDuplicateName(@Query('name') name: string): Promise<boolean> {
-		const check = await this.memberRepository.checkDuplicateName(name);
+	async checkName(@Query('name') name: string): Promise<boolean> {
+		const check = await this.memberService.checkName(name);
 		if (check)
 			return false;
 		return true;
