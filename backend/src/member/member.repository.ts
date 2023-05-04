@@ -66,7 +66,13 @@ export class MemberRepository {
 		});
 	}
 
-	async generateTfaCode(name: string): Promise<string> {
+	generateTfaCodeForSignUp(): string {
+		const charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+		const code = customAlphabet(charset, 6)();
+		return code;
+	}
+
+	async generateTfaCodeForSignIn(name: string): Promise<string> {
 		const charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 		const code = customAlphabet(charset, 6)();
 		await this.prisma.member.update({
