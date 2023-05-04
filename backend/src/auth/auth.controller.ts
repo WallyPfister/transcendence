@@ -77,8 +77,8 @@ export class AuthController {
 	@ApiBearerAuth()
 	@Post('/signup/tfa-send')
 	@UseGuards(JwtLimitedAuthGuard)
-	async sendTfaCodeForSignUp(@Payload() payload: any, @Body() body: { email: string }, @Session() session: { code?: string }): Promise<void> {
-		session.code = await this.authService.sendTfaCode(payload.userName, body.email);
+	async sendTfaCodeForSignUp(@Body() body: { email: string }, @Session() session: { code?: string }): Promise<void> {
+		session.code = await this.authService.sendTfaCodeForSignUp(body.email);
 		if (session.code === "")
 			throw new InternalServerErrorException('Failed to send tfa code.');
 	}
@@ -101,9 +101,9 @@ export class AuthController {
 	@ApiBearerAuth()
 	@Post('/signin/tfa-send')
 	@UseGuards(JwtLimitedAuthGuard)
-	async sendTfaCode(@Payload() payload: any): Promise<void> {
+	async sendTfaCodeForSignIn(@Payload() payload: any): Promise<void> {
 		const member = await this.memberRepository.getMemberInfo(payload.userName);
-		const result = await this.authService.sendTfaCode(member.name, member.email);
+		const result = await this.authService.sendTfaCodeForSignIn(member.name, member.email);
 		if (!result)
 			throw new InternalServerErrorException('Failed to send tfa code.');
 	}
@@ -134,10 +134,12 @@ export class AuthController {
 	@ApiBearerAuth()
 	@Get('/signup/tfa-verify')
 	@UseGuards(JwtLimitedAuthGuard)
-	verifyTfaCodeForSignUp(@Query('code') code: string, @Session() session: { code?: string }): void {
+	async verifyTfaCodeForSignUp(@Payload() payload: any, @Query('code') code: string, @Session() session: { code?: string }): Promise<any> {
 		const match = this.authService.verifyTfaCodeForSignUp(session.code, code);
 		if (!match)
 			throw new ConflictException('Two-factor authentication code does not match.');
+		const token = await this.authService.issueSignUpAccessToken(payload.userName);
+		return { limitedToken: token };
 	}
 
 	@ApiOperation({
@@ -164,7 +166,7 @@ export class AuthController {
 			(2) [The code has been expired.] Two-factor authentication code has been expired.',
 	})
 	@ApiBearerAuth()
-	@Post('/signin/tfa-verify')
+	@Get('/signin/tfa-verify')
 	@UseGuards(JwtLimitedAuthGuard)
 	async verifyTfaCodeForSignIn(@Query('code') code: string, @Payload() payload: any): Promise<{ accessToken: string, refreshToken: string }> {
 		const match = await this.authService.verifyTfaCodeForSignIn(payload.userName, code);
