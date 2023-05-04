@@ -13,6 +13,7 @@ import { AuthService } from '../auth/auth.service';
 import { Request } from 'express';
 import { JwtLimitedAuthGuard } from 'src/auth/guards/jwt.limited.guard';
 import { Payload } from 'src/auth/decorators/payload';
+import { JwtSignUpAuthGuard } from 'src/auth/guards/jwt.signup.guard';
 
 @ApiTags("Member")
 @Controller('member')
@@ -47,14 +48,10 @@ export class MemberController {
 	})
 	@ApiBearerAuth()
 	@Post()
-	@UseGuards(JwtLimitedAuthGuard)
-	async createMember(@Payload() payload: any, @Body(new ValidationPipe({transform: true})) memberInfo: CreateMemberDto): Promise<{ accessToken: string, refreshToken: string }> {
+	@UseGuards(JwtSignUpAuthGuard)
+	async createMember(@Payload() payload: any, @Body(new ValidationPipe({ transform: true })) memberInfo: CreateMemberDto): Promise<{ accessToken: string, refreshToken: string }> {
 		memberInfo.intraId = payload.userName;
 		await this.memberRepository.createMember(memberInfo);
-		if (memberInfo.twoFactor) {
-			const token = await this.authService.issueLimitedAccessToken(memberInfo.name);
-			throw new UnauthorizedException(`${token}`);
-		}
 		await this.authService.login(memberInfo.name);
 		return await this.authService.issueJwtTokens(memberInfo.name);
 	}
