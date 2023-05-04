@@ -131,6 +131,20 @@ export class AuthService {
 		return token;
 	}
 
+	async issueSignUpAccessToken(userName: string): Promise<string> {
+		const bodyFormData = {
+			sub: userName,
+		};
+		const token = this.jwtService.signAsync(
+			bodyFormData,
+			{
+				secret: this.jwt.signupSecret,
+				expiresIn: this.jwt.signupExpireTime,
+			},
+		);
+		return token;
+	}
+
 	async issueAccessToken(userName: string): Promise<string> {
 		const bodyFormData = {
 			sub: userName,
@@ -176,8 +190,28 @@ export class AuthService {
 		await this.memberRepository.updateStatus(name, MemberConstants.OFFLINE);
 	}
 
-	async sendTfaCode(name: string, email: string): Promise<string> {
-		const code = await this.memberRepository.generateTfaCode(name);
+	async sendTfaCodeForSignUp(email: string): Promise<string> {
+		const code = this.memberRepository.generateTfaCodeForSignUp();
+		const success = await this.mailerService.
+			sendMail({
+				to: email,
+				from: 'tspong@naver.com',
+				subject: 'Pong Two-factor Authentication Code',
+				html: `Your two-factor authentication code is [ ${code} ].`,
+			})
+			.then(() => { return code; })
+			.catch((err) => {
+				console.log('Failed to send email.');
+				return "";
+			}
+			);
+		if (!success)
+			return "";
+		return code;
+	}
+
+	async sendTfaCodeForSignIn(name: string, email: string): Promise<string> {
+		const code = await this.memberRepository.generateTfaCodeForSignIn(name);
 		const success = await this.mailerService.
 			sendMail({
 				to: email,
