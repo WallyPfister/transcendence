@@ -1,14 +1,24 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { MemberConstants } from './memberConstants';
 import { MemberRepository } from './member.repository';
 import { LoginMemberDTO } from 'src/auth/dto/member.login.dto';
 import { ChUserProfileDto } from './dto/chUserProfile.dto';
 import { MemberGameInfoDto } from './dto/memberGameInfo.dto';
 import { MemberGameHistoryDto } from './dto/memberGameHistory.dto';
+import { matches } from 'class-validator';
 
 @Injectable()
 export class MemberService {
 	constructor(private memberRepository: MemberRepository) { }
+
+	async checkName(name: string): Promise<{ name: string }> {
+		const regex = /^[a-zA-Z0-9]{2,16}$/;
+		const check = matches(name, regex);
+		console.log(check);
+		if (!check)
+			throw new BadRequestException();
+		return await this.memberRepository.checkDuplicateName(name);
+	}
 
 	async findOneByIntraId(intraId: string): Promise<LoginMemberDTO> {
 		const member = await this.memberRepository.findOneByIntraId(intraId);

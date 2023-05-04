@@ -1,4 +1,4 @@
-class GameQueue {
+export class GameQueue {
 	private capacity: number;
 	private count: number;
 	private front: number;
@@ -11,10 +11,6 @@ class GameQueue {
 		this.front = 0;
 		this.rear = 0;
 		this.queue = [];
-	}
-
-	private isEmpty(): boolean {
-		return this.front === this.rear;
 	}
 
 	private isFull(): boolean {
@@ -31,12 +27,22 @@ class GameQueue {
 	}
 
 	public deQueue(): string {
-		if (this.isEmpty())
-			return null;
 		const returnData = this.queue[this.front];
 		this.front = (this.front + 1) % this.capacity;
 		this.count--;
 		return returnData;
+	}
+
+	public deQueueSecond(): void {
+		this.queue[(this.front + 1) % this.capacity] = this.queue[this.front];
+		this.front = (this.front + 1) % this.capacity;
+		this.count--;
+	}
+
+	public peek(flag: number): string {
+		if (flag === 1)
+			return this.queue[this.front];
+		return this.queue[(this.front + 1) % this.capacity];
 	}
 
 	public getCount(): number {
