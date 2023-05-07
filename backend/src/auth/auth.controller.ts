@@ -1,6 +1,5 @@
-import { Controller, Get, Post, UseGuards, Query, Body, InternalServerErrorException, UnauthorizedException, ConflictException, Req, Session } from '@nestjs/common';
+import { Controller, Get, Post, UseGuards, Query, Body, InternalServerErrorException, UnauthorizedException, ConflictException, Session } from '@nestjs/common';
 import { ApiOperation, ApiOkResponse, ApiUnauthorizedResponse, ApiTags, ApiBearerAuth, ApiQuery, ApiTooManyRequestsResponse, ApiInternalServerErrorResponse, ApiConflictResponse } from '@nestjs/swagger';
-import { Request } from 'express';
 import { Payload } from './decorators/payload';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { JwtRefreshAuthGuard } from './guards/jwt.refresh.guard';
@@ -195,9 +194,9 @@ export class AuthController {
 	@Get('jwt-verify')
 	@UseGuards(JwtAuthGuard)
 	async verifyAccessToken(
-		@Req() req: Request
+		@Payload() payload: any
 	): Promise<void> {
-		await this.authService.login(req.user['sub']);
+		await this.authService.login(payload['sub']);
 	}
 
 	@ApiOperation({
@@ -237,8 +236,8 @@ export class AuthController {
 	@ApiBearerAuth()
 	@Get('logout')
 	@UseGuards(JwtAuthGuard)
-	async logout(@Req() req: Request): Promise<void> {
-		await this.authService.logout(req.user['sub']);
+	async logout(@Payload() payload: any): Promise<void> {
+		await this.authService.logout(payload['sub']);
 	}
 }
 
