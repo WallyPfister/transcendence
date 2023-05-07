@@ -8,6 +8,8 @@ import { JwtLimitedAuthGuard } from './guards/jwt.limited.guard';
 import { AuthService } from './auth.service';
 import { JwtTokenDTO } from './dto/jwt.dto';
 import { MemberRepository } from '../member/member.repository';
+import { IssueJwtTokenDTO } from './dto/issue.jwt';
+import { IssueAccessTokenDTO } from './dto/issue.access.token';
 
 @ApiTags('Login')
 @Controller('auth')
@@ -101,7 +103,7 @@ export class AuthController {
 	@ApiBearerAuth()
 	@Post('/signin/tfa-send')
 	@UseGuards(JwtLimitedAuthGuard)
-	async sendTfaCodeForSignIn(@Payload() payload: any): Promise<void> {
+	async sendTfaCodeForSignIn(@Payload() payload: JwtTokenDTO): Promise<void> {
 		const member = await this.memberRepository.getMemberInfo(payload.userName);
 		const result = await this.authService.sendTfaCodeForSignIn(member.name, member.email);
 		if (!result)
@@ -134,7 +136,7 @@ export class AuthController {
 	@ApiBearerAuth()
 	@Get('/signup/tfa-verify')
 	@UseGuards(JwtLimitedAuthGuard)
-	async verifyTfaCodeForSignUp(@Payload() payload: any, @Query('code') code: string, @Session() session: { code?: string }): Promise<any> {
+	async verifyTfaCodeForSignUp(@Payload() payload: JwtTokenDTO, @Query('code') code: string, @Session() session: { code?: string }): Promise<any> {
 		const match = this.authService.verifyTfaCodeForSignUp(session.code, code);
 		if (!match)
 			throw new ConflictException('Two-factor authentication code does not match.');
@@ -168,7 +170,7 @@ export class AuthController {
 	@ApiBearerAuth()
 	@Get('/signin/tfa-verify')
 	@UseGuards(JwtLimitedAuthGuard)
-	async verifyTfaCodeForSignIn(@Query('code') code: string, @Payload() payload: any): Promise<{ accessToken: string, refreshToken: string }> {
+	async verifyTfaCodeForSignIn(@Query('code') code: string, @Payload() payload: JwtTokenDTO): Promise<IssueJwtTokenDTO> {
 		const match = await this.authService.verifyTfaCodeForSignIn(payload.userName, code);
 		if (!match)
 			throw new ConflictException('Two-factor authentication code does not match.');
@@ -215,7 +217,7 @@ export class AuthController {
 	@UseGuards(JwtRefreshAuthGuard)
 	async refreshJwtToken(
 		@Payload() payload: JwtTokenDTO,
-	): Promise<{ accessToken: string }> {
+	): Promise<IssueAccessTokenDTO> {
 		const token = await this.authService.issueAccessToken(payload.userName);
 		return { accessToken: token };
 	}
