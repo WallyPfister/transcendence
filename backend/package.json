@@ -41,7 +41,6 @@
     "http": "^0.0.1-security",
     "jwt-payload": "^1.0.7",
     "oauth2": "^0.0.1",
-    "passport-42": "^1.2.6",
     "passport-custom": "^1.1.1",
     "passport-jwt": "^4.0.1",
     "passport-oauth2": "^1.7.0",
