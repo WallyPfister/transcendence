@@ -170,7 +170,6 @@ export class AuthService {
 				expiresIn: this.jwt.refreshExpireTime,
 			},
 		);
-		await this.memberRepository.updateRefreshToken(userName, token);
 		return token;
 	}
 
@@ -186,7 +185,6 @@ export class AuthService {
 	}
 
 	async logout(name: string): Promise<void> {
-		await this.memberRepository.deleteRefreshToken(name);
 		await this.memberRepository.updateStatus(name, MemberConstants.OFFLINE);
 	}
 
