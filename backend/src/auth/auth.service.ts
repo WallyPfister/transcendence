@@ -121,7 +121,7 @@ export class AuthService {
 		const bodyFormData = {
 			sub: userName,
 		};
-		const token = this.jwtService.signAsync(
+		const token = await this.jwtService.signAsync(
 			bodyFormData,
 			{
 				secret: this.jwt.limitedSecret,
@@ -135,7 +135,7 @@ export class AuthService {
 		const bodyFormData = {
 			sub: userName,
 		};
-		const token = this.jwtService.signAsync(
+		const token = await this.jwtService.signAsync(
 			bodyFormData,
 			{
 				secret: this.jwt.signupSecret,
