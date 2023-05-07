@@ -26,7 +26,6 @@ export class MemberRepository {
 					score: 0,
 					achieve: 0,
 					socket: 0,
-					refreshToken: ""
 				},
 			});
 		} catch (err) {
@@ -49,20 +48,6 @@ export class MemberRepository {
 				email: true,
 				twoFactor: true
 			}
-		});
-	}
-
-	async updateRefreshToken(name: string, refreshToken: string): Promise<void> {
-		await this.prisma.member.update({
-			where: { name: name },
-			data: { refreshToken: refreshToken }
-		});
-	}
-
-	async deleteRefreshToken(name: string): Promise<void> {
-		await this.prisma.member.update({
-			where: { name: name },
-			data: { refreshToken: "" }
 		});
 	}
 
