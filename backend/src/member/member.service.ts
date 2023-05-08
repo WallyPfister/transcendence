@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException, UnauthorizedExcepti
 import { MemberConstants } from './memberConstants';
 import { MemberRepository } from './member.repository';
 import { LoginMemberDTO } from 'src/auth/dto/member.login.dto';
-import { ChUserProfileDto } from './dto/chUserProfile.dto';
+import { userProfileDto } from './dto/userProfile.dto';
 import { MemberGameInfoDto } from './dto/memberGameInfo.dto';
 import { MemberGameHistoryDto } from './dto/memberGameHistory.dto';
 import { matches } from 'class-validator';
@@ -65,17 +65,20 @@ export class MemberService {
 		this.memberRepository.updateGameResult(member);
 	}
 
-	async getChUserInfo(name: string, chUser: string): Promise<ChUserProfileDto> {
-		const user: ChUserProfileDto = await this.memberRepository.getChUserInfo(chUser);
+	async getChUserInfo(name: string, userName: string): Promise<userProfileDto> {
+		const user: userProfileDto = await this.memberRepository.getChUserInfo(userName);
 		if (!user)
-			return null;
-		console.log(user);
-		const isFriend = await this.memberRepository.isFriend(name, chUser);
-		user.name = chUser;
-		if (isFriend.length !== 0)
-			user.isFriend = true;
-		else
-			user.isFriend = false;
+			throw new BadRequestException();
+		user.name = userName;
+		if (name === userName)
+			user.whois = 0;
+		else {
+			const isFriend = await this.memberRepository.isFriend(name, userName);
+			if (isFriend.length !== 0)
+				user.whois = 1;
+			else
+				user.whois = 2;
+		}
 		return user;
 	}
 

@@ -6,7 +6,7 @@ import { LoginMemberDTO } from "src/auth/dto/member.login.dto";
 import { MemberProfileDto } from "./dto/memberProfile.dto";
 import { MemberGameInfoDto } from "./dto/memberGameInfo.dto";
 import { MemberGameHistoryDto } from "./dto/memberGameHistory.dto";
-import { ChUserProfileDto } from "./dto/chUserProfile.dto";
+import { userProfileDto } from "./dto/userProfile.dto";
 import { FriendProfileDto } from "./dto/friendProfile.dto";
 import { customAlphabet } from "nanoid";
 
@@ -205,15 +205,18 @@ export class MemberRepository {
 		})
 	}
 
-	async getChUserInfo(name: string): Promise<ChUserProfileDto> {
+	async getChUserInfo(name: string): Promise<userProfileDto> {
 		return await this.prisma.member.findUnique({
 			where: { name: name },
 			select: {
 				name: true,
+				avatar: true,
+				status: true,
 				win: true,
 				lose: true,
 				level: true,
-				score: true
+				score: true,
+				achieve: true
 			}
 		})
 	}
