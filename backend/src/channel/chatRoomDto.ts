@@ -5,3 +5,4 @@ export interface ChatRoomListDTO {
 	  banList: string[];
 	  muteList: Record<string, Date>;
 }
+
