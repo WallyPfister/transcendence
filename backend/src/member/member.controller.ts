@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards, Req, UnauthorizedException, NotFoundException, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards, NotFoundException, Req, ValidationPipe } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiUnauthorizedResponse, ApiConflictResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags, ApiBadRequestResponse } from '@nestjs/swagger';
 import { MemberService } from './member.service';
 import { MemberRepository } from './member.repository';
@@ -10,9 +10,10 @@ import { userProfileDto } from './dto/userProfile.dto';
 import { FriendProfileDto } from './dto/friendProfile.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { AuthService } from '../auth/auth.service';
-import { Request } from 'express';
-import { JwtLimitedAuthGuard } from 'src/auth/guards/jwt.limited.guard';
 import { Payload } from 'src/auth/decorators/payload';
+import { JwtSignUpAuthGuard } from 'src/auth/guards/jwt.signup.guard';
+import { IssueJwtTokenDTO } from 'src/auth/dto/issue.jwt';
+import { JwtTokenDTO } from '../auth/dto/jwt.dto';
 
 @ApiTags("Member")
 @Controller('member')
@@ -35,7 +36,7 @@ export class MemberController {
 		type: CreateMemberDto
 	})
 	@ApiCreatedResponse({
-		description: `Member created successfully.`,
+		description: `A member has been created successfully.`,
 		type: String
 	})
 	@ApiConflictResponse({
@@ -47,14 +48,10 @@ export class MemberController {
 	})
 	@ApiBearerAuth()
 	@Post()
-	@UseGuards(JwtLimitedAuthGuard)
-	async createMember(@Payload() payload: any, @Body(new ValidationPipe()) memberInfo: CreateMemberDto): Promise<{ accessToken: string, refreshToken: string }> {
+	@UseGuards(JwtSignUpAuthGuard)
+	async createMember(@Payload() payload: JwtTokenDTO, @Body(new ValidationPipe()) memberInfo: CreateMemberDto): Promise<IssueJwtTokenDTO> {
 		memberInfo.intraId = payload.userName;
 		await this.memberRepository.createMember(memberInfo);
-		if (memberInfo.twoFactor) {
-			const token = await this.authService.issueLimitedAccessToken(memberInfo.name);
-			throw new UnauthorizedException(`${token}`);
-		}
 		await this.authService.login(memberInfo.name);
 		return await this.authService.issueJwtTokens(memberInfo.name);
 	}
@@ -97,8 +94,8 @@ export class MemberController {
 	@ApiBearerAuth()
 	@Get()
 	@UseGuards(JwtAuthGuard)
-	async getMemberInfo(@Req() req: Request): Promise<MemberProfileDto> {
-		return await this.memberRepository.getMemberInfo(req.user['sub']);
+	async getMemberInfo(@Payload() payload: any): Promise<MemberProfileDto> {
+		return await this.memberRepository.getMemberInfo(payload['sub']);
 	}
 
 	@ApiOperation({
@@ -117,8 +114,8 @@ export class MemberController {
 	@ApiBearerAuth()
 	@Post('status/:status')
 	@UseGuards(JwtAuthGuard)
-	async updateStatus(@Req() req: Request, @Param('status', ParseIntPipe) status: number): Promise<void> {
-		await this.memberRepository.updateStatus(req.user['sub'], status);
+	async updateStatus(@Payload() payload: any, @Param('status', ParseIntPipe) status: number): Promise<void> {
+		await this.memberRepository.updateStatus(payload['sub'], status);
 	}
 
 	@ApiOperation({
@@ -141,7 +138,7 @@ export class MemberController {
 	@ApiBearerAuth()
 	@Get('history')
 	@UseGuards(JwtAuthGuard)
-	async getGameHistory(@Req() req: Request, @Query('name') name: string): Promise<MemberGameHistoryDto> {
+	async getGameHistory(@Query('name') name: string): Promise<MemberGameHistoryDto> {
 		return await this.memberService.getMemberHistory(name);
 	}
 
@@ -187,7 +184,7 @@ export class MemberController {
 	@ApiBearerAuth()
 	@Delete('/:name')
 	@UseGuards(JwtAuthGuard)
-	async deleteMember(@Req() req: Request, @Param('name') name: string): Promise<void> {
+	async deleteMember(@Param('name') name: string): Promise<void> {
 		return await this.memberRepository.deleteMember(name);
 	}
 
@@ -216,8 +213,8 @@ export class MemberController {
 	@ApiBearerAuth()
 	@Get('userProfile')
 	@UseGuards(JwtAuthGuard)
-	async getChUserInfo(@Req() req: Request, @Query('userName') userName: string): Promise<userProfileDto> {
-		return await this.memberService.getChUserInfo(req.user['sub'], userName);
+	async getUserInfo(@Payload() payload: any, @Query('userName') userName: string): Promise<userProfileDto> {
+		return await this.memberService.getUserInfo(payload.user['sub'], userName);
 	}
 
 	@ApiOperation({
@@ -244,8 +241,8 @@ export class MemberController {
 	@ApiBearerAuth()
 	@Post('friend/:friendName')
 	@UseGuards(JwtAuthGuard)
-	async addFriend(@Req() req: Request, @Param('friendName') friendName: string): Promise<void> {
-		return await this.memberRepository.addFriend(req.user['sub'], friendName);
+	async addFriend(@Payload() payload: any, @Param('friendName') friendName: string): Promise<void> {
+		return await this.memberRepository.addFriend(payload['sub'], friendName);
 	}
 
 	@ApiOperation({
@@ -273,8 +270,8 @@ export class MemberController {
 	@ApiBearerAuth()
 	@Get('friend')
 	@UseGuards(JwtAuthGuard)
-	async findOneFriend(@Req() req: Request, @Query('friendName') friendName: string): Promise<FriendProfileDto> {
-		const friend = await this.memberRepository.findOneFriend(req.user['sub'], friendName);
+	async findOneFriend(@Payload() payload: any, @Query('friendName') friendName: string): Promise<FriendProfileDto> {
+		const friend = await this.memberRepository.findOneFriend(payload['sub'], friendName);
 		if (friend === undefined)
 			throw new NotFoundException(`There is no friend with name ${friendName}.`);
 		return friend;
@@ -297,8 +294,8 @@ export class MemberController {
 	@ApiBearerAuth()
 	@Get('friend/all')
 	@UseGuards(JwtAuthGuard)
-	async findAllFriends(@Req() req: Request): Promise<FriendProfileDto[]> {
-		return await this.memberRepository.findAllFriends(req.user['sub']);
+	async findAllFriends(@Payload() payload: any): Promise<FriendProfileDto[]> {
+		return await this.memberRepository.findAllFriends(payload['sub']);
 	}
 
 	@ApiOperation({
@@ -322,7 +319,7 @@ export class MemberController {
 	@ApiBearerAuth()
 	@Delete('friend/:friendName')
 	@UseGuards(JwtAuthGuard)
-	async deleteFriend(@Req() req: Request, @Param('friendName') friendName: string): Promise<void> {
-		return await this.memberRepository.deleteFriend(req.user['sub'], friendName);
+	async deleteFriend(@Payload() payload: any, @Param('friendName') friendName: string): Promise<void> {
+		return await this.memberRepository.deleteFriend(payload['sub'], friendName);
 	}
 }

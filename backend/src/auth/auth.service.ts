@@ -1,4 +1,4 @@
-import { ForbiddenException, HttpException, Inject, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import { HttpException, Inject, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { MemberRepository } from 'src/member/member.repository';
@@ -83,18 +83,18 @@ export class AuthService {
 		return profile.data.login;
 	}
 
-	async getMemberInfo(code: string): Promise<{ member: LoginMemberDTO, token: string }> {
+	async getMemberInfo(code: string): Promise<any> {
 		const token = await this.getFortyTwoToken(code);
 		const intraId = await this.getFortyTwoProfile(token);
 		const member = await this.memberRepository.findOneByIntraId(intraId);
 		if (!member)
-			throw new UnauthorizedException(intraId);
+			return { intraId: intraId };
 		else if (member.twoFactor) {
 			const token = await this.issueLimitedAccessToken(member.name);
 			return { member: member, token: token };
 		}
 		else
-			return { member: member, token: "" };
+			return { member: member };
 	}
 
 	verifyAccessToken(token: string): any {
@@ -121,11 +121,25 @@ export class AuthService {
 		const bodyFormData = {
 			sub: userName,
 		};
-		const token = this.jwtService.signAsync(
+		const token = await this.jwtService.signAsync(
 			bodyFormData,
 			{
 				secret: this.jwt.limitedSecret,
 				expiresIn: this.jwt.limitedExpireTime,
+			},
+		);
+		return token;
+	}
+
+	async issueSignUpAccessToken(userName: string): Promise<string> {
+		const bodyFormData = {
+			sub: userName,
+		};
+		const token = await this.jwtService.signAsync(
+			bodyFormData,
+			{
+				secret: this.jwt.signupSecret,
+				expiresIn: this.jwt.signupExpireTime,
 			},
 		);
 		return token;
@@ -156,7 +170,6 @@ export class AuthService {
 				expiresIn: this.jwt.refreshExpireTime,
 			},
 		);
-		await this.memberRepository.updateRefreshToken(userName, token);
 		return token;
 	}
 
@@ -172,12 +185,11 @@ export class AuthService {
 	}
 
 	async logout(name: string): Promise<void> {
-		await this.memberRepository.deleteRefreshToken(name);
 		await this.memberRepository.updateStatus(name, MemberConstants.OFFLINE);
 	}
 
-	async sendTfaCode(name: string, email: string): Promise<boolean> {
-		const code = await this.memberRepository.generateTfaCode(name);
+	async sendTfaCodeForSignUp(email: string): Promise<string> {
+		const code = this.memberRepository.generateTfaCodeForSignUp();
 		const success = await this.mailerService.
 			sendMail({
 				to: email,
@@ -185,18 +197,44 @@ export class AuthService {
 				subject: 'Pong Two-factor Authentication Code',
 				html: `Your two-factor authentication code is [ ${code} ].`,
 			})
-			.then(() => { return true; })
+			.then(() => { return code; })
 			.catch((err) => {
 				console.log('Failed to send email.');
-				return false;
+				return "";
 			}
 			);
 		if (!success)
+			return "";
+		return code;
+	}
+
+	async sendTfaCodeForSignIn(name: string, email: string): Promise<string> {
+		const code = await this.memberRepository.generateTfaCodeForSignIn(name);
+		const success = await this.mailerService.
+			sendMail({
+				to: email,
+				from: 'tspong@naver.com',
+				subject: 'Pong Two-factor Authentication Code',
+				html: `Your two-factor authentication code is [ ${code} ].`,
+			})
+			.then(() => { return code; })
+			.catch((err) => {
+				console.log('Failed to send email.');
+				return "";
+			}
+			);
+		if (!success)
+			return "";
+		return code;
+	}
+
+	verifyTfaCodeForSignUp(savedCode: string, inputCode: string): boolean {
+		if (savedCode != inputCode)
 			return false;
 		return true;
 	}
 
-	async verifyTfaCode(name: string, code: string): Promise<boolean> {
+	async verifyTfaCodeForSignIn(name: string, code: string): Promise<boolean> {
 		const time = await this.memberRepository.getTfaTime(name);
 		const now = new Date();
 		const diff = (now.getTime() - time.tfaTime.getTime()) / 1000;

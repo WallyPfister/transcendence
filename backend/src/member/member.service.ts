@@ -65,7 +65,7 @@ export class MemberService {
 		this.memberRepository.updateGameResult(member);
 	}
 
-	async getChUserInfo(name: string, userName: string): Promise<userProfileDto> {
+	async getUserInfo(name: string, userName: string): Promise<userProfileDto> {
 		const user: userProfileDto = await this.memberRepository.getChUserInfo(userName);
 		if (!user)
 			throw new BadRequestException();
@@ -82,15 +82,20 @@ export class MemberService {
 		return user;
 	}
 
-	async getMemberHistory(name: string): Promise<MemberGameHistoryDto> {
-		const history = await this.memberRepository.getMemberHistory(name);
-		if (history === null)
-			throw new NotFoundException(`There is no such member with name ${name}.`);
-		if (history.length === 0)
+	async getMemberHistory(name: string): Promise<MemberGameHistoryDto | null> {
+		try {
+			const history = await this.memberRepository.getMemberHistory(name);
+			if (history === null)
+				throw new NotFoundException(`There is no such member with name ${name}.`);
+			if (history.length === 0)
+				return null;
+			const month = (history[0].date.getMonth() + 1).toString();
+			const day = history[0].date.getDate().toString();
+			history[0].time = month.padStart(2, '0') + '.' + day.padStart(2, '0');
+			return history[0];
+		}
+		catch (err) {
 			return null;
-		const month = (history[0].date.getMonth() + 1).toString();
-		const day = history[0].date.getDate().toString();
-		history[0].time = month.padStart(2, '0')  + '.' + day.padStart(2, '0') ;
-		return history[0];
+		}
 	}
 }

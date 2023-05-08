@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
+import * as session from 'express-session';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -19,6 +20,13 @@ async function bootstrap() {
     credentials: true,
   };
   app.enableCors(corsOptions);
+  app.use(
+    session({
+      secret: process.env.SESSION_KEY,
+      resave: false,
+      saveUninitialized: false,
+    }),
+  );
 
   var http = require('http');
   var server = http.createServer(app);
