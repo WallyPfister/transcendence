@@ -1,6 +1,5 @@
-import { Controller, Get, UseGuards, Query, InternalServerErrorException, UnauthorizedException, ConflictException, Req } from '@nestjs/common';
-import { ApiOperation, ApiOkResponse, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiTags, ApiBearerAuth, ApiQuery, ApiTooManyRequestsResponse, ApiInternalServerErrorResponse, ApiConflictResponse } from '@nestjs/swagger';
-import { Request } from 'express';
+import { Controller, Get, Post, UseGuards, Query, Body, InternalServerErrorException, UnauthorizedException, ConflictException, Session } from '@nestjs/common';
+import { ApiOperation, ApiOkResponse, ApiUnauthorizedResponse, ApiTags, ApiBearerAuth, ApiQuery, ApiTooManyRequestsResponse, ApiInternalServerErrorResponse, ApiConflictResponse } from '@nestjs/swagger';
 import { Payload } from './decorators/payload';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { JwtRefreshAuthGuard } from './guards/jwt.refresh.guard';
@@ -8,6 +7,8 @@ import { JwtLimitedAuthGuard } from './guards/jwt.limited.guard';
 import { AuthService } from './auth.service';
 import { JwtTokenDTO } from './dto/jwt.dto';
 import { MemberRepository } from '../member/member.repository';
+import { IssueJwtTokenDTO } from './dto/issue.jwt';
+import { IssueAccessTokenDTO } from './dto/issue.access.token';
 
 @ApiTags('Login')
 @Controller('auth')
@@ -60,7 +61,7 @@ export class AuthController {
 	}
 
 	@ApiOperation({
-		summary: 'Two-factor authentication sending code',
+		summary: 'Two-factor authentication sending code for signup',
 		description: 'Send two-factor authentication code by e-mail.',
 	})
 	@ApiOkResponse({
@@ -75,11 +76,35 @@ export class AuthController {
 			'Two-factor authentication code has failed to be sent.',
 	})
 	@ApiBearerAuth()
-	@Get('tfa-send')
+	@Post('/signup/tfa-send')
 	@UseGuards(JwtLimitedAuthGuard)
-	async sendTfaCode(@Payload() payload: any): Promise<void> {
+	async sendTfaCodeForSignUp(@Body() body: { email: string }, @Session() session: { code?: string }): Promise<void> {
+		session.code = await this.authService.sendTfaCodeForSignUp(body.email);
+		if (session.code === "")
+			throw new InternalServerErrorException('Failed to send tfa code.');
+	}
+
+	@ApiOperation({
+		summary: 'Two-factor authentication sending code for signin',
+		description: 'Send two-factor authentication code by e-mail.',
+	})
+	@ApiOkResponse({
+		description:
+			'Two-factor authentication code has been sent.',
+	})
+	@ApiUnauthorizedResponse({
+		description: 'Invalid limited jwt token',
+	})
+	@ApiInternalServerErrorResponse({
+		description:
+			'Two-factor authentication code has failed to be sent.',
+	})
+	@ApiBearerAuth()
+	@Post('/signin/tfa-send')
+	@UseGuards(JwtLimitedAuthGuard)
+	async sendTfaCodeForSignIn(@Payload() payload: JwtTokenDTO): Promise<void> {
 		const member = await this.memberRepository.getMemberInfo(payload.userName);
-		const result = await this.authService.sendTfaCode(member.name, member.email);
+		const result = await this.authService.sendTfaCodeForSignIn(member.name, member.email);
 		if (!result)
 			throw new InternalServerErrorException('Failed to send tfa code.');
 	}
@@ -96,7 +121,7 @@ export class AuthController {
 	})
 	@ApiOkResponse({
 		description:
-			'Two-factor authentication code has been verified. JWT token issued.',
+			'Two-factor authentication code has been verified. Temporary JWT token for signup issued.',
 	})
 	@ApiConflictResponse({
 		description:
@@ -104,14 +129,48 @@ export class AuthController {
 	})
 	@ApiUnauthorizedResponse({
 		description:
-			'(1) [Unauthorized] The limited jwt token has been expired. \
+			'(1) [Unauthorized] The limited jwt token is invalid. \
 			(2) [The code has been expired.] Two-factor authentication code has been expired.',
 	})
 	@ApiBearerAuth()
-	@Get('tfa-verify')
+	@Get('/signup/tfa-verify')
 	@UseGuards(JwtLimitedAuthGuard)
-	async verifyTwoFactorAuthCode(@Query('code') code: string, @Payload() payload: any): Promise<{ accessToken: string, refreshToken: string }> {
-		const match = await this.authService.verifyTfaCode(payload.userName, code);
+	async verifyTfaCodeForSignUp(@Payload() payload: JwtTokenDTO, @Query('code') code: string, @Session() session: { code?: string }): Promise<any> {
+		const match = this.authService.verifyTfaCodeForSignUp(session.code, code);
+		if (!match)
+			throw new ConflictException('Two-factor authentication code does not match.');
+		const token = await this.authService.issueSignUpAccessToken(payload.userName);
+		return { limitedToken: token };
+	}
+
+	@ApiOperation({
+		summary: 'Two-factor authentication',
+		description: 'Verify two-factor authentication code sent by e-mail.',
+	})
+	@ApiQuery({
+		name: 'code',
+		description: 'Two-factor authentication code validate for 3 minutes.',
+		required: true,
+		type: String
+	})
+	@ApiOkResponse({
+		description:
+			'Two-factor authentication code has been verified. JWT token is issued.',
+	})
+	@ApiConflictResponse({
+		description:
+			'Two-factor authentication code does not match.',
+	})
+	@ApiUnauthorizedResponse({
+		description:
+			'(1) [Unauthorized] The limited jwt token is invalid. \
+			(2) [The code has been expired.] Two-factor authentication code has been expired.',
+	})
+	@ApiBearerAuth()
+	@Get('/signin/tfa-verify')
+	@UseGuards(JwtLimitedAuthGuard)
+	async verifyTfaCodeForSignIn(@Query('code') code: string, @Payload() payload: JwtTokenDTO): Promise<IssueJwtTokenDTO> {
+		const match = await this.authService.verifyTfaCodeForSignIn(payload.userName, code);
 		if (!match)
 			throw new ConflictException('Two-factor authentication code does not match.');
 		else
@@ -135,9 +194,9 @@ export class AuthController {
 	@Get('jwt-verify')
 	@UseGuards(JwtAuthGuard)
 	async verifyAccessToken(
-		@Req() req: Request
+		@Payload() payload: any
 	): Promise<void> {
-		await this.authService.login(req.user['sub']);
+		await this.authService.login(payload['sub']);
 	}
 
 	@ApiOperation({
@@ -157,7 +216,7 @@ export class AuthController {
 	@UseGuards(JwtRefreshAuthGuard)
 	async refreshJwtToken(
 		@Payload() payload: JwtTokenDTO,
-	): Promise<{ accessToken: string }> {
+	): Promise<IssueAccessTokenDTO> {
 		const token = await this.authService.issueAccessToken(payload.userName);
 		return { accessToken: token };
 	}
@@ -177,8 +236,8 @@ export class AuthController {
 	@ApiBearerAuth()
 	@Get('logout')
 	@UseGuards(JwtAuthGuard)
-	async logout(@Req() req: Request): Promise<void> {
-		await this.authService.logout(req.user['sub']);
+	async logout(@Payload() payload: any): Promise<void> {
+		await this.authService.logout(payload['sub']);
 	}
 }
 

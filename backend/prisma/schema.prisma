@@ -26,7 +26,6 @@ model member {
 	friend			member[]	@relation("friend")
 	blackList		member[]	@relation("friend")
 	game			game[]
-	refreshToken	String		@db.VarChar(512)
 	twoFactor		Boolean		@default(false)
 	tfaCode			String?		@db.VarChar(512)
 	tfaTime			DateTime?
