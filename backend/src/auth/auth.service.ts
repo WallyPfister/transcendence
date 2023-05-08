@@ -83,18 +83,18 @@ export class AuthService {
 		return profile.data.login;
 	}
 
-	async getMemberInfo(code: string): Promise<{ member: LoginMemberDTO, token: string }> {
+	async getMemberInfo(code: string): Promise<any> {
 		const token = await this.getFortyTwoToken(code);
 		const intraId = await this.getFortyTwoProfile(token);
 		const member = await this.memberRepository.findOneByIntraId(intraId);
 		if (!member)
-			throw new UnauthorizedException(intraId);
+			return { intraId: intraId };
 		else if (member.twoFactor) {
 			const token = await this.issueLimitedAccessToken(member.name);
 			return { member: member, token: token };
 		}
 		else
-			return { member: member, token: "" };
+			return { member: member };
 	}
 
 	verifyAccessToken(token: string): any {
