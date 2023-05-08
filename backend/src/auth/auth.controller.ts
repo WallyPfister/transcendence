@@ -45,18 +45,18 @@ export class AuthController {
 	})
 	@Get('callback')
 	async ft_login(@Query('code') code: string): Promise<any> {
-		try {
-			const info = await this.authService.getMemberInfo(code);
-			if (info.member.twoFactor)
-				return { limitedToken: info.token };
-			else {
-				await this.authService.login(info.member.name);
-				return await this.authService.issueJwtTokens(info.member.name);
-			}
-		} catch (err) {
-			const intraId = (err as Error).message;
-			const token = await this.authService.issueLimitedAccessToken(intraId);
+		const info = await this.authService.getMemberInfo(code);
+		/* Not a pong member */
+		if (info.intraId) {
+			const token = await this.authService.issueLimitedAccessToken(info.intraId);
 			throw new UnauthorizedException(`${token}`);
+		}
+		/* Pong member who checked 2-factor authentication */
+		if (info.member.twoFactor)
+			return { limitedToken: info.token };
+		else {
+			await this.authService.login(info.member.name);
+			return await this.authService.issueJwtTokens(info.member.name);
 		}
 	}
 
@@ -79,9 +79,10 @@ export class AuthController {
 	@Post('/signup/tfa-send')
 	@UseGuards(JwtLimitedAuthGuard)
 	async sendTfaCodeForSignUp(@Body() body: { email: string }, @Session() session: { code?: string }): Promise<void> {
-		session.code = await this.authService.sendTfaCodeForSignUp(body.email);
-		if (session.code === "")
+		const result = await this.authService.sendTfaCodeForSignUp(body.email);
+		if (result === "")
 			throw new InternalServerErrorException('Failed to send tfa code.');
+		session.code = result;
 	}
 
 	@ApiOperation({
