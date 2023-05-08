@@ -6,5 +6,8 @@ export default registerAs("jwt", () => ({
 	accessExpireTime: process.env.JWT_ACCESS_EXPIRE_TIME,
 	refreshExpireTime: process.env.JWT_REFRESH_EXPIRE_TIME,
 	limitedSecret: process.env.JWT_LIMITED_SECRET,
-	limitedExpireTime: process.env.JWT_LIMITED_EXPIRE_TIME
+	limitedExpireTime: process.env.JWT_LIMITED_EXPIRE_TIME,
+	signupSecret: process.env.JWT_SIGNUP_SECRET,
+	signupExpireTime: process.env.JWT_SIGNUP_EXPIRE_TIME,
+
 }))
