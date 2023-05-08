@@ -12,9 +12,7 @@ import {
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger } from '@nestjs/common';
-import { noop } from 'rxjs';
-import { IoAdapter } from '@nestjs/platform-socket.io';
+
 ​
 const prisma = new PrismaClient();
 ​
@@ -38,6 +36,7 @@ export class ChannelService {
         roomId: 'lobby',
         roomName: 'lobby',
         chiefId: null,
+		adminList: [],
         banList: [],
         muteList: {},
         password: undefined,
@@ -60,8 +59,6 @@ export class ChannelService {
     socket.data.roomId = 'lobby';
     socket.data.roomName = 'lobby';
     socket.data.nickname = nickname;
-    console.log('====setUser====');
-    console.log(nickname);
     socket.join(socket.data.roomId);
     socket.emit('joinRoom', { roomName: 'lobby' });
     this.server.to(socket.data.roomId).emit('addUser', nickname);
@@ -106,6 +103,7 @@ export class ChannelService {
       roomId: roomName,
       roomName: roomName,
       chiefId: socket.data.nickname,
+	  adminList: [socket.data.nickname],
       banList: [],
       muteList: {},
       password: data.password,
@@ -272,7 +270,12 @@ export class ChannelService {
   async isChief(chatRoom: ChatRoomListDTO, socket: Socket) {
     if (chatRoom.chiefId == socket.data.nickname) {
       const sockets = this.server.sockets.adapter.rooms.get(socket.data.roomId);
-      if (sockets) chatRoom.chiefId = Array.from(sockets.values())[0];
+      if (sockets){
+	  	const socketId = Array.from(sockets.values())[0];
+		const user = this.server.sockets.sockets.get(socketId);
+		this.chatRoomList[socket.data.roomId].adminList.push(user.data.nickname);
+		delete this.chatRoomList[socket.data.roomId].adminList[socket.data.nickname];
+	  }
     }
   }
 ​
@@ -392,41 +395,38 @@ export class ChannelService {
       socket.emit('newMessage', `Room ${roomId} not found`);
       throw new Error(`Room ${roomId} not found`);
     }
-    if (chatRoom.chiefId != socket.data.nickname) {
-      socket.emit('newMessage', `Room ${roomId} admin is not you`);
-      throw new Error(`Room ${roomId} admin is not you`);
-    }
-    if (chatRoom.chiefId == nickname) {
-      socket.emit('newMessage', `Room ${roomId} ban target is admin`);
-      throw new Error(`Room ${roomId} ban target is admin`);
-    }
-​
+	if (chatRoom.adminList.find((value) => value === nickname) != undefined){
+		socket.emit('newMessage', `Room ${roomId} admin is not you`);
+      	throw new Error(`Room ${roomId} admin is not you`);
+	}
+	if (chatRoom.adminList.find((value) => value === socket.data.nickname) == undefined){
+		socket.emit('newMessage', `Room ${roomId} ban target is admin`);
+      	throw new Error(`Room ${roomId} ban target is admin`);
+	}
+		
     return chatRoom.banList.includes(nickname);
   }
 ​
-  // 사용자가 banList에 있는지 확인 및 관리자인지 확인
   leaveRoom(socket: Socket): boolean {
     const oldRoomId = socket.data.roomId;
-    socket.leave(socket.data.roomId);
+    socket.leave(oldRoomId);
+	// true => 내가 마지막 사람, false => 나 말고도 사람이 더 남음
     if (
-      this.server.sockets.adapter.rooms.get(socket.data.roomId) !== undefined
+      this.server.sockets.adapter.rooms.get(oldRoomId) !== undefined
     ) {
       const users = [];
       const sockets = this.server.sockets.adapter.rooms.get(oldRoomId);
 ​
-      console.log('=====here!!!!=====');
       for (const socketId of sockets) {
         const user = this.server.sockets.sockets.get(socketId);
-        console.log(user.data.nickname);
         users.push(user.data.nickname);
       }
-      console.log(users);
-      this.server.to(socket.data.roomId).emit('userList', users);
+      this.server.to(oldRoomId).emit('userList', users);
       return false;
     }
-    if (socket.data.roomId !== 'lobby') {
-      delete this.chatRoomList[oldRoomId];
-    }
+    if (socket.data.roomId !== 'lobby'){
+		delete this.chatRoomList[oldRoomId];
+	}
     return true;
   }
 ​
@@ -435,7 +435,6 @@ export class ChannelService {
     const users = [];
     const sockets = this.server.sockets.adapter.rooms.get(socket.data.roomId);
 ​
-    console.log('=====here!!!!=====');
     for (const socketId of sockets) {
       const user = this.server.sockets.sockets.get(socketId);
       console.log(user.data.nickname);
