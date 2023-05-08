@@ -13,6 +13,7 @@ import { AuthService } from '../auth/auth.service';
 import { Payload } from 'src/auth/decorators/payload';
 import { JwtSignUpAuthGuard } from 'src/auth/guards/jwt.signup.guard';
 import { IssueJwtTokenDTO } from 'src/auth/dto/issue.jwt';
+import { JwtTokenDTO } from '../auth/dto/jwt.dto';
 
 @ApiTags("Member")
 @Controller('member')
@@ -48,7 +49,7 @@ export class MemberController {
 	@ApiBearerAuth()
 	@Post()
 	@UseGuards(JwtSignUpAuthGuard)
-	async createMember(@Payload() payload: any, @Body() memberInfo: CreateMemberDto): Promise<IssueJwtTokenDTO> {
+	async createMember(@Payload() payload: JwtTokenDTO, @Body() memberInfo: CreateMemberDto): Promise<IssueJwtTokenDTO> {
 		memberInfo.intraId = payload.userName;
 		await this.memberRepository.createMember(memberInfo);
 		await this.authService.login(memberInfo.name);
