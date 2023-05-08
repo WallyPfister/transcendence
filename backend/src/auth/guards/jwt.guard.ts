@@ -1,4 +1,4 @@
-import { ExecutionContext, Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from '../auth.service';
 
@@ -21,8 +21,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
 	validateToken(token: string) {
 		try {
-			const verify = this.authService.verifyAccessToken(token);
-			return verify;
+			const payload = this.authService.verifyAccessToken(token);
+			return payload;
 		} catch (e) {
 			switch (e.message) {
 				case 'EXPIRED_TOKEN':

@@ -26,7 +26,6 @@ export class MemberRepository {
 					score: 0,
 					achieve: 0,
 					socket: 0,
-					refreshToken: ""
 				},
 			});
 		} catch (err) {
@@ -52,21 +51,13 @@ export class MemberRepository {
 		});
 	}
 
-	async updateRefreshToken(name: string, refreshToken: string): Promise<void> {
-		await this.prisma.member.update({
-			where: { name: name },
-			data: { refreshToken: refreshToken }
-		});
+	generateTfaCodeForSignUp(): string {
+		const charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+		const code = customAlphabet(charset, 6)();
+		return code;
 	}
 
-	async deleteRefreshToken(name: string): Promise<void> {
-		await this.prisma.member.update({
-			where: { name: name },
-			data: { refreshToken: "" }
-		});
-	}
-
-	async generateTfaCode(name: string): Promise<string> {
+	async generateTfaCodeForSignIn(name: string): Promise<string> {
 		const charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 		const code = customAlphabet(charset, 6)();
 		await this.prisma.member.update({
