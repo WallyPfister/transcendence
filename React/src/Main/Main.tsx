@@ -1,13 +1,23 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import io, { Socket } from "socket.io-client";
 
 import "./Main.css";
 import ChannelWindow from "./ChannelWindow";
 import PasswordModal from "./PasswordWindow";
+import { SocketContext } from "../Socket/SocketContext";
+import { useNavigate } from "react-router-dom";
 
-const socket: Socket = io("http://localhost:3001", { withCredentials: true });
+// const socket: Socket = io("http://localhost:3001", { withCredentials: true });
 
 function Main() {
+
+  const socket = useContext(SocketContext);
+  console.log(socket);
+  const navigate = useNavigate();
+  useEffect(() => {
+    socket.emit('test')
+  }, []); // test
+
   interface Message {
     nickname: string;
     message: string;
@@ -20,10 +30,11 @@ function Main() {
   const [selectedTab, setSelectedTab] = useState("channel");
   const [friends, setFriends] = useState<string[]>([]);
   const [channelUser, setChannelUser] = useState<string[]>([]);
-  const [showChannel, setChannel] = useState(false);
+  const [showChannel, setChannel] = useState<boolean>(false);
   const [selectUser, setSelectUser] = useState<string>("");
   const [privateRoomName, setPrivateRoomName] = useState<string>("");
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [inviteGameSelect, setInviteGameSelect] = useState<boolean>(false);
 
   const chatWindowRef = useRef<HTMLDivElement>(null); // create a ref for the chat window
 
@@ -93,6 +104,11 @@ function Main() {
     setIsComposing(false);
   };
 
+  const goToProfile = (user: string) => {
+    // You can pass user as a parameter if you need it in the profile page
+    navigate('/profile', { state: { user } });
+  };
+
   const handleChatKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !isComposing) {
       socket.emit("sendMessage", { message: message });
@@ -113,7 +129,10 @@ function Main() {
   const handleUserClick = (user: string) => {
     if (user === selectUser) {
       setSelectUser("");
-    } else setSelectUser(user);
+    }  else {
+      setInviteGameSelect(false); // 나중에 지울지도
+      setSelectUser(user);
+    }
   };
 
   const userProfile = (user: string) => {
@@ -148,25 +167,37 @@ function Main() {
     setMessages((prevMessages) => [...prevMessages, newMessage]);
   };
 
-  const inviteGame = (user: string) => {
+  const inviteGame = (event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent event from bubbling up
+    setInviteGameSelect(true);
+  };
+
+  const selectGametype = (user: string, type: string) => {
+    // normal = 0, power = 1
+    if (type === "normal") {
+      socket.emit("invite", { type: 0, invitee: user });
+    } else if (type === "power") {
+      socket.emit("invite", { type: 1, invitee: user });
+    }
     const newMessage: Message = {
       nickname: "<system>",
-      message: ` You invited ${user} to a dual.`,
+      message: ` You challanged ${user} to a ${type} dual.`,
     };
     setMessages((prevMessages) => [...prevMessages, newMessage]);
+    setInviteGameSelect(false);
   };
 
   useEffect(() => {
     // Handle password required event
   }, []);
 
-  const handlePasswordSubmit = ( submit: any ) => {
+  const handlePasswordSubmit = (submit: any) => {
     // Send the password to the server
     socket.emit("sendPassword", submit);
     console.log(submit);
     setShowPasswordModal(false);
   };
-
+  
   return (
     <div id="main">
       <div id="top-buttons">
@@ -175,7 +206,7 @@ function Main() {
           <button id="ladder-button">Rank</button>
           <button id="ranking-button">Ranking</button>
         </div>
-        <button id="profile-button">My Profile</button>
+        <button id="profile-button" onClick={() => goToProfile(nickname)}>My Profile</button>
       </div>
       <div id="chat-interface">
         <div id="chat-box">
@@ -241,7 +272,23 @@ function Main() {
                         <button onClick={() => deleteFriend(user)}>
                           delete user
                         </button>
-                        <button onClick={() => inviteGame(user)}>1vs1</button>
+                        <button onClick={(event) => inviteGame(event)}>
+                          1vs1
+                        </button>
+                        <div className="button-invite-type">
+                          <button
+                            className="button-normal-invite"
+                            onClick={() => selectGametype(user, "normal")}
+                          >
+                            Normal
+                          </button>
+                          <button
+                            className="button-power-invite"
+                            onClick={() => selectGametype(user, "Power")}
+                          >
+                            Power
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -266,7 +313,25 @@ function Main() {
                           Add Friend
                         </button>
                         <button onClick={() => banUser(user)}>Ban</button>
-                        <button onClick={() => inviteGame(user)}>1vs1</button>
+                        <button onClick={(event) => inviteGame(event)}>
+                          1vs1
+                        </button>
+                        {inviteGameSelect === true && (
+                          <div className="button-invite-type">
+                            <button
+                              className="button-normal-invite"
+                              onClick={() => selectGametype(user, "normal")}
+                            >
+                              Normal
+                            </button>
+                            <button
+                              className="button-power-invite"
+                              onClick={() => selectGametype(user, "Power")}
+                            >
+                              Power
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -301,5 +366,6 @@ function Main() {
     </div>
   );
 }
+
 
 export default Main;

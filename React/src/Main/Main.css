@@ -149,6 +149,28 @@
   height: 100%;
 }
 
+#main #chat-interface #switch-box #list-window .button-invite-type {
+  width: 95%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+#main #chat-interface #switch-box #list-window .button-invite-type button {
+  width: 50%;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+#main #chat-interface #switch-box #list-window .button-normal-invite  {
+  background-color: #378f28;
+}
+
+#main #chat-interface #switch-box #list-window .button-power-invite  {
+  background-color: #ff4b7b;
+}
+
 #main #chat-interface #switch-box #list-window div {
   margin-bottom: 5px;
 }
