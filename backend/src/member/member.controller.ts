@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards, NotFoundException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards, NotFoundException, Req, ValidationPipe } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiUnauthorizedResponse, ApiConflictResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags, ApiBadRequestResponse } from '@nestjs/swagger';
 import { MemberService } from './member.service';
 import { MemberRepository } from './member.repository';
@@ -6,7 +6,7 @@ import { CreateMemberDto } from './dto/create-member.dto';
 import { MemberProfileDto } from './dto/memberProfile.dto';
 import { MemberGameInfoDto } from './dto/memberGameInfo.dto';
 import { MemberGameHistoryDto } from './dto/memberGameHistory.dto';
-import { ChUserProfileDto } from './dto/chUserProfile.dto';
+import { userProfileDto } from './dto/userProfile.dto';
 import { FriendProfileDto } from './dto/friendProfile.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { AuthService } from '../auth/auth.service';
@@ -49,7 +49,7 @@ export class MemberController {
 	@ApiBearerAuth()
 	@Post()
 	@UseGuards(JwtSignUpAuthGuard)
-	async createMember(@Payload() payload: JwtTokenDTO, @Body() memberInfo: CreateMemberDto): Promise<IssueJwtTokenDTO> {
+	async createMember(@Payload() payload: JwtTokenDTO, @Body(new ValidationPipe()) memberInfo: CreateMemberDto): Promise<IssueJwtTokenDTO> {
 		memberInfo.intraId = payload.userName;
 		await this.memberRepository.createMember(memberInfo);
 		await this.authService.login(memberInfo.name);
@@ -189,38 +189,33 @@ export class MemberController {
 	}
 
 	@ApiOperation({
-		summary: 'Get channel user information.',
-		description: 'It gets a channel user information.'
+		summary: 'Get user information.',
+		description: 'It gets a user information.'
 	})
-	@ApiBody({
-		description: 'List of the channel user names.',
+	@ApiQuery({
+		name: 'name',
+		description: 'The name that the member wants to know',
 		required: true,
-		type: String,
-		isArray: true
+		type: String
 	})
 	@ApiOkResponse({
-		description: 'List of the channel users information.',
-		type: ChUserProfileDto,
-		isArray: true
+		description: 'User information.',
+		type: userProfileDto,
 	})
 	@ApiUnauthorizedResponse({
 		description:
 			'(1) [Invalid access token] Redirect to 42 login. \
 			(2) [Expired access token] Refresh the access token.',
 	})
+	@ApiNotFoundResponse({
+		description: 'There is no such member with the given name.'
+	})
 	@ApiBearerAuth()
-	@Get('chUser')
+	@Get('userProfile')
 	@UseGuards(JwtAuthGuard)
-	async getChUserInfo(@Payload() payload: any, @Body() data: { chUsers: string[] }): Promise<ChUserProfileDto[]> {
-		let ret: ChUserProfileDto[] = [];
-		for (let i = 0; i < data.chUsers.length; i++) {
-			const chUserInfo = await this.memberService.getChUserInfo(payload['sub'], data.chUsers[i]);
-			if (!chUserInfo)
-				continue;
-			ret.push(chUserInfo);
-		}
-		return ret;
-	} // 프론트: 따로 이름 솔팅은 하지 않고 있는데 필요한지 확인, 없는 멤버일 경우 걍 건너뜀 에러 반환 안함.
+	async getUserInfo(@Payload() payload: any, @Query('userName') userName: string): Promise<userProfileDto> {
+		return await this.memberService.getUserInfo(payload.user['sub'], userName);
+	}
 
 	@ApiOperation({
 		summary: 'Add a friend',
