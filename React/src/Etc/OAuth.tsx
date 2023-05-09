@@ -29,7 +29,7 @@ function OAuth() {
             else if (err.response.status === 500)
                 Swal.fire('관리자에게 문의해주세요.').then(() => nav('/'));
         });
-    }, []);
+    }, [code, nav]);
 
     return (
         <>Loading</>

@@ -9,6 +9,7 @@
 
 #verify #title {
 	font-size: max(55px, 5vw);
+	text-align: center;
 }
 
 #verify button {

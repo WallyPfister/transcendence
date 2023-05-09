@@ -100,6 +100,8 @@
 
 #sign-up #profile-form #file-wrapper div {
     font-size: max(25px, 2.5vw);
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 #sign-up #profile-form #auth-check {
@@ -134,4 +136,13 @@
 
 #sign-up #buttons #profile-cancle {
     background-color: #FF2F2F;
+}
+
+.swal2-popup {
+    white-space: pre-wrap;
+    padding: 1.25em 0;
+}
+
+.swal2-title {
+    font-size: 1.125em;
 }

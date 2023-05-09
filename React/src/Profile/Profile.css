@@ -1,7 +1,3 @@
-/* img {
-    width: 100px;
-} */
-
 #profile {
     width: 90%;
     display: flex;
@@ -53,16 +49,40 @@
     font-size: max(15px, 1.5vw);
 }
 
+#profile #left-wrapper #user-info #name-button-wrapper label.ONLINE {
+    color: #FFF84B;
+}
+
+#profile #left-wrapper #user-info #name-button-wrapper label.WAIT {
+    color: red;
+}
+
+#profile #left-wrapper #user-info #name-button-wrapper label.IN-GAME {
+    color: lime;
+}
+
 #profile #left-wrapper #user-info #name-button-wrapper #friend {
     width: 18%;
     padding-bottom: 18%;
     border-radius: 50%;
     border: none;
-    background-image: url('../../public/friend-add-button.svg');
     background-color: transparent;
     background-repeat: no-repeat;
     background-size: contain;
     margin-right: 10px;
+    cursor: pointer;
+}
+
+#profile #left-wrapper #user-info #name-button-wrapper #friend.add {
+    background-image: url('../../public/friend-add-button.svg');
+}
+
+#profile #left-wrapper #user-info #name-button-wrapper #friend.del {
+    background-image: url('../../public/friend-del-button.svg');
+}
+
+#profile #left-wrapper #user-info #name-button-wrapper #friend.me {
+    display: none;
 }
 
 #profile #left-wrapper #stat {

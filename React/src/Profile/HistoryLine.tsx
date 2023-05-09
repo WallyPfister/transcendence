@@ -1,20 +1,7 @@
+import { HistoryProps } from './ProfileInterface';
 import './HistoryLine.css';
 
-interface HistoryProps {
-    line: {
-        type: number,
-        name: string,
-        opponent: string,
-        scoreA: number,
-        scoreB: number,
-        time: string
-        result: boolean
-    }
-}
-
-function HistoryLine(props: HistoryProps) {
-    const line: HistoryProps["line"] = props.line;
-
+function HistoryLine({ line }: HistoryProps) {
     return (
         <div className="history-line">
             <div className="date">{line.time}</div>

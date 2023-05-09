@@ -1,8 +1,14 @@
+import LimitedAxios from "./LimitedAxios";
+import Swal from "sweetalert2";
 import { useState, useEffect } from "react";
 
-function Timer() {
+interface TimerProps {
+    isRunning: boolean,
+    setIsRunning: React.Dispatch<React.SetStateAction<boolean>>
+}
+
+function Timer({ isRunning, setIsRunning }: TimerProps) {
     const [timeLeft, setTimeLeft] = useState(0);
-    const [isRunning, setIsRunning] = useState(false);
 
     const minutes = String(Math.floor((timeLeft / (1000 * 60)) % 60)).padStart(2, '0');
     const second = String(Math.floor((timeLeft / 1000) % 60)).padStart(2, '0');
@@ -23,14 +29,22 @@ function Timer() {
                 clearInterval(timer);
             }
         }
-    }, [timeLeft, isRunning]);
+    }, [timeLeft, isRunning, setIsRunning]);
 
     const sendCode = (event: React.MouseEvent<HTMLButtonElement>): void => {
         const target: HTMLButtonElement = event.target as HTMLButtonElement;
+        const email: HTMLInputElement = document.getElementById('email-input') as HTMLInputElement;
+
         target.setAttribute('disabled', '');
-        // api 보내고 then에서 타이머 시작
-        setTimeLeft(5 * 1000);
-        setIsRunning(true);
+        LimitedAxios.post(email ? '/auth/signup/tfa-send' : '/auth/signin/tfa-send', email ? {"email": email.value} : null)
+            .then(() => {
+                setTimeLeft(180 * 1000);
+                setIsRunning(true);
+            }).catch((err) => {
+                if (err.response.status === 500)
+                    Swal.fire('Authentication code has failed to be sent');
+                target.removeAttribute('disabled');
+            });
     }
 
     return (
