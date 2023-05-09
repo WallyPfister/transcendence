@@ -214,7 +214,7 @@ export class MemberController {
 	@Get('profile')
 	@UseGuards(JwtAuthGuard)
 	async getUserInfo(@Payload() payload: any, @Query('userName') userName: string): Promise<userProfileDto> {
-		return await this.memberService.getUserInfo(payload.user['sub'], userName);
+		return await this.memberService.getUserInfo(payload['sub'], userName);
 	}
 
 	@ApiOperation({
