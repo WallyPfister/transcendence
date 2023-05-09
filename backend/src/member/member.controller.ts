@@ -1,20 +1,17 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards, NotFoundException, Req, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards, ValidationPipe } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiUnauthorizedResponse, ApiConflictResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags, ApiBadRequestResponse } from '@nestjs/swagger';
 import { MemberService } from './member.service';
 import { MemberRepository } from './member.repository';
 import { CreateMemberDto } from './dto/create-member.dto';
-import { MemberProfileDto } from './dto/memberProfile.dto';
 import { MemberGameInfoDto } from './dto/memberGameInfo.dto';
 import { MemberGameHistoryDto } from './dto/memberGameHistory.dto';
-import { userProfileDto } from './dto/userProfile.dto';
-import { FriendProfileDto } from './dto/friendProfile.dto';
+import { memberProfileDto } from './dto/memberProfile.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { AuthService } from '../auth/auth.service';
 import { Payload } from 'src/auth/decorators/payload';
 import { JwtSignUpAuthGuard } from 'src/auth/guards/jwt.signup.guard';
 import { IssueJwtTokenDTO } from 'src/auth/dto/issue.jwt';
 import { JwtTokenDTO } from '../auth/dto/jwt.dto';
-import { isArray } from 'class-validator';
 
 @ApiTags("Member")
 @Controller('member')
@@ -85,18 +82,32 @@ export class MemberController {
 	}
 
 	@ApiOperation({
-		summary: 'Get the member information by name',
-		description: 'It returns the currently authenticated member\'s own profile information.'
+		summary: 'Get member information.',
+		description: 'It gets a member information.'
+	})
+	@ApiQuery({
+		name: 'name',
+		description: 'The name that the member wants to know',
+		required: true,
+		type: String
 	})
 	@ApiOkResponse({
-		description: 'The profile information for the authenticated member.',
-		type: MemberProfileDto
+		description: 'The profile information for the given name',
+		type: memberProfileDto
+	})
+	@ApiUnauthorizedResponse({
+		description:
+			'(1) [Invalid access token] Redirect to 42 login. \
+			(2) [Expired access token] Refresh the access token.',
+	})
+	@ApiNotFoundResponse({
+		description: 'There is no such member with the given name.'
 	})
 	@ApiBearerAuth()
-	@Get()
+	@Get('profile')
 	@UseGuards(JwtAuthGuard)
-	async getMemberInfo(@Payload() payload: any): Promise<MemberProfileDto> {
-		return await this.memberRepository.getMemberInfo(payload['sub']);
+	async getUserInfo(@Payload() payload: any, @Query('userName') userName: string): Promise<memberProfileDto> {
+		return await this.memberService.getMemberInfo(payload['sub'], userName);
 	}
 
 	@ApiOperation({
@@ -191,35 +202,6 @@ export class MemberController {
 	}
 
 	@ApiOperation({
-		summary: 'Get user information.',
-		description: 'It gets a user information.'
-	})
-	@ApiQuery({
-		name: 'name',
-		description: 'The name that the member wants to know',
-		required: true,
-		type: String
-	})
-	@ApiOkResponse({
-		description: 'User information.',
-		type: userProfileDto,
-	})
-	@ApiUnauthorizedResponse({
-		description:
-			'(1) [Invalid access token] Redirect to 42 login. \
-			(2) [Expired access token] Refresh the access token.',
-	})
-	@ApiNotFoundResponse({
-		description: 'There is no such member with the given name.'
-	})
-	@ApiBearerAuth()
-	@Get('profile')
-	@UseGuards(JwtAuthGuard)
-	async getUserInfo(@Payload() payload: any, @Query('userName') userName: string): Promise<userProfileDto> {
-		return await this.memberService.getUserInfo(payload['sub'], userName);
-	}
-
-	@ApiOperation({
 		summary: 'Add a friend',
 		description: 'It adds a friend to the requester.'
 	})
@@ -248,21 +230,13 @@ export class MemberController {
 	}
 
 	@ApiOperation({
-		summary: 'Get a friend information',
-		description: 'It returns one friend\'s information'
-	})
-	@ApiQuery({
-		name: 'friendName',
-		description: 'The name of the member that the requester wants to know',
-		required: true,
-		type: String
+		summary: 'get member\'s all friends',
+		description: 'It gets member\'s all friend names.'
 	})
 	@ApiOkResponse({
-		description: 'The requester\'s friend information.',
-		type: FriendProfileDto
-	})
-	@ApiNotFoundResponse({
-		description: 'There is no such friend with the given name.'
+		description: 'The friend name list of the authenticated member.',
+		type: String,
+		isArray: true
 	})
 	@ApiUnauthorizedResponse({
 		description:
@@ -272,31 +246,7 @@ export class MemberController {
 	@ApiBearerAuth()
 	@Get('friend')
 	@UseGuards(JwtAuthGuard)
-	async findOneFriend(@Payload() payload: any, @Query('friendName') friendName: string): Promise<FriendProfileDto> {
-		const friend = await this.memberRepository.findOneFriend(payload['sub'], friendName);
-		if (friend === undefined)
-			throw new NotFoundException(`There is no friend with name ${friendName}.`);
-		return friend;
-	}
-
-	@ApiOperation({
-		summary: 'Get all friends information',
-		description: 'It returns all friends information sorted in ascending alphabetical order of name.'
-	})
-	@ApiOkResponse({
-		description: 'The requester\'s all friends information.',
-		type: FriendProfileDto,
-		isArray: true
-	})
-	@ApiUnauthorizedResponse({
-		description:
-			'(1) [Invalid access token] Redirect to 42 login. \
-			(2) [Expired access token] Refresh the access token.',
-	})
-	@ApiBearerAuth()
-	@Get('friend/all')
-	@UseGuards(JwtAuthGuard)
-	async findAllFriends(@Payload() payload: any): Promise<FriendProfileDto[]> {
+	async getAllFriends(@Payload() payload: any): Promise<{name: string}[]> {
 		return await this.memberRepository.findAllFriends(payload['sub']);
 	}
 

@@ -1,19 +1,16 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-export class MemberProfileDto {
+export class memberProfileDto {
 	@ApiProperty({ description: 'user-set name' })
 	name: string;
-	
-	@ApiProperty({ description: 'user two' })
-	email: string;
 
-	@ApiProperty({ description: `user avatar image` })
+	@ApiProperty({ description: 'user avatar' })
 	avatar: string;
 
-	@ApiProperty({ description: `user connection status`})
+	@ApiProperty({ description: 'user connection status' })
 	status: number;
-
-	@ApiProperty({ description: `the number of wins`})
+	
+	@ApiProperty({ description: 'the number of wins'})
 	win: number;
 
 	@ApiProperty({ description: `the number of loses`})
@@ -21,10 +18,13 @@ export class MemberProfileDto {
 
 	@ApiProperty({ description: 'total earned game points' })
 	score: number;
-	
+
 	@ApiProperty({ description: 'game tier' })
 	level: number;
-	
-	@ApiProperty({ description: 'game achievements earned'})
+
+	@ApiProperty({ description: 'game achievements earned' })
 	achieve: number;
+
+	@ApiProperty({ description: 'friend or not'})
+	whois?: number;
 }
