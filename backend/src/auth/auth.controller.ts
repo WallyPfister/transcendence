@@ -1,4 +1,4 @@
-import { Controller, Get, Post, UseGuards, Query, Body, InternalServerErrorException, UnauthorizedException, ConflictException, Session } from '@nestjs/common';
+import { Controller, Get, Post, UseGuards, Query, Body, InternalServerErrorException, UnauthorizedException, ConflictException, Session, Res } from '@nestjs/common';
 import { ApiOperation, ApiOkResponse, ApiUnauthorizedResponse, ApiTags, ApiBearerAuth, ApiQuery, ApiTooManyRequestsResponse, ApiInternalServerErrorResponse, ApiConflictResponse } from '@nestjs/swagger';
 import { Payload } from './decorators/payload';
 import { JwtAuthGuard } from './guards/jwt.guard';
@@ -9,6 +9,7 @@ import { JwtTokenDTO } from './dto/jwt.dto';
 import { MemberRepository } from '../member/member.repository';
 import { IssueJwtTokenDTO } from './dto/issue.jwt';
 import { IssueAccessTokenDTO } from './dto/issue.access.token';
+import { Response } from 'express';
 
 @ApiTags('Login')
 @Controller('auth')
@@ -136,12 +137,13 @@ export class AuthController {
 	@ApiBearerAuth()
 	@Get('/signup/tfa-verify')
 	@UseGuards(JwtLimitedAuthGuard)
-	async verifyTfaCodeForSignUp(@Payload() payload: JwtTokenDTO, @Query('code') code: string, @Session() session: { code?: string }): Promise<any> {
+	async verifyTfaCodeForSignUp(@Payload() payload: JwtTokenDTO, @Query('code') code: string, @Session() session: { code?: string }, @Res() res: Response): Promise<any> {
 		const match = this.authService.verifyTfaCodeForSignUp(session.code, code);
 		if (!match)
 			throw new ConflictException('Two-factor authentication code does not match.');
+		res.clearCookie('connect.sid');
 		const token = await this.authService.issueSignUpAccessToken(payload.userName);
-		return { limitedToken: token };
+		res.status(200).send({ limitedToken: token });
 	}
 
 	@ApiOperation({
