@@ -211,7 +211,7 @@ export class MemberController {
 		description: 'There is no such member with the given name.'
 	})
 	@ApiBearerAuth()
-	@Get('userProfile')
+	@Get('profile')
 	@UseGuards(JwtAuthGuard)
 	async getUserInfo(@Payload() payload: any, @Query('userName') userName: string): Promise<userProfileDto> {
 		return await this.memberService.getUserInfo(payload.user['sub'], userName);
