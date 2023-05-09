@@ -36,7 +36,7 @@ function Timer({ isRunning, setIsRunning }: TimerProps) {
         const email: HTMLInputElement = document.getElementById('email-input') as HTMLInputElement;
 
         target.setAttribute('disabled', '');
-        LimitedAxios.post(email ? '/auth/signup/tfa-send' : '/auth/signin/tfa-send', email ? {"email": email.value} : null)
+        LimitedAxios.post(email ? '/auth/signup/tfa-send' : '/auth/signin/tfa-send', email ? {"email": email.value} : {})
             .then(() => {
                 setTimeLeft(180 * 1000);
                 setIsRunning(true);

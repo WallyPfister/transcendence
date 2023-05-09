@@ -1,15 +1,17 @@
 import { useQuery } from 'react-query';
-import { HistoryProps, ProfileData } from './ProfileInterface';
+import Swal from 'sweetalert2';
+import { HistoryData, ProfileData } from './ProfileInterface';
 import HistoryLine from './HistoryLine';
 import './Profile.css';
 import CustomAxios from '../Etc/CustomAxios';
 import { AxiosResponse } from 'axios';
 import { NavigateFunction, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 
 const getProfileData = (user: string): Promise<ProfileData> => {
     return new Promise<ProfileData>(async (resolve, reject) => {
             try {
-                const res: AxiosResponse = await CustomAxios.get('/member/userProfile', {params: {userName: user}});
+                const res: AxiosResponse = await CustomAxios.get('/member/profile', {params: {userName: user}});
                 const status: string = res.data.status === 0 ? 'OFFLINE' : (res.data.status === 1 ? 'ONLINE' : (res.data.status === 2 ? 'WAIT' : 'IN-GAME'));
                 const achieve: Array<string> = String(res.data.achieve).split('');
                 const who: string = res.data.whois === 0 ? 'me' : (res.data.whois === 1 ? 'del' : 'add');
@@ -18,7 +20,8 @@ const getProfileData = (user: string): Promise<ProfileData> => {
                     "avatar": res.data.avatar,
                     "status": status,
                     "win": res.data.win,
-                    "lose": res.data.los,
+                    "lose": res.data.lose,
+                    "level": res.data.level,
                     "score": res.data.score,
                     "achieve1": achieve[0] === '0' ? false : true,
                     "achieve2": achieve[0] === '0' ? false : true,
@@ -34,24 +37,41 @@ const getProfileData = (user: string): Promise<ProfileData> => {
     );
 }
 
-const getHistory = async (user: string): Promise<Array<HistoryProps>> => {
+const getHistory = async (user: string): Promise<Array<HistoryData>> => {
     const res = await CustomAxios.get('/member/history', {params: {name: user}});
     return res.data;
 }
 
 function Profile() {
     const nav: NavigateFunction = useNavigate();
-    const userName: string = window.location.pathname.split('/')[2];
-    const { data: profileData, isLoading, isError } = useQuery<ProfileData>('profile-data', ()=>getProfileData(userName), {retry: false});
-    const { data: history } = useQuery<Array<HistoryProps>>('history-data', ()=>getHistory(userName), {retry: false});
-
-    if (isLoading)
+    const userName: string = window.location.pathname.split('/')[2] || '@'; 
+    const { data: profileData, isLoading: profileLoading, isError: profileError } = useQuery<ProfileData>('profile-data', ()=>getProfileData(userName), {retry: false, staleTime: 60 * 1000});
+    const { data: history, isLoading: historyLoading, isError: histotyError } = useQuery<Array<HistoryData>>('history-data', ()=>getHistory(userName), {retry: false});
+    
+    if (profileLoading || historyLoading)
         return (<>Loading</>);
-    if (isError)
-        nav('/not-found');
+    if (profileError || histotyError)
+        return (<>NotFound</>);
 
-    console.log(profileData);
-    console.log(history);
+    const friendButton = () => {
+        if (profileData && profileData.whois !== 'me') {
+            Swal.fire({
+                text: (profileData.whois === 'del' ? 'Remove' : 'Add') + ' as a friend?',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'OK'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    if (profileData.whois === 'del')
+                        CustomAxios.delete('/member/friend/' + profileData.name).then(() => Swal.fire('Complete!'));
+                    else if (profileData.whois === 'add')
+                        CustomAxios.post('/member/friend/' + profileData.name).then(() => Swal.fire('Complete!'))
+                        .catch((err) => {if (err.response.status === 404) Swal.fire('No such user')});
+                }
+            });
+        }
+    }
 
     return (
         <>
@@ -60,37 +80,35 @@ function Profile() {
                 <div id="profile">
                     <div id="left-wrapper">
                         <div id="user-info">
-                            <div id="img-wrapper">
-                                <img id="avatar" src="suzume.jpg" alt="img"></img>
-                            </div>
+                            <div id="avatar" style={{backgroundImage: `url(${profileData.avatar})`}}></div>
                             <div id="name-button-wrapper">
                                 <div id="name">{profileData.name}</div>
-                                <label className={profileData.status}><button id="friend" className={profileData.whois}></button>{profileData.status}</label>
+                                <label className={profileData.status}><button id="friend" className={profileData.whois} onClick={friendButton}></button>{profileData.status}</label>
                             </div>
                         </div>
                         <div id="stat">
                             <div id="stat-title">STAT</div>
                             <div id="stat-content">
                                 <div id="level-wrapper">
-                                    <img id="tier" src="tier5.png" alt="img"></img>
+                                    <img id="tier" src={"../tier" + profileData.level + ".png"} alt="img"></img>
                                     <div id="point">{profileData.score} pt</div>
                                 </div>
-                                <div id="win-lose">{profileData.win}W / {profileData.lose}L<br/>{(profileData.win / (profileData.win + profileData.lose) * 100).toFixed(2)}%</div>
+                                <div id="win-lose">{profileData.win}W / {profileData.lose}L<br/>{profileData.win === 0 ? '0' : (profileData.win / (profileData.win + profileData.lose) * 100).toFixed(2)}%</div>
                                 <div id="achieve">
                                     <div id="achieve-1">
-                                        <img className="off" src={'achieve-' + (profileData.achieve1 ? 'star' : 'non') + '.svg'} alt="img"></img>
+                                        <img className="off" src={'../achieve-' + (profileData.achieve1 ? 'star' : 'non') + '.svg'} alt="img"></img>
                                         <p>Win 5 times in a row</p>
                                     </div>
                                     <div id="achieve-2">
-                                        <img className="off" src={'achieve-' + (profileData.achieve2 ? 'star' : 'non') + '.svg'} alt="img"></img>
+                                        <img className="off" src={'../achieve-' + (profileData.achieve2 ? 'star' : 'non') + '.svg'} alt="img"></img>
                                         <p>Win 10 times in a row</p>
                                     </div>
                                     <div id="achieve-3">
-                                        <img className="off" src={'achieve-' + (profileData.achieve3 ? 'star' : 'non') + '.svg'} alt="img"></img>
+                                        <img className="off" src={'../achieve-' + (profileData.achieve3 ? 'star' : 'non') + '.svg'} alt="img"></img>
                                         <p>Perfect game winner</p>
                                     </div>
                                     <div id="achieve-4">
-                                        <img className="off" src={'achieve-' + (profileData.achieve4 ? 'star' : 'non') + '.svg'} alt="img"></img>
+                                        <img className="off" src={'../achieve-' + (profileData.achieve4 ? 'star' : 'non') + '.svg'} alt="img"></img>
                                         <p>Master Hunter</p>
                                     </div>
                                 </div>
@@ -99,12 +117,15 @@ function Profile() {
                     </div>
                     <div id="history-wrapper">
                         <div id="history-title">HISTORY</div>
+                        {
+                            history.length === 0 ? (<div style={{textAlign: 'center', marginTop: '30px'}}>No Result</div>) : null
+                        }
                         <div id="history-content">
-                            {/* {
+                            {
                                 history.map((line, idx) => (
                                     <HistoryLine line={line} key={idx}/>
                                 ))
-                            } */}
+                            }
                         </div>
                     </div>
                 </div>

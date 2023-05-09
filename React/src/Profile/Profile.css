@@ -21,7 +21,7 @@
     align-items: center;
 }
 
-#profile #left-wrapper #user-info #img-wrapper {
+#profile #left-wrapper #user-info #avatar {
     width: 18%;
     min-width: 65px;
     height: 0;
@@ -29,11 +29,9 @@
     border-radius: 50%;
     overflow: hidden;
     margin: 0 20px 0 20px;
-}
-
-#profile #left-wrapper #user-info #img-wrapper #avatar {
-    width: 100%;
-    object-fit: contain;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 #profile #left-wrapper #user-info #name-button-wrapper #name {

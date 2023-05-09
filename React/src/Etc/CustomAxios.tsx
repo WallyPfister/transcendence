@@ -10,7 +10,8 @@ const CustomAxios: AxiosInstance = axios.create({
 });
 
 CustomAxios.interceptors.request.use((config) => {
-    config.headers['Authorization'] = 'Bearer ' + localStorage.getItem('token');
+    if (config.headers['Authorization'] === undefined)
+        config.headers['Authorization'] = 'Bearer ' + localStorage.getItem('token');
     return config;
 })
 

@@ -71,12 +71,13 @@ const register = (event: React.MouseEvent<HTMLButtonElement>, nickPass: boolean,
     else if (codePass === false)
         Swal.fire('Please confirm email code');
     else if (files && files.length === 0) {
-        registerApiRequest(name, "default-avatar.jpeg", mail, tfa, nav);
+        registerApiRequest(name, "../default-avatar.jpeg", mail, tfa, nav);
     } else if (files) {
         const fileReader: FileReader = new FileReader();
         fileReader.readAsDataURL(files[0]);
         fileReader.onloadend = () => {
             const base64: string = fileReader.result as string;
+            console.log(base64);
             registerApiRequest(name, base64, mail, tfa, nav);
         }
     }
@@ -89,7 +90,7 @@ const registerApiRequest = (name: string, base64: string, mail: string, tfa: boo
         "avatar": base64,
         "email": mail,
         "twoFactor": tfa
-    }).then((res) => {
+    }, {headers: {'Authorization': 'Bearer ' + localStorage.getItem('ctoken')}}).then((res) => {
         const { accessToken, refreshToken } = res.data;
         localStorage.setItem('token', accessToken);
         localStorage.setItem('rtoken', refreshToken);

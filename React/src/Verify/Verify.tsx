@@ -17,14 +17,15 @@ function Verify() {
 
         target.setAttribute('disabled', '');
         LimitedAxios.get('/auth/signin/tfa-verify', {params: {code: input.value}}).then((res) => {
-            const { access, refresh } = res.data;
-            localStorage.setItem('token', access);
-            localStorage.setItem('rtoken', refresh);
+            const { accessToken, refreshToken } = res.data;
+            localStorage.setItem('token', accessToken);
+            localStorage.setItem('rtoken', refreshToken);
             localStorage.removeItem('ltoken');
             nav('/main');
         }).catch((err) => {
             if (err.response.status === 409)
                 Swal.fire('Code is incorrect');
+            target.removeAttribute('disabled');
         });
     }
     
@@ -34,7 +35,7 @@ function Verify() {
             <Timer isRunning={isRunning} setIsRunning={setIsRunning}/>
             <div id="verify-form">
                 <input id="verify-input" placeholder="code"></input>
-                <button id="verify-button" onClick={verifyCode} disabled>verify</button>
+                <button id="verify-button" onClick={verifyCode}>verify</button>
             </div>
         </div>
     )

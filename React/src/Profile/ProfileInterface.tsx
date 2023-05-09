@@ -4,6 +4,7 @@ export interface ProfileData {
     status: string,
     win: number,
     lose: number,
+    level: number,
     score: number,
     achieve1: boolean,
     achieve2: boolean,
@@ -12,14 +13,16 @@ export interface ProfileData {
     whois: string
 }
 
+export interface HistoryData {
+    type: number,
+    name: string,
+    opponent: string,
+    scoreA: number,
+    scoreB: number,
+    time: string,
+    result: boolean
+}
+
 export interface HistoryProps {
-    line: {
-        type: number,
-        name: string,
-        opponent: string,
-        scoreA: number,
-        scoreB: number,
-        time: string,
-        result: boolean
-    }
+    line: HistoryData
 }
