@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException, UnauthorizedExcepti
 import { MemberConstants } from './memberConstants';
 import { MemberRepository } from './member.repository';
 import { LoginMemberDTO } from 'src/auth/dto/member.login.dto';
-import { userProfileDto } from './dto/userProfile.dto';
+import { memberProfileDto } from './dto/memberProfile.dto';
 import { MemberGameInfoDto } from './dto/memberGameInfo.dto';
 import { MemberGameHistoryDto } from './dto/memberGameHistory.dto';
 import { matches } from 'class-validator';
@@ -65,10 +65,10 @@ export class MemberService {
 		this.memberRepository.updateGameResult(member);
 	}
 
-	async getUserInfo(name: string, userName: string): Promise<userProfileDto> {
-		const user: userProfileDto = await this.memberRepository.getChUserInfo(userName);
+	async getMemberInfo(name: string, userName: string): Promise<memberProfileDto> {
+		const user: memberProfileDto = await this.memberRepository.getMemberInfo(userName);
 		if (!user)
-			throw new BadRequestException();
+			throw new NotFoundException(`There is no such member with name ${name}.`);
 		user.name = userName;
 		if (name === userName)
 			user.whois = 0;
@@ -83,19 +83,14 @@ export class MemberService {
 	}
 
 	async getMemberHistory(name: string): Promise<MemberGameHistoryDto[] | null> {
-		try {
-			const history = await this.memberRepository.getMemberHistory(name);
-			if (history === null)
-				throw new NotFoundException(`There is no such member with name ${name}.`);
-			for (let i = 0; i < history.length; i++) {
-				const month = (history[i].date.getMonth() + 1).toString();
-				const day = history[i].date.getDate().toString();
-				history[i].time = month.padStart(2, '0') + '.' + day.padStart(2, '0');
-			}
-			return history;
+		const history = await this.memberRepository.getMemberHistory(name);
+		if (history === null)
+			throw new NotFoundException(`There is no such member with name ${name}.`);
+		for (let i = 0; i < history.length; i++) {
+			const month = (history[i].date.getMonth() + 1).toString();
+			const day = history[i].date.getDate().toString();
+			history[i].time = month.padStart(2, '0') + '.' + day.padStart(2, '0');
 		}
-		catch (err) {
-			return null;
-		}
+		return history;
 	}
 }
