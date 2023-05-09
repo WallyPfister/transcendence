@@ -25,7 +25,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 			return payload;
 		} catch (e) {
 			switch (e.message) {
-				case 'EXPIRED_TOKEN':
+				case 'jwt expired':
 					throw new UnauthorizedException('Expired access token.');
 				default:
 					throw new UnauthorizedException('Invalid access token.');

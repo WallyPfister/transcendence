@@ -122,7 +122,7 @@ export class MemberController {
 		summary: 'Get member\'s game history.',
 		description: 'It gets member\'s game history what sorted in aescending order of created time. '
 	})
-	@ApiParam({
+	@ApiQuery({
 		name: 'name',
 		description: 'The name of the member that the requester wants to know the history.',
 		required: true,
@@ -249,7 +249,7 @@ export class MemberController {
 		summary: 'Get a friend information',
 		description: 'It returns one friend\'s information'
 	})
-	@ApiParam({
+	@ApiQuery({
 		name: 'friendName',
 		description: 'The name of the member that the requester wants to know',
 		required: true,
