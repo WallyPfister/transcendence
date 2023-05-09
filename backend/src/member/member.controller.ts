@@ -14,6 +14,7 @@ import { Payload } from 'src/auth/decorators/payload';
 import { JwtSignUpAuthGuard } from 'src/auth/guards/jwt.signup.guard';
 import { IssueJwtTokenDTO } from 'src/auth/dto/issue.jwt';
 import { JwtTokenDTO } from '../auth/dto/jwt.dto';
+import { isArray } from 'class-validator';
 
 @ApiTags("Member")
 @Controller('member')
@@ -129,8 +130,9 @@ export class MemberController {
 		type: String
 	})
 	@ApiOkResponse({
-		description: 'The profile information for the authenticated member.',
-		type: MemberGameHistoryDto
+		description: 'The game history for the authenticated member.',
+		type: MemberGameHistoryDto,
+		isArray: true
 	})
 	@ApiNotFoundResponse({
 		description: 'There is no such member with given name.'
@@ -138,7 +140,7 @@ export class MemberController {
 	@ApiBearerAuth()
 	@Get('history')
 	@UseGuards(JwtAuthGuard)
-	async getGameHistory(@Query('name') name: string): Promise<MemberGameHistoryDto> {
+	async getGameHistory(@Query('name') name: string): Promise<MemberGameHistoryDto[]> {
 		return await this.memberService.getMemberHistory(name);
 	}
 
