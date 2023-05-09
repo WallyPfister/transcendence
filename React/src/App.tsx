@@ -23,7 +23,7 @@ function App() {
               <Route path='/auth/callback' element={<OAuth/>}/>
               <Route path='/signup' element={<SignUp/>}/>
               <Route path='/verify' element={<Verify/>}/>
-              <Route path='/main' element={<Main/>}/>
+              {/* <Route path='/main' element={<Main/>}/> */}
               <Route path='/rank' element={<Rank/>}/>
               <Route path='/profile/*' element={<Profile/>}/>
               {/*<Route path='/game' element={<Game/>}/> */}
@@ -34,3 +34,5 @@ function App() {
 	  </div>
   )
 }
+
+export default App;
