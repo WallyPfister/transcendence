@@ -32,9 +32,12 @@ async function errorHandler(error: AxiosError) {
         } else
             console.log(error);
     } else if (error.response && error.response.status === 500) {
-        Swal.fire('관리자에게 문의해주세요.');
-        removeToken();
-        window.location.href = process.env.REACT_APP_CLIENT_URL || 'where42.kr';
+        Swal.fire('관리자에게 문의해주세요.').then((res) => {
+            if (res.isConfirmed) {
+                removeToken();
+                window.location.href = process.env.REACT_APP_CLIENT_URL || 'where42.kr';
+            }
+        });
     } else
         console.log(error);
 }
