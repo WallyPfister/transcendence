@@ -17,29 +17,22 @@ interface Ball {
 function Game() {
   const socket = useContext(SocketContext);
   const location = useLocation();
-  const gameData = location.state.data;
-  console.log(gameData);
-
-  useEffect(() => {
-	console.log(socket.id);
-    socket.emit("register", { roomId: '1234' });
-	console.log("send register")
-  }, []);
+  const gameData = location.state;
 
   const canvasRef = useRef(null);
   let canvas;
   let context;
 
-  const [user, setUser] = useState({
+  const [playerA, setPlayerA] = useState({
     x: 0,
     y: 250,
     width: 10,
     height: 100,
-    color: "BLACK",
+    color: "GRAY",
     score: 0,
   });
 
-  const [com, setCom] = useState({
+  const [playerB, setPlayerB] = useState({
     x: 890,
     y: 250,
     width: 10,
@@ -57,6 +50,11 @@ function Game() {
     velocityY: 5,
     color: "BLACK",
   });
+
+  useEffect(() => {
+    socket.emit("register", { roomId: gameData.data.roomId });
+    console.log("send register");
+  }, []);
 
   function drawRect(x, y, w, h, c) {
     context.fillStyle = c;
@@ -95,11 +93,23 @@ function Game() {
     drawRect(0, 0, 900, 600, "WHITE");
     drawNet();
 
-    drawText(user.score, canvas.width / 4, canvas.height / 5, "BLACK");
-    drawText(com.score, (3 * canvas.width) / 4, canvas.height / 5, "BLACK");
+    drawText(playerA.score, canvas.width / 4, canvas.height / 5, "BLACK");
+    drawText(playerB.score, (3 * canvas.width) / 4, canvas.height / 5, "BLACK");
 
-    drawRect(user.x, user.y, user.width, user.height, user.color);
-    drawRect(com.x, com.y, com.width, com.height, com.color);
+    drawRect(
+      playerA.x,
+      playerA.y,
+      playerA.width,
+      playerA.height,
+      playerA.color
+    );
+    drawRect(
+      playerB.x,
+      playerB.y,
+      playerB.width,
+      playerB.height,
+      playerB.color
+    );
 
     drawCircle(ball.x, ball.y, ball.radius, ball.color);
   }
@@ -107,21 +117,6 @@ function Game() {
   useEffect(() => {
     canvas = canvasRef.current;
     context = canvas.getContext("2d");
-    // socket.on("set", (data) => {
-    // 	const newBall: Ball ={
-    // 		x: data.x,
-    // 		y: data.y,
-    // 		radius: data.radius,
-    // 		speed: data.speed,
-    // 		velocityX: data.velocityX,
-    // 		velocityY: data.velocityY,
-    // 		color: data.color,
-    // 	}
-    // 	setBall(newBall);
-    // 	canvas = canvasRef.current;
-    // 	context = canvas.getContext("2d");
-    // 	render();
-    // })
 
     socket.on("update", (data) => {
       const updateBall: Ball = {
@@ -133,23 +128,42 @@ function Game() {
         velocityY: data.ball.velocityY,
         color: data.ball.color,
       };
-      const updateCom = {
-        x: data.playerB.x,
-        y: data.playerB.y,
-        width: 10,
-        height: 100,
-        color: "GRAY",
-        score: data.playerB.score,
-      };
-      user.score = data.playerA.score;
+      if (gameData.nickname == gameData.data.playerA) {
+        const updateplayerB = {
+          x: data.playerB.x,
+          y: data.playerB.y,
+          width: 10,
+          height: 100,
+          color: "BLACK",
+          score: data.playerB.score,
+        };
+        setPlayerB(updateplayerB);
+      } else {
+        const updateplayerA = {
+          x: data.playerA.x,
+          y: data.playerA.y,
+          width: 10,
+          height: 100,
+          color: "BLACK",
+          score: data.playerA.score,
+        };
+        setPlayerA(updateplayerA);
+      }
+      playerA.score = data.playerA.score;
+      playerB.score = data.playerB.score;
       setBall(updateBall);
-      setCom(updateCom);
     });
 
     function movePaddle(evt) {
       let rect = canvas.getBoundingClientRect();
-      user.y = evt.clientY - rect.top - user.height / 2;
-      socket.emit("paddleA", { roomId: "1", y: user.y });
+      console.log(gameData.nickname);
+      if (gameData.nickname == gameData.data.playerA) {
+        playerA.y = evt.clientY - rect.top - playerA.height / 2;
+        socket.emit("paddleA", { roomId: gameData.data.roomId, y: playerA.y });
+      } else {
+        playerB.y = evt.clientY - rect.top - playerA.height / 2;
+        socket.emit("paddleB", { roomId: gameData.data.roomId, y: playerB.y });
+      }
     }
     canvas.addEventListener("mousemove", movePaddle);
   }, []);
