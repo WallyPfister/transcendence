@@ -6,13 +6,3 @@ export interface gameRoomDto {
 	playerA: Player;
 	playerB: Player;
 }
-
-export class test{
-	private A: string;
-	private B: number;
-
-	constructor(A: string, B: number){
-		this.A = A;
-		this.B = B;
-	}
-}

@@ -57,13 +57,10 @@ export class Pong{
 		this.gameRoomList[roomId].ball.velocityX = -1 * this.gameRoomList[roomId].ball.velocityX;
 	}
 	
-	@SubscribeMessage("test")
-	async test(@MessageBody() data: {roomId: string, socketId: string}){
-		console.log("=====test=====");
-	}
-	
 	@SubscribeMessage("register")
 	async register(@MessageBody() data: {roomId: string}, @ConnectedSocket() socket:Socket){
+		console.log(data.roomId);
+		console.log(this.server.sockets.adapter.rooms.get(data.roomId));
 		if (this.server.sockets.adapter.rooms.get(data.roomId) == undefined)
 			return ;
 		this.gameRoomList[data.roomId] = {
@@ -96,9 +93,6 @@ export class Pong{
 	
 	@SubscribeMessage("paddleA")
 	async paddleA(@MessageBody() data: {roomId: string, y: number} ){
-		// console.log("======= Paddle =======");
-		// console.log(data);
-		// console.log(this.gameRoomList);
 		if(!this.gameRoomList[data.roomId])
 			return;
 		this.gameRoomList[data.roomId].playerA.y = data.y;
@@ -118,8 +112,6 @@ export class Pong{
 		for (const roomId of Object.keys(this.gameRoomList)){
 			this.gameRoomList[roomId].ball.x += this.gameRoomList[roomId].ball.velocityX;
 			this.gameRoomList[roomId].ball.y += this.gameRoomList[roomId].ball.velocityY;
-			let computerLevel = 0.1;
-			this.gameRoomList[roomId].playerB.y += (this.gameRoomList[roomId].ball.y - (this.gameRoomList[roomId].playerB.y + this.gameRoomList[roomId].playerB.height / 2)) * computerLevel;
 	
 			if (this.gameRoomList[roomId].ball.y + this.gameRoomList[roomId].ball.radius > 600 || this.gameRoomList[roomId].ball.y - this.gameRoomList[roomId].ball.radius < 0)
 				this.gameRoomList[roomId].ball.velocityY = -this.gameRoomList[roomId].ball.velocityY;
@@ -154,7 +146,7 @@ export class Pong{
 				this.resetBall(roomId);
 			}
 			if (this.gameRoomList[roomId].playerA.score > 2 || this.gameRoomList[roomId].playerB.score > 2)
-				this.endGame(roomId);
+				await this.endGame(roomId);
 			this.server.to(roomId).emit("update", {ball: this.gameRoomList[roomId].ball, playerA: this.gameRoomList[roomId].playerA, playerB: this.gameRoomList[roomId].playerB});
 			// this.server.emit("update", {ball: this.gameRoomList[roomId].ball, playerA: this.gameRoomList[roomId].playerA, playerB: this.gameRoomList[roomId].playerB});
 		}
