@@ -7,6 +7,7 @@ import { MemberModule } from './member/member.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { GameModule } from './game/game.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { Pong } from './pong/pong.gateway';
 
 @Module({
   imports: [PrismaModule, AuthModule, MemberModule, GameModule,
@@ -23,6 +24,6 @@ import { ScheduleModule } from '@nestjs/schedule';
     }),
     ScheduleModule.forRoot()],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, Pong],
 })
 export class AppModule { }

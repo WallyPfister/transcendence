@@ -21,7 +21,6 @@ export class Pong{
 	@WebSocketServer()
 	server:Server;
 
-	// 임시 리스트 나중에 바꿔야함
 	gameRoomList: Record<string, gameRoomDto>;
 
 	constructor(){
@@ -36,58 +35,41 @@ export class Pong{
 	// 	console.log("Pong socket server Disconnect");
 	// 	this.gameList.pop();
 	//   }
-
-	collision(b: Ball, p: Player): boolean{
-		const bTop = b.y - b.radius;
-		const bBottom = b.y + b.radius;
-		const bLeft = b.x - b.radius;
-		const bRight = b.x + b.radius;
-	
-		const pTop = p.y;
-		const pBottom = p.y + p.height;
-		const pLeft = p.x;
-		const pRight = p.x + p.width;
-	
-		return bRight > pLeft && bBottom > pTop && bLeft < pRight && bTop < pBottom;
-	}
-	
-	resetBall(roomId: string){
-		this.gameRoomList[roomId].ball.x = 450;
-		this.gameRoomList[roomId].ball.y = 300;
-		this.gameRoomList[roomId].ball.velocityX = -1 * this.gameRoomList[roomId].ball.velocityX;
-	}
 	
 	@SubscribeMessage("register")
-	async register(@MessageBody() data: {roomId: string}, @ConnectedSocket() socket:Socket){
-		console.log(data.roomId);
-		console.log(this.server.sockets.adapter.rooms.get(data.roomId));
+	async register(@MessageBody() data: {roomId: string, type: string}, @ConnectedSocket() socket:Socket){
 		if (this.server.sockets.adapter.rooms.get(data.roomId) == undefined)
 			return ;
 		this.gameRoomList[data.roomId] = {
 			ball: {x: 450,
 			y: 300,
-			radius: 10,
-			speed: 10,
+			radius: 20,
+			speed: 15,
 			velocityX: 5,
 			velocityY: 5,
 			color: "BLACK"
 			},
 			playerA: {
 				x : 0,
-				y : 350,
+				y : 250,
 				width : 10,
 				height : 100,
-				color : "WHITE",
+				color : "BLACK",
 				score : 0
 			},
 			playerB: {
 				x : 890,
-				y : 350,
+				y : 250,
 				width : 10,
 				height : 100,
-				color : "WHITE",
+				color : "BLACK",
 				score : 0
-			}
+			},
+			type: data.type
+		}
+		if (data.type == "1"){
+			this.gameRoomList[data.roomId].ball.radius = 20;
+			this.gameRoomList[data.roomId].ball.speed = 15;
 		}
 	}
 	
@@ -106,7 +88,7 @@ export class Pong{
 	}
 	
 	@Interval(15)
-	async upadte(){
+	async update(){
 		if (!this.gameRoomList)
 			return ;
 		for (const roomId of Object.keys(this.gameRoomList)){
@@ -120,13 +102,13 @@ export class Pong{
 	
 			if (this.collision(this.gameRoomList[roomId].ball, player)){
 				// 공이 플레이어를 친 곳
-				let colliedPoint = this.gameRoomList[roomId].ball.y - (player.y + player.height / 2);
+				let collidePoint = this.gameRoomList[roomId].ball.y - (player.y + player.height / 2);
 		
 				// 평균화
-				colliedPoint = colliedPoint / (player.height / 2);
+				collidePoint = collidePoint / (player.height / 2);
 		
 				// calculate angle in Radian
-				let angleRad = colliedPoint * Math.PI / 4;
+				let angleRad = collidePoint * Math.PI / 4;
 		
 		
 				let direction = (this.gameRoomList[roomId].ball.x < 900 / 2) ? 1 : -1;
@@ -151,12 +133,46 @@ export class Pong{
 			// this.server.emit("update", {ball: this.gameRoomList[roomId].ball, playerA: this.gameRoomList[roomId].playerA, playerB: this.gameRoomList[roomId].playerB});
 		}
 	}
+
+	collision(b: Ball, p: Player): boolean{
+		const bTop = b.y - b.radius;
+		const bBottom = b.y + b.radius;
+		const bLeft = b.x - b.radius;
+		const bRight = b.x + b.radius;
+	
+		const pTop = p.y;
+		const pBottom = p.y + p.height;
+		const pLeft = p.x;
+		const pRight = p.x + p.width;
+	
+		return bRight > pLeft && bBottom > pTop && bLeft < pRight && bTop < pBottom;
+	}
+	
+	resetBall(roomId: string){
+		if (this.gameRoomList[roomId].type == "1"){
+			this.gameRoomList[roomId].ball.x = 450;
+			this.gameRoomList[roomId].ball.y = 300;
+			this.gameRoomList[roomId].ball.speed = 15;
+			this.gameRoomList[roomId].ball.velocityX = -1 * this.gameRoomList[roomId].ball.velocityX;
+		}
+		else{
+			this.gameRoomList[roomId].ball.x = 450;
+			this.gameRoomList[roomId].ball.y = 300;
+			this.gameRoomList[roomId].ball.speed = 10;
+			this.gameRoomList[roomId].ball.velocityX = -1 * this.gameRoomList[roomId].ball.velocityX;
+		}
+	}
 	
 	endGame(roomId: string){
 		this.server.to(roomId).emit("endgame", {ball: this.gameRoomList[roomId].ball, playerA: this.gameRoomList[roomId].playerA, playerB: this.gameRoomList[roomId].playerB});
+		const room = this.server.sockets.adapter.rooms.get(roomId);
+		if (!room)
+			return;
+		for (const socketId of room) {
+			const user = this.server.sockets.sockets.get(socketId);
+			user.leave(roomId);
+		}
 		delete this.gameRoomList[roomId];
 	}
 
 }
-
-/** game logic */

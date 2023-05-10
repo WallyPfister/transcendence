@@ -82,6 +82,26 @@ export class MemberController {
 	}
 
 	@ApiOperation({
+		summary: 'Get login member name.',
+		description: 'It gets a member who the authenticated member information.'
+	})
+	@ApiOkResponse({
+		description: 'The profile information for the authenticated member information.',
+		type: String
+	})
+	@ApiUnauthorizedResponse({
+		description:
+			'(1) [Invalid access token] Redirect to 42 login. \
+			(2) [Expired access token] Refresh the access token.',
+	})
+	@ApiBearerAuth()
+	@Get()
+	@UseGuards(JwtAuthGuard)
+	async getMyInfo(@Payload() payload: any): Promise<string> {
+		return payload['sub'];
+	}
+
+	@ApiOperation({
 		summary: 'Get member information.',
 		description: 'It gets a member information.'
 	})
@@ -231,11 +251,11 @@ export class MemberController {
 
 	@ApiOperation({
 		summary: 'get member\'s all friends',
-		description: 'It gets member\'s all friend names.'
+		description: 'It gets member\'s all friends information.'
 	})
 	@ApiOkResponse({
-		description: 'The friend name list of the authenticated member.',
-		type: String,
+		description: 'The friends list of the authenticated member.',
+		type: memberProfileDto,
 		isArray: true
 	})
 	@ApiUnauthorizedResponse({
@@ -246,7 +266,7 @@ export class MemberController {
 	@ApiBearerAuth()
 	@Get('friend')
 	@UseGuards(JwtAuthGuard)
-	async getAllFriends(@Payload() payload: any): Promise<{name: string}[]> {
+	async getAllFriends(@Payload() payload: any): Promise<memberProfileDto[]> {
 		return await this.memberRepository.findAllFriends(payload['sub']);
 	}
 
