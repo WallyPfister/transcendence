@@ -375,13 +375,7 @@ export class ChannelService {
         },
       })
       .then((result) => result?.socket);
-<<<<<<< HEAD
-
-    console.log(memberId); // 이거 나중에 emit으로 수정
-=======
-
     // console.log(memberId); // 이거 나중에 emit으로 수정
->>>>>>> 4fc3db05025b037eb2fd17114dcc3556fad55859
   }
 
   kick(nickname: string, roomId: string) {
