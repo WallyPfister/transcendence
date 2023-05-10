@@ -7,6 +7,9 @@ export class memberProfileDto {
 	@ApiProperty({ description: 'user avatar' })
 	avatar: string;
 
+	@ApiProperty({ description: 'member email' })
+	email: string;
+
 	@ApiProperty({ description: 'user connection status' })
 	status: number;
 	

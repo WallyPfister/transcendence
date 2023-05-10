@@ -22,8 +22,7 @@ export class MemberRepository {
 					lose: 0,
 					level: 0,
 					score: 0,
-					achieve: 0,
-					socket: 0,
+					achieve: 0
 				},
 			});
 		} catch (err) {
@@ -90,6 +89,7 @@ export class MemberRepository {
 			select: {
 				name: true,
 				avatar: true,
+				email: true,
 				status: true,
 				win: true,
 				lose: true,
