@@ -32,7 +32,7 @@ function OAuth() {
     }, [code, nav]);
 
     return (
-        <>Loading</>
+        <img src="../spinner.gif" alt="img"></img>
     )
 }
 

@@ -1,4 +1,4 @@
-.invite-modal-overlay {
+.startgame-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -11,14 +11,10 @@
   z-index: 9999;
 }
 
-.invite-modal {
+.startgame-modal {
   background-color: white;
   border: 1px solid black;
-  color: black;
+  color: red;
+  font: 20px;
   padding: 20px;
-}
-
-.invite-modal button {
-  display: block;
-  margin-top: 10px;
 }

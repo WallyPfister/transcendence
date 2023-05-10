@@ -1,0 +1,22 @@
+#not-found {
+    width: 100%;
+    min-width: 768px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+#not-found p {
+    font-size: clamp(66px, 8vw, 88px);
+}
+
+#not-found button {
+    width: 40%;
+    height: max(60px, 5vw);
+    border-radius: 10px;
+    border: none;
+    font-size: max(25px, 2.3vw);
+    cursor: pointer;
+}
