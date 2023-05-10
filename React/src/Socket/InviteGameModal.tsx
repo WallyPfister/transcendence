@@ -1,14 +1,16 @@
 import "./InviteGameModal.css";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
 export function useInviteGame(socket: Socket) {
   const [showInvite, setShowInvite] = useState(false);
-  const [inviteData, setInvteData] = useState(null);
+  const [inviteData, setInviteData] = useState(null);
+
 
   useEffect(() => {
     socket.on("invite", (data: any) => {
-      setInvteData(data);
+      setInviteData(data);
       setShowInvite(true);
       console.log(data);
     });
@@ -20,7 +22,6 @@ export function useInviteGame(socket: Socket) {
 type Props = {
   onClose: () => void;
   socket: Socket;
-  nickname: string;
   inviteData: any;
 };
 
@@ -35,7 +36,7 @@ export function InviteGameModal(props: Props) {
   };
 
   const handleDecline = () => {
-    props.socket.emit("inviteReject", props.nickname);
+    props.socket.emit("inviteReject", props.inviteData.inviter);
     props.onClose();
   };
 
