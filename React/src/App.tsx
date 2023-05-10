@@ -11,6 +11,7 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import { SocketContext, socket } from "./Socket/SocketContext";
 import NotFound from './Etc/NotFound';
 import Game from './Game/Game';
+import { CustomRoute } from './Util/CustomRoute';
 
 const queryClient: QueryClient = new QueryClient();
 
@@ -23,11 +24,11 @@ function App() {
             <Routes>
               <Route path='/' element={<Login/>}/>
               <Route path='/auth/callback' element={<OAuth/>}/>
-              <Route path='/signup' element={<SignUp/>}/>
-              <Route path='/verify' element={<Verify/>}/>
-              <Route path='/main' element={<Main/>}/>
-              <Route path='/rank' element={<Rank/>}/>
-              <Route path='/profile/*' element={<Profile/>}/>
+              <Route path='/signup' element={<CustomRoute.AuthRoute isSignUp={true} isVerify={false} component={<SignUp/>}/>}/>
+              <Route path='/verify' element={<CustomRoute.AuthRoute isSignUp={false} isVerify={true} component={<Verify/>}/>}/>
+              <Route path='/main' element={<CustomRoute.PrivateRoute component={<Main/>}/>}/>
+              <Route path='/rank' element={<CustomRoute.PrivateRoute component={<Rank/>}/>}/>
+              <Route path='/profile/*' element={<CustomRoute.PrivateRoute component={<Profile/>}/>}/>
               <Route path='/game' element={<Game/>}/>
               <Route path='/*' element={<NotFound/>}/>
             </Routes>

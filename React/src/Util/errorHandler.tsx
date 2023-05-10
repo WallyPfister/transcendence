@@ -13,8 +13,7 @@ async function errorHandler(error: AxiosError) {
         const msg = (error.response.data as ErrorResponse).message;
         if (msg === "Invalid access token." || msg === "Unauthorized") { //refresh fail msg 바꾸고 tfa 안한 사람은 unauthorized로 가자
             //invalid, refresh fail -> token delete 후 42로그인으로
-            localStorage.removeItem('token');
-            localStorage.removeItem('rtoken');
+            removeToken();
             window.location.href = process.env.REACT_APP_42_URL || 'where42.kr'; //여기 뭐해야하지
         } else if (msg === "Expired access token.") {
             //token 만료 -> refresh 후 재요청
@@ -34,15 +33,18 @@ async function errorHandler(error: AxiosError) {
             console.log(error);
     } else if (error.response && error.response.status === 500) {
         Swal.fire('관리자에게 문의해주세요.');
-        localStorage.removeItem('token');
-        localStorage.removeItem('rtoken');
-        localStorage.removeItem('ltoken');
-        localStorage.removeItem('ctoken');
+        removeToken();
         window.location.href = process.env.REACT_APP_CLIENT_URL || 'where42.kr';
-    }
-    
-    else
+    } else
         console.log(error);
+}
+
+const removeToken = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('rtoken');
+    localStorage.removeItem('ltoken');
+    localStorage.removeItem('ctoken');
+    localStorage.removeItem('atoken');
 }
 
 export default errorHandler;

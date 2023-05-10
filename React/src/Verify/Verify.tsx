@@ -1,4 +1,4 @@
-import LimitedAxios from '../Etc/LimitedAxios';
+import LimitedAxios from '../Util/LimitedAxios';
 import Timer from '../Etc/Timer';
 import Swal from 'sweetalert2';
 import './Verify.css';
@@ -20,7 +20,7 @@ function Verify() {
             const { accessToken, refreshToken } = res.data;
             localStorage.setItem('token', accessToken);
             localStorage.setItem('rtoken', refreshToken);
-            localStorage.removeItem('ltoken');
+            localStorage.removeItem('atoken');
             nav('/main');
         }).catch((err) => {
             if (err.response.status === 409)

@@ -1,5 +1,5 @@
 import { NavigateFunction } from 'react-router-dom';
-import LimitedAxios from '../Etc/LimitedAxios';
+import LimitedAxios from '../Util/LimitedAxios';
 import Swal from 'sweetalert2';
 
 const nickCheck = (event: React.MouseEvent<HTMLButtonElement>, setNickPass: React.Dispatch<React.SetStateAction<boolean>>): void => {
