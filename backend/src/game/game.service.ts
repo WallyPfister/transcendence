@@ -36,18 +36,8 @@ export class GameService {
 
 	@SubscribeMessage('enterGame') // 희망 게임을 보내줘야 함 0 casual, 1 casual power, 2 ladder, 3 ladder power
 	waitGame(@MessageBody() type: number, @ConnectedSocket() socket: Socket) {
-<<<<<<< HEAD
-		if (!this.gameQ[type].enQueue(socket.id)) {
-			socket.emit('errorMessage', {
-				nickname: '<system>',
-				message: 'The waiting list is full. Please try again later.',
-			});
-			return ;
-		}
-=======
 		if (!this.gameQ[type].enQueue(socket.id))
 			this.server.emit("errorMessage", { message: "The waiting list is full. Please try again later." });
->>>>>>> ed85658cae6300094220bf449ad9b2a764b856be
 		socket.emit('addQueue', socket.data.nickname); // 큐에 넣어졌음을 알려줌. 굳이 응답 안해줘도 되면 삭제해도 됨.
 	}
 

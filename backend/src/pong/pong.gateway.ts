@@ -11,15 +11,9 @@ import { gameRoomDto } from "./gameRoomDto";
 @WebSocketGateway(3001, {
 	// transports: ['websocket'],
 	cors: {
-<<<<<<< HEAD
-	  origin: '*',
-	  methods: ['GET', 'POST'],
-	  credentials: true
-=======
 		origin: 'http://localhost:3000',
 		methods: ['GET', 'POST'],
 		credentials: true
->>>>>>> ed85658cae6300094220bf449ad9b2a764b856be
 	}
 })
 export class Pong {
@@ -47,15 +41,6 @@ export class Pong {
 		if (this.server.sockets.adapter.rooms.get(data.roomId) == undefined)
 			return;
 		this.gameRoomList[data.roomId] = {
-<<<<<<< HEAD
-			ball: {x: 450,
-			y: 300,
-			radius: 20,
-			speed: 10,
-			velocityX: 5,
-			velocityY: 5,
-			color: "BLACK"
-=======
 			ball: {
 				x: 450,
 				y: 300,
@@ -64,7 +49,6 @@ export class Pong {
 				velocityX: 5,
 				velocityY: 5,
 				color: "BLACK"
->>>>>>> ed85658cae6300094220bf449ad9b2a764b856be
 			},
 			playerA: {
 				x: 0,

@@ -2,7 +2,6 @@ COMPOSE_SRC = ./docker-compose.yml
 
 .PHONY : all
 all : build
-	@ mkdir -p $(VOLUME_PATH)/example_path
 	@ sudo docker compose -f $(COMPOSE_SRC) up -d
 
 .PHONY : dev

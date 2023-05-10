@@ -1,5 +1,4 @@
 import { useRef, useEffect, useState } from "react";
-import io, { Socket } from "socket.io-client";
 import { useContext } from "react";
 import { SocketContext } from "../Socket/SocketContext";
 import { useLocation } from "react-router-dom";
