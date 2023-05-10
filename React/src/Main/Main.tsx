@@ -6,17 +6,16 @@ import ChannelWindow from "./ChannelWindow";
 import PasswordModal from "./PasswordWindow";
 import { SocketContext } from "../Socket/SocketContext";
 import { useNavigate } from "react-router-dom";
+import { InviteGameModal, useInviteGame } from "../Socket/InviteGameModal";
 
 // const socket: Socket = io("http://localhost:3001", { withCredentials: true });
 
 function Main() {
-
   const socket = useContext(SocketContext);
+  const { showInvite, closeInvite, inviteData } = useInviteGame(socket);
+
   console.log(socket);
   const navigate = useNavigate();
-  useEffect(() => {
-    socket.emit('test')
-  }, []); // test
 
   interface Message {
     nickname: string;
@@ -56,6 +55,14 @@ function Main() {
       setNickname(`Yachoi ${randomNumber}`);
       socket.emit("setUser", { nickname: `Yachoi ${randomNumber}` });
     });
+
+    socket.on(
+      "startGame",
+      (data: { type: number; playerA: string; playerB: string }) => {
+        console.log(data);
+        navigate("/game", { state: { data } });
+      }
+    );
 
     socket.on("joinRoom", (data: { roomName: string }) => {
       setRoomName(data.roomName);
@@ -106,7 +113,7 @@ function Main() {
 
   const goToProfile = (user: string) => {
     // You can pass user as a parameter if you need it in the profile page
-    navigate('/profile', { state: { user } });
+    navigate("/profile", { state: { user } });
   };
 
   const handleChatKeyDown = (e: React.KeyboardEvent) => {
@@ -129,7 +136,7 @@ function Main() {
   const handleUserClick = (user: string) => {
     if (user === selectUser) {
       setSelectUser("");
-    }  else {
+    } else {
       setInviteGameSelect(false); // 나중에 지울지도
       setSelectUser(user);
     }
@@ -174,6 +181,7 @@ function Main() {
 
   const selectGametype = (user: string, type: string) => {
     // normal = 0, power = 1
+    console.log("invite");
     if (type === "normal") {
       socket.emit("invite", { type: 0, invitee: user });
     } else if (type === "power") {
@@ -197,7 +205,7 @@ function Main() {
     console.log(submit);
     setShowPasswordModal(false);
   };
-  
+
   return (
     <div id="main">
       <div id="top-buttons">
@@ -206,26 +214,31 @@ function Main() {
           <button id="ladder-button">Rank</button>
           <button id="ranking-button">Ranking</button>
         </div>
-        <button id="profile-button" onClick={() => goToProfile(nickname)}>My Profile</button>
+        <button id="profile-button" onClick={() => goToProfile(nickname)}>
+          My Profile
+        </button>
       </div>
       <div id="chat-interface">
         <div id="chat-box">
           <div id="chat-name">{roomName}</div>
           <div id="chat-window" ref={chatWindowRef}>
-            {messages.map((msg: Message, index: number) => (
-              <div
-                key={index}
-                className={
-                  msg.nickname === "<system>"
-                    ? "system-message"
-                    : msg.nickname === nickname
-                    ? "my-message"
-                    : ""
-                }
-              >
-                {msg.nickname}: {msg.message}
-              </div>
-            ))}
+            {messages.map(
+              (msg: Message, index: number) =>
+                msg.message !== "" && (
+                  <div
+                    key={index}
+                    className={
+                      msg.nickname === "<system>"
+                        ? "system-message"
+                        : msg.nickname === nickname
+                        ? "my-message"
+                        : ""
+                    }
+                  >
+                    {msg.nickname}: {msg.message}
+                  </div>
+                )
+            )}
           </div>
           <input
             id="send-message"
@@ -363,9 +376,18 @@ function Main() {
           />
         </div>
       )}
+      {showInvite && (
+        <div>
+          <InviteGameModal
+            onClose={closeInvite}
+            socket={socket}
+            nickname={nickname}
+            inviteData={inviteData}
+          />
+        </div>
+      )}
     </div>
   );
 }
-
 
 export default Main;
