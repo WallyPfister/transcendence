@@ -210,13 +210,21 @@ export class MemberRepository {
 		}
 	}
 
-	async findAllFriends(name: string): Promise<{name: string}[]> {
+	async findAllFriends(name: string): Promise<memberProfileDto[]> {
 		return await this.prisma.member.findUnique({
 			where: { name: name },
 		}).friend({
 			orderBy: { name: 'asc' },
 			select: {
-				name: true
+				name: true,
+				avatar: true,
+				email: true,
+				status: true,
+				win: true,
+				lose: true,
+				level: true,
+				score: true,
+				achieve: true
 			}
 		});
 	}
