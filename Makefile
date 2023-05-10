@@ -1,7 +1,5 @@
 COMPOSE_SRC = ./docker-compose.yml
 
-VOLUME_PATH = /Users/soyeon/desktop
-
 .PHONY : all
 all : build
 	@ mkdir -p $(VOLUME_PATH)/example_path
@@ -9,7 +7,6 @@ all : build
 
 .PHONY : dev
 dev : build
-	@ mkdir -p $(VOLUME_PATH)/example_path
 	@ sudo docker compose -f $(COMPOSE_SRC) up
 
 .PHONY : build
@@ -31,7 +28,6 @@ clean :
 
 .PHONY : fclean
 fclean : clean
-	@ sudo rm -rf $(VOLUME_PATH)/example_path
 
 .PHONY : re
 re :
