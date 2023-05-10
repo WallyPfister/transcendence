@@ -9,7 +9,7 @@ function Login() {
         if (token)
             CustomAxios.get('/auth/jwt-verify').then(() => nav('/main'));
         else
-            window.location.href = process.env.REACT_APP_42_URL || 'where42.kr'; //여기 뭐해야하지
+            window.location.href = process.env.REACT_APP_42_URL || 'intra.42.fr';
     }
 
     return (

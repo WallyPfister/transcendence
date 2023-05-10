@@ -11,10 +11,10 @@ interface ErrorResponse {
 async function errorHandler(error: AxiosError) {
     if (error.response && error.response.status === 401) {
         const msg = (error.response.data as ErrorResponse).message;
-        if (msg === "Invalid access token." || msg === "Unauthorized") { //refresh fail msg 바꾸고 tfa 안한 사람은 unauthorized로 가자
+        if (msg === "Invalid access token." || msg === "Unauthorized") {
             //invalid, refresh fail -> token delete 후 42로그인으로
             removeToken();
-            window.location.href = process.env.REACT_APP_42_URL || 'where42.kr'; //여기 뭐해야하지
+            window.location.href = process.env.REACT_APP_42_URL || 'intra.42.fr'; //42로그인으로? 로그인 버튼 있는 페이지로?
         } else if (msg === "Expired access token.") {
             //token 만료 -> refresh 후 재요청
             const originalRequest: InternalAxiosRequestConfig | undefined = error.config;
@@ -32,10 +32,11 @@ async function errorHandler(error: AxiosError) {
         } else
             console.log(error);
     } else if (error.response && error.response.status === 500) {
+        //DB (서버) 오류 시 토큰 삭제 후 로그인 화면으로 이동
         Swal.fire('관리자에게 문의해주세요.').then((res) => {
             if (res.isConfirmed) {
                 removeToken();
-                window.location.href = process.env.REACT_APP_CLIENT_URL || 'where42.kr';
+                window.location.href = process.env.REACT_APP_CLIENT_URL || 'intra.42.fr';
             }
         });
     } else
