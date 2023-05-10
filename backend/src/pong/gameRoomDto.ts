@@ -5,4 +5,5 @@ export interface gameRoomDto {
 	ball: Ball;
 	playerA: Player;
 	playerB: Player;
+	type: string;
 }
