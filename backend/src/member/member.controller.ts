@@ -82,12 +82,12 @@ export class MemberController {
 	}
 
 	@ApiOperation({
-		summary: 'Get login member information.',
+		summary: 'Get login member name.',
 		description: 'It gets a member who the authenticated member information.'
 	})
 	@ApiOkResponse({
 		description: 'The profile information for the authenticated member information.',
-		type: memberProfileDto
+		type: String
 	})
 	@ApiUnauthorizedResponse({
 		description:
@@ -251,11 +251,11 @@ export class MemberController {
 
 	@ApiOperation({
 		summary: 'get member\'s all friends',
-		description: 'It gets member\'s all friend names.'
+		description: 'It gets member\'s all friends information.'
 	})
 	@ApiOkResponse({
-		description: 'The friend name list of the authenticated member.',
-		type: String,
+		description: 'The friends list of the authenticated member.',
+		type: memberProfileDto,
 		isArray: true
 	})
 	@ApiUnauthorizedResponse({
