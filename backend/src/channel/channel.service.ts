@@ -17,7 +17,7 @@ const prisma = new PrismaClient();
 @WebSocketGateway(3001, {
   // transports: ['websocket'],
   cors: {
-    origin: 'http://localhost:3002',
+    origin: '*',
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -233,7 +233,7 @@ export class ChannelService {
       .emit('newMessage', { nickname, message });
     console.log(data);
   }
-  
+
   @SubscribeMessage('chatRoomList')
   async channelList() {
     this.server.emit('channelList', Object.keys(this.chatRoomList));
