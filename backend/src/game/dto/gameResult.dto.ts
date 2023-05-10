@@ -15,6 +15,4 @@ export class GameResultDto {
 
 	@ApiProperty({ description: 'the type of the game' })
 	type: number;
-
-	spectators?: string[];
 }
