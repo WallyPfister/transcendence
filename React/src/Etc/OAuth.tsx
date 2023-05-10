@@ -11,7 +11,7 @@ function OAuth() {
     useEffect(() => {
         axios.get(process.env.REACT_APP_API_URL + '/auth/callback', {params: {code: code}}).then((res) => {
             if (res.data.limitedToken) {
-                localStorage.setItem('ltoken', res.data.limitedToken);
+                localStorage.setItem('atoken', res.data.limitedToken);
                 nav('/verify');
             }
             else {

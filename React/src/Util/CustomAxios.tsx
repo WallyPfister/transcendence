@@ -1,6 +1,5 @@
 import axios, { AxiosInstance } from "axios";
 import errorHandler from "./errorHandler";
-import { NavigateFunction, useNavigate } from "react-router-dom";
 
 const CustomAxios: AxiosInstance = axios.create({
     baseURL: process.env.REACT_APP_API_URL,

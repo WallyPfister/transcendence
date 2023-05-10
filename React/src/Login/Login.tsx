@@ -1,5 +1,5 @@
 import { NavigateFunction, useNavigate } from 'react-router-dom';
-import CustomAxios from '../Etc/CustomAxios';
+import CustomAxios from '../Util/CustomAxios';
 import './Login.css';
 
 function Login() {

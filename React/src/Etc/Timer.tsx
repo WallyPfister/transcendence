@@ -1,4 +1,4 @@
-import LimitedAxios from "./LimitedAxios";
+import LimitedAxios from "../Util/LimitedAxios";
 import Swal from "sweetalert2";
 import { useState, useEffect } from "react";
 

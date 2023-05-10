@@ -10,8 +10,12 @@ const LimitedAxios: AxiosInstance = axios.create({
 });
 
 LimitedAxios.interceptors.request.use((config) => {
-    if (config.headers['Authorization'] === undefined)
-        config.headers['Authorization'] = 'Bearer ' + localStorage.getItem('ltoken');
+    if (config.headers['Authorization'] === undefined) {
+        if (localStorage.getItem('ltoken'))
+            config.headers['Authorization'] = 'Bearer ' + localStorage.getItem('ltoken');
+        else if (localStorage.getItem('atoken'))
+            config.headers['Authorization'] = 'Bearer ' + localStorage.getItem('atoken');
+    }
     return config;
 });
 

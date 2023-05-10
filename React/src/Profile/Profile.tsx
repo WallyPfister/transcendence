@@ -3,7 +3,7 @@ import Swal from 'sweetalert2';
 import { HistoryData, ProfileData } from './ProfileInterface';
 import HistoryLine from './HistoryLine';
 import './Profile.css';
-import CustomAxios from '../Etc/CustomAxios';
+import CustomAxios from '../Util/CustomAxios';
 import { AxiosResponse } from 'axios';
 import NotFound from '../Etc/NotFound';
 
