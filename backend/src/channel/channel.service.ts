@@ -123,13 +123,7 @@ export class ChannelService {
     const noRoom = Object.values(this.chatRoomList).find(
       (room) => room.roomId === roomId,
     );
-<<<<<<< HEAD
-
-    console.log(`join ${data}`);
-=======
-
     // console.log(`join ${data}`);
->>>>>>> 4fc3db05025b037eb2fd17114dcc3556fad55859
     if (noRoom == undefined) {
       this.server.emit('errorMessage', {
         nickname: '<system>',
@@ -178,13 +172,7 @@ export class ChannelService {
     const noRoom = Object.values(this.chatRoomList).find(
       (room) => room.roomId === roomId,
     );
-<<<<<<< HEAD
-
-    console.log(`privatejoin ${data}`);
-=======
-
     // console.log(`privatejoin ${data}`);
->>>>>>> 4fc3db05025b037eb2fd17114dcc3556fad55859
     if (noRoom == undefined) {
       this.server.emit('errorMessage', {
         nickname: '<system>',
@@ -235,17 +223,9 @@ export class ChannelService {
     const nickname = socket.data.nickname;
     const message = data.message;
     const chatRoom = this.chatRoomList[socket.data.roomId];
-<<<<<<< HEAD
-
-    console.log('=====send=====');
-    console.log(this.chatRoomList);
-    console.log(socket.data.roomId);
-=======
-
     // console.log('=====send=====');
     // console.log(this.chatRoomList);
     // console.log(socket.data.roomId);
->>>>>>> 4fc3db05025b037eb2fd17114dcc3556fad55859
     if (chatRoom && Object.keys(chatRoom.muteList).includes(nickname)) {
       const now = new Date();
       const diff =
