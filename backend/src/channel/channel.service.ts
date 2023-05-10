@@ -12,12 +12,14 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 
+
 const prisma = new PrismaClient();
+
 @Injectable()
 @WebSocketGateway(3001, {
   // transports: ['websocket'],
   cors: {
-    origin: '*',
+    origin: 'http://localhost:3000',
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -76,9 +78,11 @@ export class ChannelService {
       });
       return;
     }
+
     const existingRoom = Object.values(this.chatRoomList).find(
       (room) => room.roomName === roomName,
     );
+
     if (existingRoom) {
       this.server.emit('errorMessage', {
         nickname: '<system>',
@@ -116,7 +120,7 @@ export class ChannelService {
     const noRoom = Object.values(this.chatRoomList).find(
       (room) => room.roomId === roomId,
     );
-    console.log(`join ${data}`);
+    // console.log(`join ${data}`);
     if (noRoom == undefined) {
       this.server.emit('errorMessage', {
         nickname: '<system>',
@@ -132,7 +136,7 @@ export class ChannelService {
       return;
     }
     if (noRoom.roomId == socket.data.roomId) {
-      console.log('here');
+      //   console.log('here');
       socket.emit('newMessage', {
         nickname: '<system>',
         message: '이미 입장한 방입니다.',
@@ -146,8 +150,10 @@ export class ChannelService {
     if (this.leaveRoom(socket) === false) {
       this.isChief(this.chatRoomList[socket.data.roomId], socket);
     }
+
     socket.data.roomId = roomId;
     socket.data.roomName = roomId;
+
     socket.join(roomId);
     socket.emit('joinRoom', { roomName: roomId });
     this.server.to(socket.data.roomId).emit('addUser', socket.data.nickname);
@@ -163,7 +169,7 @@ export class ChannelService {
     const noRoom = Object.values(this.chatRoomList).find(
       (room) => room.roomId === roomId,
     );
-    console.log(`privatejoin ${data}`);
+    // console.log(`privatejoin ${data}`);
     if (noRoom == undefined) {
       socket.emit('errorMessage', {
         nickname: '<system>',
@@ -186,7 +192,7 @@ export class ChannelService {
       return;
     }
     if (noRoom.roomId == socket.data.roomId) {
-      console.log('here');
+      //   console.log('here');
       socket.emit('newMessage', {
         nickname: '<system>',
         message: '이미 입장한 방입니다.',
@@ -196,8 +202,10 @@ export class ChannelService {
     if (this.leaveRoom(socket) === false) {
       this.isChief(this.chatRoomList[socket.data.roomId], socket);
     }
+
     socket.data.roomId = roomId;
     socket.data.roomName = roomId;
+
     socket.join(roomId);
     socket.emit('joinRoom', { roomName: roomId });
     this.server.to(socket.data.roomId).emit('addUser', socket.data.nickname);
@@ -212,14 +220,14 @@ export class ChannelService {
     const nickname = socket.data.nickname;
     const message = data.message;
     const chatRoom = this.chatRoomList[socket.data.roomId];
-    console.log('=====send=====');
-    console.log(this.chatRoomList);
-    console.log(socket.data.roomId);
+    // console.log('=====send=====');
+    // console.log(this.chatRoomList);
+    // console.log(socket.data.roomId);
     if (chatRoom && Object.keys(chatRoom.muteList).includes(nickname)) {
       const now = new Date();
       const diff =
         (now.getTime() - chatRoom.muteList[nickname].getTime()) / 1000 / 60;
-      console.log(diff);
+      //   console.log(diff);
       if (diff < 4) {
         socket.emit('newMessage', {
           message: `your chat is blocked in ${socket.data.roomId}`,
@@ -242,9 +250,11 @@ export class ChannelService {
   @SubscribeMessage('exitChannel')
   async exitChannel(@ConnectedSocket() socket: Socket) {
     const chatRoom = this.chatRoomList[socket.data.roomId];
+
     if (this.leaveRoom(socket) === false) {
       this.isChief(this.chatRoomList[socket.data.roomId], socket);
     }
+
     socket.data.roomId = 'lobby';
     socket.data.roomName = 'lobby';
     socket.join('lobby');
@@ -258,62 +268,9 @@ export class ChannelService {
       if (sockets) {
         const socketId = Array.from(sockets.values())[0];
         const user = this.server.sockets.sockets.get(socketId);
-        this.chatRoomList[socket.data.roomId].chiefId = user.data.nickname;
-        user.emit('isChief');
-        this.chatRoomList[socket.data.roomId].adminList.push(
-          user.data.nickname,
-        );
-        delete this.chatRoomList[socket.data.roomId].adminList[
-          socket.data.nickname
-        ];
+        this.chatRoomList[socket.data.roomId].adminList.push(user.data.nickname);
+        delete this.chatRoomList[socket.data.roomId].adminList[socket.data.nickname];
       }
-    }
-  }
-  @SubscribeMessage('setAdmin')
-  async setAdmin(
-    @MessageBody() data: { nickname: string },
-    @ConnectedSocket() socket: Socket,
-  ) {
-    const chatRoom = this.chatRoomList[socket.data.roomId];
-    if (chatRoom.chiefId != socket.data.nickname) {
-      socket.emit('system', `You are not the owner`);
-      throw new Error(`Room ${socket.data.roomId} onwer is not you`);
-    }
-    const target = await this.findSocketByName(data.nickname);
-    if (!target) {
-      target.emit('isAdmin');
-      socket.emit('system', `${data.nickname} joins admin`);
-    } else {
-      throw new Error(`cannot find ${data.nickname}`);
-    }
-  }
-
-  @SubscribeMessage('unSetAdmin')
-  async unSetAdmin(
-    @MessageBody() data: { nickname: string },
-    @ConnectedSocket() socket: Socket,
-  ) {
-    const chatRoom = this.chatRoomList[socket.data.roomId];
-    if (chatRoom.chiefId != socket.data.nickname) {
-      socket.emit('system', `You are not the owner`);
-      throw new Error(`Room ${socket.data.roomId} onwer is not you`);
-    }
-    const target = await this.findSocketByName(data.nickname);
-    if (!target) {
-      if (
-        chatRoom.adminList.find((value) => value === data.nickname) == undefined
-      ) {
-        socket.emit('newMessage', {
-          nickname: '<system>',
-          message: `You are not admin`,
-        });
-      } else {
-        throw new Error(`${data.nickname} is not admin`);
-      }
-      target.emit('isNotAdmin');
-      socket.emit('system', `${data.nickname} leaves admin`);
-    } else {
-      throw new Error(`cannot find ${data.nickname}`);
     }
   }
 
@@ -386,13 +343,17 @@ export class ChannelService {
     @MessageBody() data: { nickname: string; message: string },
     @ConnectedSocket() socket: Socket,
   ) {
-    const user = await this.findSocketByName(data.nickname);
-    if (!user) {
-      user.emit('message', {
-        nickname: socket.data.nickname,
-        message: data.message,
-      });
-    }
+    const memberId = await prisma.member
+      .findUnique({
+        where: {
+          name: data.nickname,
+        },
+        select: {
+          socket: true,
+        },
+      })
+      .then((result) => result?.socket);
+    // console.log(memberId); // 이거 나중에 emit으로 수정
   }
 
   kick(nickname: string, roomId: string) {
@@ -400,12 +361,14 @@ export class ChannelService {
     console.log(nickname);
     console.log(roomId);
     const sockets = this.server.sockets.adapter.rooms.get(roomId);
+
     for (const socketId of sockets) {
       const target = this.server.sockets.sockets.get(socketId);
-      console.log(target.data.nickname);
-      console.log(target.data.roomId);
+      //   console.log(target.data.nickname);
+      //   console.log(target.data.roomId);
       if (target.data.nickname == nickname) {
         this.leaveRoom(target);
+
         target.data.roomId = 'lobby';
         target.data.roomName = 'lobby';
         this.server
@@ -428,20 +391,15 @@ export class ChannelService {
       });
       throw new Error(`Room ${roomId} not found`);
     }
-    if (chatRoom.adminList.find((value) => value === nickname) == undefined) {
-      socket.emit('newMessage', {
-        nickname: '<system>',
-        message: `Room ${roomId} admin is not you`,
-      });
+    if (chatRoom.adminList.find((value) => value === nickname) != undefined) {
+      socket.emit('newMessage', `Room ${roomId} admin is not you`);
       throw new Error(`Room ${roomId} admin is not you`);
     }
-    if (chatRoom.chiefId === nickname) {
-      socket.emit('newMessage', {
-        nickname: '<system>',
-        message: `Room ${roomId} ban target is owner`,
-      });
-      throw new Error(`Room ${roomId} ban target is owner`);
+    if (chatRoom.adminList.find((value) => value === socket.data.nickname) == undefined) {
+      socket.emit('newMessage', `Room ${roomId} ban target is admin`);
+      throw new Error(`Room ${roomId} ban target is admin`);
     }
+
     return chatRoom.banList.includes(nickname);
   }
 
@@ -449,9 +407,12 @@ export class ChannelService {
     const oldRoomId = socket.data.roomId;
     socket.leave(oldRoomId);
     // true => 내가 마지막 사람, false => 나 말고도 사람이 더 남음
-    if (this.server.sockets.adapter.rooms.get(oldRoomId) !== undefined) {
+    if (
+      this.server.sockets.adapter.rooms.get(oldRoomId) !== undefined
+    ) {
       const users = [];
       const sockets = this.server.sockets.adapter.rooms.get(oldRoomId);
+
       for (const socketId of sockets) {
         const user = this.server.sockets.sockets.get(socketId);
         users.push(user.data.nickname);
@@ -468,9 +429,10 @@ export class ChannelService {
   async channelUserList(socket: Socket) {
     const users = [];
     const sockets = this.server.sockets.adapter.rooms.get(socket.data.roomId);
+
     for (const socketId of sockets) {
       const user = this.server.sockets.sockets.get(socketId);
-      console.log(user.data.nickname);
+      //   console.log(user.data.nickname);
       users.push(user.data.nickname);
     }
     console.log(users);

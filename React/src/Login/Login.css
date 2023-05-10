@@ -1,0 +1,24 @@
+#login {
+    width: 80%;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#login #title {
+    font-size: max(50px, 6vw);
+    text-align: center;
+}
+
+#login #login-button {
+    width: 40%;
+    height: max(60px, 5vw);
+    border-radius: 10px;
+    border: none;
+    margin-top: 60px;
+    font-size: max(25px, 2.3vw);
+    cursor: pointer;
+}
+

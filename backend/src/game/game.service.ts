@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { GameConstants } from './gameConstants';
-import { Socket, Server} from 'socket.io';
-import { SubscribeMessage, MessageBody, ConnectedSocket,WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { Socket, Server } from 'socket.io';
+import { SubscribeMessage, MessageBody, ConnectedSocket, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { MemberRepository } from 'src/member/member.repository';
 import { MemberConstants } from 'src/member/memberConstants';
 import { Interval } from '@nestjs/schedule';
@@ -17,11 +17,11 @@ import { randomBytes } from 'crypto';
 @WebSocketGateway(3001, {
 	// transports: ['websocket'],
 	cors: {
-	  origin: 'http://localhost:3002',
-	  methods: ['GET', 'POST'],
-	  credentials: true,
+		origin: 'http://localhost:3000',
+		methods: ['GET', 'POST'],
+		credentials: true,
 	},
-  })
+})
 export class GameService {
 	private gameQ: GameQueue[];
 	@WebSocketServer()
@@ -36,6 +36,7 @@ export class GameService {
 
 	@SubscribeMessage('enterGame') // 희망 게임을 보내줘야 함 0 casual, 1 casual power, 2 ladder, 3 ladder power
 	waitGame(@MessageBody() type: number, @ConnectedSocket() socket: Socket) {
+<<<<<<< HEAD
 		if (!this.gameQ[type].enQueue(socket.id)) {
 			socket.emit('errorMessage', {
 				nickname: '<system>',
@@ -43,6 +44,10 @@ export class GameService {
 			});
 			return ;
 		}
+=======
+		if (!this.gameQ[type].enQueue(socket.id))
+			this.server.emit("errorMessage", { message: "The waiting list is full. Please try again later." });
+>>>>>>> ed85658cae6300094220bf449ad9b2a764b856be
 		socket.emit('addQueue', socket.data.nickname); // 큐에 넣어졌음을 알려줌. 굳이 응답 안해줘도 되면 삭제해도 됨.
 	}
 
@@ -50,13 +55,13 @@ export class GameService {
 	// @Interval('casualGame', 10000)
 	async checkCasualGame() {
 		if (this.gameQ[GameConstants.CASUAL].getCount() < 2) // 큐에 두개 이하면 실행 안함
-			return ;
+			return;
 		const p1 = await this.checkPlayer(MemberConstants.CASUAL, this.gameQ[GameConstants.CASUAL].peek(1), 1);
 		if (p1 === null)
-			return ;
+			return;
 		const p2 = await this.checkPlayer(MemberConstants.CASUAL, this.gameQ[GameConstants.CASUAL].peek(2), 2);
 		if (p1 === null)
-			return ; 
+			return;
 		this.gameQ[GameConstants.CASUAL].deQueue(); // 두명을 큐에서 뻄
 		this.gameQ[GameConstants.CASUAL].deQueue();
 		this.memberRepository.updateStatus(p1.data.nickname, MemberConstants.INGAME); // 두명을 인게임으로 변경해
@@ -72,7 +77,7 @@ export class GameService {
 	async checkPlayer(type: number, name: string, flag: number): Promise<Socket> {
 		if (this.gameQ[type].getCount() < 2)
 			return null;
-		const {status} = await this.memberRepository.getStatus(name);
+		const { status } = await this.memberRepository.getStatus(name);
 		if (status !== MemberConstants.ONLINE) { // offline, ingame(초대게임 하는 중일 때), wait(게임 초대했을 때) 모두제외 당장 게임 시작이 가능한 경우
 			if (flag === 1)
 				this.gameQ[type].deQueue();
@@ -82,7 +87,7 @@ export class GameService {
 		}
 		return this.checkSocket(type, name, flag); // 스테이터스 확인 끝나면 소켓 확인
 	}
-	
+
 	async checkSocket(type: number, name: string, flag: number): Promise<Socket> {
 		if (this.gameQ[type].getCount() < 2)
 			return null;
@@ -98,7 +103,7 @@ export class GameService {
 	}
 
 	@SubscribeMessage('invite') // 채널 리스트 or 친구 중 상태가 online인 사람만 초대할 수 있게 버튼이 떠야함
-	async inviteGame(@MessageBody() data: {type: number, invitee: string}, @ConnectedSocket() socket: Socket) {
+	async inviteGame(@MessageBody() data: { type: number, invitee: string }, @ConnectedSocket() socket: Socket) {
 		// 게임 종류랑 초대할 사람 담아서 보내주기
 		const {status} = await this.memberRepository.getStatus(data.invitee);
 		if (status !== MemberConstants.ONLINE)
@@ -106,17 +111,17 @@ export class GameService {
 		const inviteeSocket = await this.channelService.findSocketByName(data.invitee); // 초대 당한 애 소켓 찾기
 		const gameType = data.type;
 		const inviter = socket.data.nickname;
-		inviteeSocket.emit("invite", {gameType, inviter}) // 초대된 게임타입, 초대자 이름 초대 받은 애한테 보내주기
+		inviteeSocket.emit("invite", { gameType, inviter }) // 초대된 게임타입, 초대자 이름 초대 받은 애한테 보내주기
 		this.memberRepository.updateStatus(socket.data.nickname, MemberConstants.WAIT); // 초대한 애는 wait으로 바꾸기
 	}
 
 	@SubscribeMessage('inviteAccept') // 초대 수락 버튼 누름
-	async startGame(@MessageBody() data: {type: number, inviterName: string}, @ConnectedSocket() socket: Socket) {
-		const {status} = await this.memberRepository.getStatus(data.inviterName); // 초대자 상태 확인
+	async startGame(@MessageBody() data: { type: number, inviterName: string }, @ConnectedSocket() socket: Socket) {
+		const { status } = await this.memberRepository.getStatus(data.inviterName); // 초대자 상태 확인
 		const inviter = await this.channelService.findSocketByName(data.inviterName); // 초대자 소켓 찾기
 		if (status !== MemberConstants.WAIT || inviter === null) { // 웨잇 아니면, 소켓 못찾으면
 			socket.emit("lost", data.inviterName); // 초대자가 연결이 끊김. (로그아웃 등등) 잃어버렸음을 알려줌
-			return ;
+			return;
 		}
 		this.memberRepository.updateStatus(socket.data.nickname, MemberConstants.INGAME);
 		this.memberRepository.updateStatus(data.inviterName, MemberConstants.INGAME);
@@ -132,7 +137,7 @@ export class GameService {
 	async rejectGame(@MessageBody() inviterName: string, @ConnectedSocket() socket: Socket) {
 		const inviter = await this.channelService.findSocketByName(inviterName);
 		if (inviter === null)
-			return ; // 초대자 사라지면 암것도 안함. 접속 끊기면서 offline 처리 됐겠지;
+			return; // 초대자 사라지면 암것도 안함. 접속 끊기면서 offline 처리 됐겠지;
 		this.memberRepository.updateStatus(inviterName, MemberConstants.ONLINE);
 		inviter.emit("rejectedGame", socket.data.nickname); // 초대자에게 게임 거절 당함 알려줌
 	}

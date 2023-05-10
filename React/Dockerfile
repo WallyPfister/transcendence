@@ -1,8 +1,8 @@
 FROM node:18
 
-EXPOSE 4000
+EXPOSE 3000
 
-WORKDIR /app
+WORKDIR /usr/src/app
 
 COPY . .
 

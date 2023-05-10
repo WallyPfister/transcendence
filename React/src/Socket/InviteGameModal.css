@@ -1,0 +1,24 @@
+.invite-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+}
+
+.invite-modal {
+  background-color: white;
+  border: 1px solid black;
+  color: black;
+  padding: 20px;
+}
+
+.invite-modal button {
+  display: block;
+  margin-top: 10px;
+}

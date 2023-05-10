@@ -19,7 +19,7 @@ networks:
 
 services:
     postgres:
-        container_name: postgres1
+        container_name: postgres
         image: postgres:14
         restart: always
         ports:
@@ -28,6 +28,7 @@ services:
             - .env
         networks:
             - trans
+        init: true
         # volumes:
         #     - postgres-volume:/var/lib/postgresql/data
         tty: true
@@ -39,9 +40,24 @@ services:
         env_file:
             - .env
         depends_on:
-          - postgres
+            - postgres
         ports:
             - "3001:3001"
-            - "3002:3000"
+            - "4000:3000"
         networks:
             - trans
+        init: true
+    react:
+        container_name: react
+        build: ./React/
+        image: react:transcendence
+        restart: always
+        ports:
+            - "3000:3000"
+        depends_on:
+            - nestjs
+        env_file:
+            - .env
+        networks:
+            - trans
+        init: true

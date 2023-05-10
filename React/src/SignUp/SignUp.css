@@ -1,0 +1,148 @@
+#sign-up {
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#sign-up #title {
+    font-size: max(55px, 6vw);
+}
+
+#sign-up #profile-form {
+    width: max(350px, 45%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#sign-up #profile-form > * {
+    margin: 10px 0 10px 0;
+}
+
+#sign-up #profile-form button {
+    cursor: pointer;
+}
+
+#sign-up #profile-form button:disabled {
+    cursor: not-allowed;
+    color: black;
+}
+
+#sign-up #profile-form input, label, button {
+    font-family: pixopedia;
+}
+
+#sign-up #profile-form input:focus {
+    outline: none;
+}
+
+#sign-up #profile-form #nickname, .info-form input, button {
+    font-size: max(18px, 1.5vw);
+    text-align: center;
+}
+
+#sign-up #profile-form #nick-form {
+    margin-top: 30px;
+}
+
+#sign-up #profile-form .info-form {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+#sign-up #profile-form .info-form input {
+    width: 67%;
+    height: max(50px, 4vw);
+    background-color: #E0E0E0;
+    border: none;
+    padding: 0 10px 0 10px;
+    box-sizing: border-box;
+}
+
+#sign-up #profile-form .info-form button {
+    width: 30%;
+    height: max(50px, 4vw);
+    background-color: #FFF84B;
+    border: none;
+    border-radius: 10px;
+    padding: 0;
+}
+
+#sign-up #profile-form #file-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+#sign-up #profile-form #file-wrapper label {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+#sign-up #profile-form #file-wrapper label #upload-button {
+    width: 10%;
+    height: 100%;
+    background-image: url("../../public/upload-button.svg");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    margin-right: 5px;
+}
+
+#sign-up #profile-form #file-wrapper input {
+    display: none;
+}
+
+#sign-up #profile-form #file-wrapper div {
+    font-size: max(25px, 2.5vw);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#sign-up #profile-form #auth-check {
+    width: 5%;
+    height: 80%;
+    margin-right: 10px;
+}
+
+#sign-up #profile-form > label {
+    width: 100%;
+    font-size: max(20px, 2vw);
+    text-align: center;
+}
+
+#sign-up #buttons {
+    width: 100%;
+    text-align: center;
+    margin-top: 30px;
+}
+
+#sign-up #buttons button {
+    width: 30%;
+    height: max(50px, 4vw);
+    margin: 0 10px 0 10px;
+    border-radius: 10px;
+    border: none;
+}
+
+#sign-up #buttons #profile-submit {
+    background-color: #65FF4B;
+}
+
+#sign-up #buttons #profile-cancle {
+    background-color: #FF2F2F;
+}
+
+.swal2-popup {
+    white-space: pre-wrap;
+    padding: 1.25em 0;
+}
+
+.swal2-title {
+    font-size: 1.125em;
+}
