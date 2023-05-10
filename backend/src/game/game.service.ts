@@ -125,8 +125,6 @@ export class GameService {
 		this.gameRepository.createHistory(result.loser, result.winner, result.loseScore, result.winScore, false, result.type); // 게임 결과 디비 저장
 		this.memberRepository.updateStatus(result.winner, MemberConstants.ONLINE); // 인게임->온라인
 		this.memberRepository.updateStatus(result.loser, MemberConstants.ONLINE); // 인게임->온라인
-		for (let i = 0; i < result.spectators.length; i++)
-			this.memberRepository.updateStatus(result.spectators[i], MemberConstants.ONLINE); // 관전자가 있으면 관전자 인게임->온라인
 	}
 
 }

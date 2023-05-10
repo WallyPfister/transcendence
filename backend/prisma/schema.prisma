@@ -15,7 +15,7 @@ model member {
 	name			String		@id @db.VarChar(20) @unique
 	email			String		@db.VarChar(50)
 	intraId			String		@db.VarChar(20) @unique
-	avatar			String		@db.VarChar(60000)
+	avatar			String
 	status			Int			@default(1)
 	win				Int			@default(0)
 	lose			Int			@default(0)
