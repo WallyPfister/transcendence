@@ -6,6 +6,10 @@ import './Profile.css';
 import CustomAxios from '../Etc/CustomAxios';
 import { AxiosResponse } from 'axios';
 import NotFound from '../Etc/NotFound';
+import { useContext } from 'react';
+import { SocketContext } from '../Socket/SocketContext';
+import { InviteGameModal, useInviteGame } from '../Socket/InviteGameModal';
+import { StartGameModal, useStartGame } from '../Socket/StartGameModal';
 
 const getProfileData = (user: string): Promise<ProfileData> => {
     return new Promise<ProfileData>(async (resolve, reject) => {
@@ -60,7 +64,10 @@ function Profile() {
     const userName: string = window.location.pathname.split('/')[2] || '@'; 
     const { data: profileData, isLoading: profileLoading, isError: profileError } = useQuery<ProfileData>('profile-data', ()=>getProfileData(userName), {retry: false, staleTime: 60 * 1000});
     const { data: history, isLoading: historyLoading, isError: histotyError } = useQuery<Array<HistoryData>>('history-data', ()=>getHistory(userName), {retry: false});
-    
+    const socket = useContext(SocketContext);
+    const { showInvite, closeInvite, inviteData } = useInviteGame(socket);
+    const { showStart, closeStart, startData } = useStartGame(socket);
+
     if (profileLoading || historyLoading)
         return (<img src="../spinner.gif" alt="img"></img>);
     if (profileError || histotyError)
@@ -150,6 +157,20 @@ function Profile() {
                             }
                         </div>
                     </div>
+                    {showInvite && (
+        <div className="invite-modal-overlay">
+          <InviteGameModal
+            onClose={closeInvite}
+            socket={socket}
+            inviteData={inviteData}
+          />
+        </div>
+      )}
+      {showStart && (
+        <div className="startgame-modal-overlay">
+          <StartGameModal onClose={closeStart} data={startData} />
+        </div>
+      )}
                 </div>
             )
         }

@@ -7,12 +7,16 @@ import PasswordModal from "./PasswordWindow";
 import { SocketContext } from "../Socket/SocketContext";
 import { useNavigate } from "react-router-dom";
 import { InviteGameModal, useInviteGame } from "../Socket/InviteGameModal";
+import { StartGameModal, useStartGame } from "../Socket/StartGameModal";
+import { AxiosResponse } from "axios";
+import CustomAxios from "../Etc/CustomAxios";
 
 // const socket: Socket = io("http://localhost:3001", { withCredentials: true });
 
 function Main() {
   const socket = useContext(SocketContext);
   const { showInvite, closeInvite, inviteData } = useInviteGame(socket);
+  const { showStart, closeStart, startData } = useStartGame(socket);
 
   console.log(socket);
   const navigate = useNavigate();
@@ -25,7 +29,7 @@ function Main() {
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [roomName, setRoomName] = useState<string>("");
-  const [nickname, setNickname] = useState<string>("yaho");
+  const [nickname, setNickname] = useState<string>("");
   const [selectedTab, setSelectedTab] = useState("channel");
   const [friends, setFriends] = useState<string[]>([]);
   const [channelUser, setChannelUser] = useState<string[]>([]);
@@ -39,7 +43,9 @@ function Main() {
 
   useEffect(() => {
     setFriends(["yachoi", "ean", "sunghkim"]);
-    // setChannelUser(['sokim', 'sojoo', 'captain']);
+    CustomAxios.get("/member").then((res) => {
+      setNickname(res.data);
+    });
   }, []); // test
 
   useEffect(() => {
@@ -51,18 +57,8 @@ function Main() {
   useEffect(() => {
     socket.on("connect", () => {
       console.log("Socket.IO connected!");
-      const randomNumber = Math.floor(Math.random() * 900) + 100;
-      setNickname(`Yachoi ${randomNumber}`);
-      socket.emit("setUser", { nickname: `Yachoi ${randomNumber}` });
+      socket.emit("setUser", { nickname: nickname });
     });
-
-    socket.on(
-      "startGame",
-      (data: { type: number; playerA: string; playerB: string }) => {
-        console.log(data);
-        navigate("/game", { state: { data } });
-      }
-    );
 
     socket.on("joinRoom", (data: { roomName: string }) => {
       setRoomName(data.roomName);
@@ -101,6 +97,14 @@ function Main() {
   const handleFriendListClick = () => setSelectedTab("friends");
   const handleChannelListClick = () => setSelectedTab("channel");
 
+  const handleCasualGame = (user: string) => {
+    socket.emit("enterGame", 0);
+  };
+
+  const handleLadderGame = (user: string) => {
+    socket.emit("enterGame", 2);
+  };
+
   const [isComposing, setIsComposing] = useState<boolean>(false);
 
   const handleCompositionStart = () => {
@@ -109,6 +113,11 @@ function Main() {
 
   const handleCompositionEnd = () => {
     setIsComposing(false);
+  };
+
+  const goToRanking = (user: string) => {
+    // You can pass user as a parameter if you need it in the profile page
+    navigate("/rank", { state: { user } });
   };
 
   const goToProfile = (user: string) => {
@@ -210,9 +219,15 @@ function Main() {
     <div id="main">
       <div id="top-buttons">
         <div id="game-buttons">
-          <button id="casual-button">1 vs 1</button>
-          <button id="ladder-button">Rank</button>
-          <button id="ranking-button">Ranking</button>
+          <button id="casual-button" onClick={() => handleCasualGame(nickname)}>
+            1 vs 1
+          </button>
+          <button id="ladder-button" onClick={() => handleLadderGame(nickname)}>
+            Rank
+          </button>
+          <button id="ranking-button" onClick={() => goToRanking(nickname)}>
+            Ranking
+          </button>
         </div>
         <button id="profile-button" onClick={() => goToProfile(nickname)}>
           My Profile
@@ -317,7 +332,7 @@ function Main() {
                     className={selectUser === user ? "user-selected" : ""}
                   >
                     {user}
-                    {selectUser === user && (
+                    {selectUser === user && selectUser !== nickname && (
                       <div className="button-container">
                         <button onClick={() => userProfile(user)}>
                           Profile
@@ -377,13 +392,17 @@ function Main() {
         </div>
       )}
       {showInvite && (
-        <div>
+        <div className="invite-modal-overlay">
           <InviteGameModal
             onClose={closeInvite}
             socket={socket}
-            nickname={nickname}
             inviteData={inviteData}
           />
+        </div>
+      )}
+      {showStart && (
+        <div className="startgame-modal-overlay">
+          <StartGameModal onClose={closeStart} data={startData} />
         </div>
       )}
     </div>
