@@ -4,6 +4,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import * as session from 'express-session';
+import * as express from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -35,6 +36,8 @@ async function bootstrap() {
   io.on('connection', (socket) => {
     console.log('a user connected');
   });
+  app.use(express.json({limit: '50mb'}));
+  app.use(express.urlencoded({limit: '50mb'}));
   await app.listen(3000);
 }
 bootstrap();
