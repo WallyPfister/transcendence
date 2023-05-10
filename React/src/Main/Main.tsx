@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
-import io, { Socket } from "socket.io-client";
 
 import "./Main.css";
 import ChannelWindow from "./ChannelWindow";
@@ -8,17 +7,12 @@ import { SocketContext } from "../Socket/SocketContext";
 import { useNavigate } from "react-router-dom";
 import { InviteGameModal, useInviteGame } from "../Socket/InviteGameModal";
 import { StartGameModal, useStartGame } from "../Socket/StartGameModal";
-import { AxiosResponse } from "axios";
 import CustomAxios from "../Etc/CustomAxios";
-
-// const socket: Socket = io("http://localhost:3001", { withCredentials: true });
 
 function Main() {
   const socket = useContext(SocketContext);
   const { showInvite, closeInvite, inviteData } = useInviteGame(socket);
   const { showStart, closeStart, startData } = useStartGame(socket);
-
-  console.log(socket);
   const navigate = useNavigate();
 
   interface Message {
@@ -26,10 +20,10 @@ function Main() {
     message: string;
   }
 
+  const [nickname, setNickname] = useState("");
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [roomName, setRoomName] = useState<string>("");
-  const [nickname, setNickname] = useState<string>("");
   const [selectedTab, setSelectedTab] = useState("channel");
   const [friends, setFriends] = useState<string[]>([]);
   const [channelUser, setChannelUser] = useState<string[]>([]);
@@ -42,10 +36,13 @@ function Main() {
   const chatWindowRef = useRef<HTMLDivElement>(null); // create a ref for the chat window
 
   useEffect(() => {
-    setFriends(["yachoi", "ean", "sunghkim"]);
-    CustomAxios.get("/member").then((res) => {
+    async function fetchData() {
+      const res = await CustomAxios.get("/member");
       setNickname(res.data);
-    });
+    }
+    fetchData();
+    console.log(nickname);
+    socket.emit("setUser", { nickname: nickname });
   }, []); // test
 
   useEffect(() => {
@@ -57,7 +54,6 @@ function Main() {
   useEffect(() => {
     socket.on("connect", () => {
       console.log("Socket.IO connected!");
-      socket.emit("setUser", { nickname: nickname });
     });
 
     socket.on("joinRoom", (data: { roomName: string }) => {
