@@ -5,28 +5,28 @@ import HistoryLine from './HistoryLine';
 import './Profile.css';
 import CustomAxios from '../Etc/CustomAxios';
 import { AxiosResponse } from 'axios';
-import { NavigateFunction, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import NotFound from '../Etc/NotFound';
 
 const getProfileData = (user: string): Promise<ProfileData> => {
     return new Promise<ProfileData>(async (resolve, reject) => {
             try {
                 const res: AxiosResponse = await CustomAxios.get('/member/profile', {params: {userName: user}});
                 const status: string = res.data.status === 0 ? 'OFFLINE' : (res.data.status === 1 ? 'ONLINE' : (res.data.status === 2 ? 'WAIT' : 'IN-GAME'));
-                const achieve: Array<string> = String(res.data.achieve).split('');
+                const achieve: Array<number> = calcAchieve(res.data.achieve);
                 const who: string = res.data.whois === 0 ? 'me' : (res.data.whois === 1 ? 'del' : 'add');
+                const level = res.data.level > 5 ? 5 : res.data.level;
                 const data: ProfileData = {
                     "name": res.data.name,
                     "avatar": res.data.avatar,
                     "status": status,
                     "win": res.data.win,
                     "lose": res.data.lose,
-                    "level": res.data.level,
+                    "level": level,
                     "score": res.data.score,
-                    "achieve1": achieve[0] === '0' ? false : true,
-                    "achieve2": achieve[0] === '0' ? false : true,
-                    "achieve3": achieve[0] === '0' ? false : true,
-                    "achieve4": achieve[0] === '0' ? false : true,
+                    "achieve1": achieve[3] === 0 ? false : true,
+                    "achieve2": achieve[2] === 0 ? false : true,
+                    "achieve3": achieve[1] === 0 ? false : true,
+                    "achieve4": achieve[0] === 0 ? false : true,
                     "whois": who
                 };
                 resolve(data);
@@ -37,36 +37,58 @@ const getProfileData = (user: string): Promise<ProfileData> => {
     );
 }
 
+const calcAchieve = (achieve: number) => {
+    let bit = 1;
+    let arr = [0, 0, 0, 0];
+
+    for (let i = 0; i < 4; i++) {
+        if ((achieve & bit) === bit)
+            arr[i] = 1;
+        else
+            arr[i] = 0;
+        bit = bit << 1;
+    }
+    return arr;
+}
+
 const getHistory = async (user: string): Promise<Array<HistoryData>> => {
     const res = await CustomAxios.get('/member/history', {params: {name: user}});
     return res.data;
 }
 
 function Profile() {
-    const nav: NavigateFunction = useNavigate();
     const userName: string = window.location.pathname.split('/')[2] || '@'; 
     const { data: profileData, isLoading: profileLoading, isError: profileError } = useQuery<ProfileData>('profile-data', ()=>getProfileData(userName), {retry: false, staleTime: 60 * 1000});
     const { data: history, isLoading: historyLoading, isError: histotyError } = useQuery<Array<HistoryData>>('history-data', ()=>getHistory(userName), {retry: false});
     
     if (profileLoading || historyLoading)
-        return (<>Loading</>);
+        return (<img src="../spinner.gif" alt="img"></img>);
     if (profileError || histotyError)
-        return (<>NotFound</>);
+        return (<NotFound/>);
 
-    const friendButton = () => {
-        if (profileData && profileData.whois !== 'me') {
+    const friendButton = (event: React.MouseEvent) => {
+        const target = event.target as HTMLButtonElement;
+        if (profileData && !target.classList.contains('me')) {
             Swal.fire({
-                text: (profileData.whois === 'del' ? 'Remove' : 'Add') + ' as a friend?',
+                text: (target.classList.contains('del') ? 'Remove' : 'Add') + ' as a friend?',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#d33',
                 confirmButtonText: 'OK'
             }).then((res) => {
                 if (res.isConfirmed) {
-                    if (profileData.whois === 'del')
-                        CustomAxios.delete('/member/friend/' + profileData.name).then(() => Swal.fire('Complete!'));
-                    else if (profileData.whois === 'add')
-                        CustomAxios.post('/member/friend/' + profileData.name).then(() => Swal.fire('Complete!'))
+                    if (target.classList.contains('del'))
+                        CustomAxios.delete('/member/friend/' + profileData.name).then(() => {
+                            Swal.fire('Complete!');
+                            target.classList.remove('del');
+                            target.classList.add('add');
+                        });
+                    else if (target.classList.contains('add'))
+                        CustomAxios.post('/member/friend/' + profileData.name).then((res) => {
+                            Swal.fire('Complete!');
+                            target.classList.remove('add');
+                            target.classList.add('del');
+                        })
                         .catch((err) => {if (err.response.status === 404) Swal.fire('No such user')});
                 }
             });

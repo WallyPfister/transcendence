@@ -77,7 +77,6 @@ const register = (event: React.MouseEvent<HTMLButtonElement>, nickPass: boolean,
         fileReader.readAsDataURL(files[0]);
         fileReader.onloadend = () => {
             const base64: string = fileReader.result as string;
-            console.log(base64);
             registerApiRequest(name, base64, mail, tfa, nav);
         }
     }
