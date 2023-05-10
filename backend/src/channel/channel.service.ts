@@ -45,8 +45,8 @@ export class ChannelService {
   }
 ​
   handleConnection(socket: Socket) {
-    console.log(`Client connected with ID ${socket.id}`);
-    console.log(`data ==> ${socket.data.nickname}`);
+    // console.log(`Client connected with ID ${socket.id}`);
+    // console.log(`data ==> ${socket.data.nickname}`);
   }
 ​
   @SubscribeMessage('setUser')
@@ -70,8 +70,8 @@ export class ChannelService {
     @MessageBody() data: { roomId: string; password: string },
     @ConnectedSocket() socket: Socket,
   ) {
-    console.log(data.password);
-    console.log(data.roomId);
+    // console.log(data.password);
+    // console.log(data.roomId);
     const roomName = data.roomId;
     if (data.password === '') data.password = undefined;
     if (data.roomId == undefined || data.roomId === '') {
@@ -124,7 +124,7 @@ export class ChannelService {
       (room) => room.roomId === roomId,
     );
 ​
-    console.log(`join ${data}`);
+    // console.log(`join ${data}`);
     if (noRoom == undefined) {
       this.server.emit('errorMessage', {
         nickname: '<system>',
@@ -140,7 +140,7 @@ export class ChannelService {
       return;
     }
     if (noRoom.roomId == socket.data.roomId) {
-      console.log('here');
+    //   console.log('here');
       socket.emit('newMessage', {
         nickname: '<system>',
         message: '이미 입장한 방입니다.',
@@ -174,7 +174,7 @@ export class ChannelService {
       (room) => room.roomId === roomId,
     );
 ​
-    console.log(`privatejoin ${data}`);
+    // console.log(`privatejoin ${data}`);
     if (noRoom == undefined) {
       this.server.emit('errorMessage', {
         nickname: '<system>',
@@ -197,7 +197,7 @@ export class ChannelService {
       return;
     }
     if (noRoom.roomId == socket.data.roomId) {
-      console.log('here');
+    //   console.log('here');
       socket.emit('newMessage', {
         nickname: '<system>',
         message: '이미 입장한 방입니다.',
@@ -226,14 +226,14 @@ export class ChannelService {
     const message = data.message;
     const chatRoom = this.chatRoomList[socket.data.roomId];
 ​
-    console.log('=====send=====');
-    console.log(this.chatRoomList);
-    console.log(socket.data.roomId);
+    // console.log('=====send=====');
+    // console.log(this.chatRoomList);
+    // console.log(socket.data.roomId);
     if (chatRoom && Object.keys(chatRoom.muteList).includes(nickname)) {
       const now = new Date();
       const diff =
         (now.getTime() - chatRoom.muteList[nickname].getTime()) / 1000 / 60;
-      console.log(diff);
+    //   console.log(diff);
       if (diff < 4) {
         socket.emit('newMessage', {
           message: `your chat is blocked in ${socket.data.roomId}`,
@@ -245,7 +245,7 @@ export class ChannelService {
     this.server
       .to(socket.data.roomId)
       .emit('newMessage', { nickname, message });
-    console.log(data);
+    // console.log(data);
   }
 ​
   @SubscribeMessage('chatRoomList')
@@ -359,19 +359,19 @@ export class ChannelService {
       })
       .then((result) => result?.socket);
 ​
-    console.log(memberId); // 이거 나중에 emit으로 수정
+    // console.log(memberId); // 이거 나중에 emit으로 수정
   }
 ​
   kick(nickname: string, roomId: string) {
-    console.log('===== kick =====');
-    console.log(nickname);
-    console.log(roomId);
+    // console.log('===== kick =====');
+    // console.log(nickname);
+    // console.log(roomId);
     const sockets = this.server.sockets.adapter.rooms.get(roomId);
 ​
     for (const socketId of sockets) {
       const target = this.server.sockets.sockets.get(socketId);
-      console.log(target.data.nickname);
-      console.log(target.data.roomId);
+    //   console.log(target.data.nickname);
+    //   console.log(target.data.roomId);
       if (target.data.nickname == nickname) {
         this.leaveRoom(target);
 ​
@@ -437,10 +437,18 @@ export class ChannelService {
 ​
     for (const socketId of sockets) {
       const user = this.server.sockets.sockets.get(socketId);
-      console.log(user.data.nickname);
+    //   console.log(user.data.nickname);
       users.push(user.data.nickname);
     }
-    console.log(users);
+    // console.log(users);
     this.server.to(socket.data.roomId).emit('userList', users);
+  }
+
+  async findSocketByName(name: string): Promise<Socket> {
+    const sockets = this.server.sockets.sockets;
+    for (const [_, socket] of sockets) {
+      if (socket.data.nickname === name) return socket;
+    }
+    return null;
   }
 }

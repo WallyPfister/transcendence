@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { GameConstants } from './gameConstants';
-import { Socket } from 'socket.io';
-import { SubscribeMessage, MessageBody, ConnectedSocket } from '@nestjs/websockets';
+import { Socket, Server} from 'socket.io';
+import { SubscribeMessage, MessageBody, ConnectedSocket,WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { MemberRepository } from 'src/member/member.repository';
 import { MemberConstants } from 'src/member/memberConstants';
 import { Interval } from '@nestjs/schedule';
@@ -11,22 +11,33 @@ import { GameInfoDto } from './dto/gameInfo.dto';
 import { MemberService } from 'src/member/member.service';
 import { GameResultDto } from './dto/gameResult.dto';
 import { GameRepository } from './game.repository';
+import { randomBytes } from 'crypto';
 
 @Injectable()
+@WebSocketGateway(3001, {
+	// transports: ['websocket'],
+	cors: {
+	  origin: 'http://localhost:3002',
+	  methods: ['GET', 'POST'],
+	  credentials: true,
+	},
+  })
 export class GameService {
 	private gameQ: GameQueue[];
+	@WebSocketServer()
+	server: Server;
 
 	constructor(
 		private gameRepository: GameRepository,
 		private readonly memberService: MemberService,
 		private memberRepository: MemberRepository,
 		private readonly channelService: ChannelService
-	) { this.gameQ = new GameQueue(30)[4] }
+	) { this.gameQ = Array.from({ length: 4 }, () => new GameQueue(30)); }
 
 	@SubscribeMessage('enterGame') // 희망 게임을 보내줘야 함 0 casual, 1 casual power, 2 ladder, 3 ladder power
 	waitGame(@MessageBody() type: number, @ConnectedSocket() socket: Socket) {
 		if (!this.gameQ[type].enQueue(socket.id))
-			this.channelService.server.emit("errorMessage", {message : "The waiting list is full. Please try again later."});
+			this.server.emit("errorMessage", {message : "The waiting list is full. Please try again later."});
 		socket.emit('addQueue', socket.data.nickname); // 큐에 넣어졌음을 알려줌. 굳이 응답 안해줘도 되면 삭제해도 됨.
 	}
 
@@ -40,13 +51,16 @@ export class GameService {
 			return ;
 		const p2 = await this.checkPlayer(MemberConstants.CASUAL, this.gameQ[GameConstants.CASUAL].peek(2), 2);
 		if (p1 === null)
-			return ; // 여기까지 지내면 p1, p2 둘다 정상 남아있다는 뜻
+			return ; 
 		this.gameQ[GameConstants.CASUAL].deQueue(); // 두명을 큐에서 뻄
 		this.gameQ[GameConstants.CASUAL].deQueue();
 		this.memberRepository.updateStatus(p1.data.nickname, MemberConstants.INGAME); // 두명을 인게임으로 변경해
 		this.memberRepository.updateStatus(p2.data.nickname, MemberConstants.INGAME);
-		p1.emit("startGame", new GameInfoDto(GameConstants.CASUAL, p1.data.nickname, p2.data.nickname)); // 게임 시작 정보 알려줌
-		p2.emit("startGame", new GameInfoDto(GameConstants.CASUAL, p1.data.nickname, p2.data.nickname));
+		const roomId = randomBytes(Math.ceil(25 / 2)).toString('hex').slice(0, 25);
+		p1.join(roomId);
+		p2.join(roomId);
+		p1.emit("startGame", new GameInfoDto(GameConstants.CASUAL, roomId, p1.data.nickname, p2.data.nickname, 0)); // 게임 시작 정보 알려줌
+		p2.emit("startGame", new GameInfoDto(GameConstants.CASUAL, roomId, p1.data.nickname, p2.data.nickname, 1));
 	} // 아마 프론트 머 몇초 후 겜방으로 이동합니다 창 띄운다음에 쫌 이따 게임창 띄워주고 백에 성훈이 게임 시작 함수 호출.
 	// 그러면 백에서 해야 하는 거 게임방 만들고, 두명 게임에 넣고, 게임 그리기 시작
 
@@ -98,8 +112,12 @@ export class GameService {
 		}
 		this.memberRepository.updateStatus(socket.data.nickname, MemberConstants.INGAME);
 		this.memberRepository.updateStatus(data.inviterName, MemberConstants.INGAME);
-		socket.emit("startGame", new GameInfoDto(data.type, data.inviterName, socket.data.nickname));
-		inviter.emit("startGame", new GameInfoDto(data.type, data.inviterName, socket.data.nickname));
+
+		const roomId = randomBytes(Math.ceil(25 / 2)).toString('hex').slice(0, 25);
+		socket.join(roomId);
+		inviter.join(roomId);
+		socket.emit("startGame", new GameInfoDto(data.type, roomId, data.inviterName, socket.data.nickname, 0));
+		inviter.emit("startGame", new GameInfoDto(data.type, roomId, data.inviterName, socket.data.nickname, 1));
 	}
 
 	@SubscribeMessage('inviteReject') // 거절 버튼 누름
