@@ -1,5 +1,7 @@
 FROM node:18
 
+EXPOSE 4000
+
 WORKDIR /app
 
 COPY . .
@@ -13,5 +15,5 @@ COPY ./entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
-CMD ["npm", "run", "build"]
+CMD ["npm", "run", "start"]
 # CMD ["npm", "run", "start:dev"]

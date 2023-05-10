@@ -18,27 +18,17 @@ networks:
                 - subnet: 172.26.0.0/16
 
 services:
-    react:
-        container_name: react
-        build: ./React/
-        image: react:transcendence
-        restart: always
-        ports:
-            - "3000:3000"
-        env_file:
-            - .env
-        networks:
-            - trans
     postgres:
         container_name: postgres
         image: postgres:14
         restart: always
         ports:
-            - "5432"
+            - "5432:5432"
         env_file:
             - .env
         networks:
             - trans
+        init: true
         # volumes:
         #     - postgres-volume:/var/lib/postgresql/data
         tty: true
@@ -53,6 +43,21 @@ services:
             - postgres
         ports:
             - "3001:3001"
-            - "4000"
+            - "4000:3000"
         networks:
             - trans
+        init: true
+    react:
+        container_name: react
+        build: ./React/
+        image: react:transcendence
+        restart: always
+        ports:
+            - "3000:3000"
+        depends_on:
+            - nestjs
+        env_file:
+            - .env
+        networks:
+            - trans
+        init: true

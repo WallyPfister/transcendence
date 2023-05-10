@@ -20,7 +20,7 @@ const prisma = new PrismaClient();
 @WebSocketGateway(3001, {
   // transports: ['websocket'],
   cors: {
-    origin: 'http://localhost:3002',
+    origin: 'http://localhost:4000',
     methods: ['GET', 'POST'],
     credentials: true,
   },

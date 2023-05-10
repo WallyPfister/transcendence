@@ -2,14 +2,10 @@
 
 set -e
 
-# wait for the postgres container to be ready
-wait-for-it postgres:5432 -t 60 -- echo "postgres is up"
-
-# generate the Prisma client
-npx prisma migrate dev --name init && \
-npx prisma generate
+# wait for the Nestjs container to be ready
+wait-for-it nestjs:4000 -t 60 -- echo "nestjs is up"
 
 npm run build
 
-# start the NestJS application
+# start the React application
 exec "$@"
