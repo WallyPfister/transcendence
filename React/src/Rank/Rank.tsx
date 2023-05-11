@@ -13,7 +13,7 @@ function Rank() {
     const { data, isLoading, isError } = useQuery('rank-data', getRankData, {retry: false, staleTime: 60 * 1000});
 
     if (isLoading)
-        return (<img src="../spinner.gif" alt="img"></img>);
+        return (<img src="../img/spinner.gif" alt="img"></img>);
     if (isError)
         return (<NotFound/>)
 
