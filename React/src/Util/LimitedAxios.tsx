@@ -24,7 +24,7 @@ LimitedAxios.interceptors.response.use((response) => {
 }, (error) => {
     if (error.response?.status === 401) {
         Swal.fire('Your token has been expired\nPlease login again').then(() => {
-            window.location.href = process.env.REACT_APP_42_URL || 'where42.kr';
+            window.location.href = process.env.REACT_APP_42_URL || 'intra.42.fr';
         });
     } else
         console.log(error);
