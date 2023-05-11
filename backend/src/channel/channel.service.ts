@@ -19,7 +19,7 @@ const prisma = new PrismaClient();
 @WebSocketGateway(3001, {
 	// transports: ['websocket'],
 	cors: {
-		origin: '*',
+		origin: 'http://localhost:3000',
 		methods: ['GET', 'POST'],
 		credentials: true,
 	},
@@ -55,9 +55,9 @@ export class ChannelService {
 			(out) => out.socketId === socket.id,
 		)
 		if (!user)
-			return;
+			return ;
 		const index = this.channelList[user.roomId].adminList.indexOf(user.nickname);
-		if (user.isChief == true) {
+		if (user.isChief == true){
 			const sockets = this.server.sockets.adapter.rooms.get(user.roomId);
 			if (sockets) {
 				const socketId = Array.from(sockets.values())[0];
@@ -70,8 +70,8 @@ export class ChannelService {
 			else
 				delete this.channelList[user.roomId];
 		}
-		if (user.isAdmin == true) {
-			if (this.channelList[user.roomId]) {
+		if (user.isAdmin == true){
+			if (this.channelList[user.roomId]){
 				if (index > -1)
 					this.channelList[user.roomId].adminList.slice(index, 1);
 			}
@@ -281,7 +281,7 @@ export class ChannelService {
 				});
 				return;
 			}
-			delete chatRoom.muteList[nickname];
+			delete this.chatRoomList[socket.data.roomId].muteList[nickname];
 		}
 		this.server
 			.to(socket.data.roomId)
@@ -358,7 +358,7 @@ export class ChannelService {
 			throw new Error(`Room ${socket.data.roomId} onwer is not you`);
 		}
 		const target = await this.findSocketByName(data.nickname);
-		if (!target) {
+		if (target) {
 			if (
 				chatRoom.adminList.find((value) => value === data.nickname) == undefined
 			) {
@@ -391,7 +391,7 @@ export class ChannelService {
 			socket.emit('newMessage', `Room ${socket.data.roomId} admin is not you`);
 			throw new Error(`Room ${socket.data.roomId} admin is not you`);
 		}
-		chatRoom.muteList[data.nickname] = new Date();
+		this.chatRoomList[socket.data.roomId].muteList[data.nickname] = new Date();
 		socket.emit('newMessage', `${data.nickname} is mute`);
 	}
 	// banList에 사용자 추가
@@ -401,7 +401,6 @@ export class ChannelService {
 		@ConnectedSocket() socket: Socket,
 	) {
 		const nickname = data.nickname;
-		const chatRoom = this.chatRoomList[socket.data.roomId];
 		if (this.isBanned(nickname, socket) == true) {
 			socket.emit('newMessage', {
 				nickname: '<system>',
@@ -409,7 +408,7 @@ export class ChannelService {
 			});
 			return;
 		}
-		chatRoom.banList.push(nickname);
+		this.chatRoomList[socket.data.roomId].banList.push(nickname);
 		this.kick(nickname, socket.data.roomId);
 		socket.emit('newMessage', {
 			nickname: '<system>',
@@ -423,7 +422,6 @@ export class ChannelService {
 		@ConnectedSocket() socket: Socket,
 	) {
 		const { nickname } = data;
-		const chatRoom = this.chatRoomList[socket.data.roomId];
 		if (this.isBanned(nickname, socket) == false) {
 			socket.emit('newMessage', {
 				nickname: '<system>',
@@ -431,9 +429,9 @@ export class ChannelService {
 			});
 			return;
 		}
-		const index = chatRoom.banList.indexOf(nickname);
+		const index = this.chatRoomList[socket.data.roomId].banList.indexOf(nickname);
 		if (index !== -1) {
-			chatRoom.banList.splice(index, 1);
+			this.chatRoomList[socket.data.roomId].banList.splice(index, 1);
 		}
 		socket.emit('newMessage', {
 			nickname: '<system>',
@@ -553,5 +551,5 @@ export class ChannelService {
 	async sendErrorMsg(name: string, msg: string): Promise<void> {
 		const socket = await this.findSocketByName(name);
 		socket.emit('errorMessage', msg);
-	}
+	  }
 }
