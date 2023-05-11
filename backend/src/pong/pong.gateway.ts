@@ -5,6 +5,8 @@ import { Player } from "./pong.interface";
 import { Server, Socket } from 'socket.io';
 import { Interval } from '@nestjs/schedule';
 import { gameRoomDto } from "./gameRoomDto";
+import { GameResultDto } from "src/game/dto/gameResult.dto";
+import { GameService } from "src/game/game.service";
 
 
 @Injectable()
@@ -20,10 +22,10 @@ export class Pong {
 
 	@WebSocketServer()
 	server: Server;
-
+	private gameService: GameService;
 	gameRoomList: Record<string, gameRoomDto>;
 
-	constructor() {
+	constructor(gameService:GameService) {
 		this.gameRoomList = {};
 	}
 
@@ -37,7 +39,7 @@ export class Pong {
 	//   }
 
 	@SubscribeMessage("register")
-	async register(@MessageBody() data: { roomId: string, type: string }, @ConnectedSocket() socket: Socket) {
+	async register(@MessageBody() data: { roomId: string, type: number, playerA: string, playerB: string }, @ConnectedSocket() socket: Socket) {
 		if (this.server.sockets.adapter.rooms.get(data.roomId) == undefined)
 			return;
 		this.gameRoomList[data.roomId] = {
@@ -56,6 +58,7 @@ export class Pong {
 				width: 10,
 				height: 100,
 				color: "BLACK",
+				nickname: data.playerA,
 				score: 0
 			},
 			playerB: {
@@ -64,11 +67,12 @@ export class Pong {
 				width: 10,
 				height: 100,
 				color: "BLACK",
+				nickname: data.playerB,
 				score: 0
 			},
 			type: data.type
 		}
-		if (data.type == "1") {
+		if (data.type == 1) {
 			this.gameRoomList[data.roomId].ball.radius = 20;
 			this.gameRoomList[data.roomId].ball.speed = 15;
 		}
@@ -150,7 +154,7 @@ export class Pong {
 	}
 
 	resetBall(roomId: string) {
-		if (this.gameRoomList[roomId].type == "1") {
+		if (this.gameRoomList[roomId].type == 1) {
 			this.gameRoomList[roomId].ball.x = 450;
 			this.gameRoomList[roomId].ball.y = 300;
 			this.gameRoomList[roomId].ball.speed = 15;
@@ -165,15 +169,28 @@ export class Pong {
 	}
 
 	endGame(roomId: string) {
-		this.server.to(roomId).emit("endgame", { ball: this.gameRoomList[roomId].ball, playerA: this.gameRoomList[roomId].playerA, playerB: this.gameRoomList[roomId].playerB });
-		const room = this.server.sockets.adapter.rooms.get(roomId);
-		if (!room)
-			return;
-		for (const socketId of room) {
-			const user = this.server.sockets.sockets.get(socketId);
-			user.leave(roomId);
-		}
-		delete this.gameRoomList[roomId];
-	}
-
+        this.server.to(roomId).emit("endgame", { ball: this.gameRoomList[roomId].ball, playerA: this.gameRoomList[roomId].playerA, playerB: this.gameRoomList[roomId].playerB });
+        const room = this.server.sockets.adapter.rooms.get(roomId);
+        if (!room)
+            return;
+        for (const socketId of room) {
+            const user = this.server.sockets.sockets.get(socketId);
+            user.leave(roomId);
+        }
+        let gameResult: GameResultDto
+        if (this.gameRoomList[roomId].playerA.score > this.gameRoomList[roomId].playerB.score) {
+            gameResult.winner = this.gameRoomList[roomId].playerA.nickname;
+            gameResult.loser = this.gameRoomList[roomId].playerB.nickname;
+            gameResult.winScore = this.gameRoomList[roomId].playerA.score;
+            gameResult.loseScore = this.gameRoomList[roomId].playerB.score;
+        } else {
+            gameResult.winner = this.gameRoomList[roomId].playerB.nickname;
+            gameResult.loser = this.gameRoomList[roomId].playerB.nickname;
+            gameResult.winScore = this.gameRoomList[roomId].playerA.score;
+            gameResult.loseScore = this.gameRoomList[roomId].playerB.score;
+        }
+        gameResult.type = this.gameRoomList[roomId].type;
+        this.gameService.updateGameResult(gameResult);
+        delete this.gameRoomList[roomId];
+    }
 }

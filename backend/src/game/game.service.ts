@@ -193,13 +193,6 @@ export class GameService {
 		inviter.emit("rejectedGame", socket.data.nickname); // 초대자에게 게임 거절 당함 알려줌
 	}
 
-	@SubscribeMessage('spectator') // 채널 리스트 or 친구 중 상태가 ingame인 사람만 관전 버튼이 떠야함
-	watchGame(@MessageBody() roomId: string, @ConnectedSocket() socket: Socket) {
-		this.memberRepository.updateStatus(socket.data.nickname, MemberConstants.INGAME);
-		// 요 사이에 넘겨받은 roomid로 바꿔주는 작업 필요 chatsungkim아 알려줘
-		socket.emit("startWatch", roomId); // 이제 이거 보내면 프론트 게임 화면으로 옮겨?? 줘??
-	}
-
 	updateGameResult(result: GameResultDto): void { // api로 할지 소켓으로 할지 
 		this.memberService.updateWinGameResult(result.winner, result.type, result.winScore, result.loser); // 위너 게임 결과 기록
 		this.memberService.updateLoseGameResult(result.loser, result.type); // 루저 게임 결과 기록
