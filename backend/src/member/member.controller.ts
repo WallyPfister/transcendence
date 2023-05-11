@@ -252,7 +252,8 @@ export class MemberController {
 	@UseGuards(JwtAuthGuard)
 	async addFriend(@Payload() payload: any, @Param('friendName') friendName: string): Promise<void> {
 		const name = payload['sub']
-		if (this.memberRepository.isFriend(name, friendName)) {
+		const isFriend = await this.memberRepository.isFriend(name, friendName);
+		if (isFriend.length !== 0) {
 			this.channelService.sendErrorMsg(name, `${friendName} has already been added as a friend.`);
 			throw new BadRequestException();
 		}

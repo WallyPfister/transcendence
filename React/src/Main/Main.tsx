@@ -142,7 +142,6 @@ function Main() {
 
   const handleFriendListClick = () => {
     CustomAxios.get("/member/friend/").then((res) => {
-      console.log(res);
       const friendDataArray: FriendData[] = res.data.map((friend: any) => {
         return {
           level: friend.level,
