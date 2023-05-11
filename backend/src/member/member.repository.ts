@@ -186,7 +186,7 @@ export class MemberRepository {
 		}
 	}
 
-	async isFriend(name: string, checkMember: string): Promise<any> {
+	async isFriend(name: string, checkMember: string): Promise<{ name: string }[]> {
 		return await this.prisma.member.findUnique({
 			where: { name: name },
 		}).friend({
