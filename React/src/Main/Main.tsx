@@ -94,7 +94,7 @@ function Main() {
 
     socket.on("isAdmin", () => {
       setIsChief(false);
-      setIsAdmin(false);
+      setIsAdmin(true);
     });
 
     socket.on("isNotAdmin", () => {
@@ -231,7 +231,7 @@ function Main() {
     CustomAxios.delete("/member/friend/" + user).then(() => {
       const newMessage: Message = {
         nickname: "<system>",
-        message: ` ${user} is added to friend list.`,
+        message: ` ${user} is deleted from the friend list.`,
       };
       setMessages((prevMessages) => [...prevMessages, newMessage]);
     });
@@ -320,10 +320,10 @@ function Main() {
                       msg.nickname === "<system>"
                         ? "system-message"
                         : msg.nickname === nickname
-                        ? "my-message"
-                        : msg.nickname === "<error>"
-                        ? "error-message"
-                        : ""
+                          ? "my-message"
+                          : msg.nickname === "<error>"
+                            ? "error-message"
+                            : ""
                     }
                   >
                     {msg.nickname}: {msg.message}
