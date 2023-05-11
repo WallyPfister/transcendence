@@ -337,7 +337,7 @@ export class ChannelService {
 			throw new Error(`Room ${socket.data.roomId} onwer is not you`);
 		}
 		const target = await this.findSocketByName(data.nickname);
-		if (!target) {
+		if (target) {
 			target.emit('isAdmin');
 			this.chatRoomList[socket.data.roomId].adminList.push(target.data.nickname);
 			this.userList[target.data.nickname].isAdmin = true;
