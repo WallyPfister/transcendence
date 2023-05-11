@@ -15,4 +15,5 @@ export interface Player{
 	height : number,
 	color : string,
 	score : number
+	nickname: string,
 }

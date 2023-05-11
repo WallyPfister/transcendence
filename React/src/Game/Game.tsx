@@ -21,7 +21,7 @@ function Game() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (gameData == undefined || gameData. roomId == undefined) {
+    if (gameData == undefined || gameData.roomId == undefined) {
       console.log("Gamedata undifined");
       navigate("/login");
       return;
@@ -63,7 +63,7 @@ function Game() {
   });
 
   useEffect(() => {
-    socket.emit("register", { roomId: gameData.data.roomId });
+    socket.emit("register", { roomId: gameData.roomId, type: gameData.type, playerA: gameData.playerA, playerB: gameData.playerB });
     console.log("send register");
   }, []);
 
@@ -139,7 +139,7 @@ function Game() {
         velocityY: data.ball.velocityY,
         color: data.ball.color,
       };
-      if (gameData.nickname == gameData.data.playerA) {
+      if (gameData.side == 0) {
         const updateplayerB = {
           x: data.playerB.x,
           y: data.playerB.y,
@@ -168,12 +168,12 @@ function Game() {
     function movePaddle(evt) {
       let rect = canvas.getBoundingClientRect();
       console.log(gameData.nickname);
-      if (gameData.nickname == gameData.data.playerA) {
+      if (gameData.nickname == gameData.playerA) {
         playerA.y = evt.clientY - rect.top - playerA.height / 2;
-        socket.emit("paddleA", { roomId: gameData.data.roomId, y: playerA.y });
+        socket.emit("paddleA", { roomId: gameData.roomId, y: playerA.y });
       } else {
         playerB.y = evt.clientY - rect.top - playerA.height / 2;
-        socket.emit("paddleB", { roomId: gameData.data.roomId, y: playerB.y });
+        socket.emit("paddleB", { roomId: gameData.roomId, y: playerB.y });
       }
     }
     canvas.addEventListener("mousemove", movePaddle);
