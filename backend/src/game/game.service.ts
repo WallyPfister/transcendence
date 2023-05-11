@@ -32,9 +32,9 @@ export class GameService {
 		private readonly memberService: MemberService,
 		private memberRepository: MemberRepository,
 		private readonly channelService: ChannelService
-	) { this.gameQ = Array.from({ length: 4 }, () => new GameQueue(30)); }
+	) { this.gameQ = Array.from({ length: 3 }, () => new GameQueue(30)); }
 
-	@SubscribeMessage('enterGame') // 희망 게임을 보내줘야 함 0 casual, 1 casual power, 2 ladder, 3 ladder power
+	@SubscribeMessage('enterGame') // 희망 게임을 보내줘야 함 0 casual, 1 casual power, 2 ladder
 	waitGame(@MessageBody() type: number, @ConnectedSocket() socket: Socket) {
 		if (!this.gameQ[type].enQueue(socket.data.nickname)) {
 			socket.emit('errorMessage', "The waiting list is full. Please try again later.");
@@ -44,16 +44,20 @@ export class GameService {
 	}
 
 	// 이건 스케쥴링으로 계속 돌아야 함, casualPower, ladder, ladderPower 각각 함수 만들어야 함. 정리 후 복붙
-	@Interval('casualGame', 7000)
+	@Interval('casual', 7000)
 	async checkCasualGame() {
 		if (this.gameQ[GameConstants.CASUAL].getCount() < 2) // 큐에 두개 이하면 실행 안함
 			return;
-		const p1 = await this.checkPlayer(MemberConstants.CASUAL, this.gameQ[GameConstants.CASUAL].peek(1), 1);
+		const p1 = await this.checkPlayer(GameConstants.CASUAL, this.gameQ[GameConstants.CASUAL].peek(1), 1);
 		if (p1 === null)
 			return;
-		const p2 = await this.checkPlayer(MemberConstants.CASUAL, this.gameQ[GameConstants.CASUAL].peek(2), 2);
+		const p2 = await this.checkPlayer(GameConstants.CASUAL, this.gameQ[GameConstants.CASUAL].peek(2), 2);
 		if (p1 === null)
 			return;
+		if (p1.data.nickname === p2.data.nickname) {
+			this.gameQ[GameConstants.CASUAL].deQueue();
+			return ;
+		}
 		this.gameQ[GameConstants.CASUAL].deQueue(); // 두명을 큐에서 뻄
 		this.gameQ[GameConstants.CASUAL].deQueue();
 		this.memberRepository.updateStatus(p1.data.nickname, MemberConstants.INGAME); // 두명을 인게임으로 변경해
@@ -63,7 +67,58 @@ export class GameService {
 		p2.join(roomId);
 		p1.emit("startGame", new GameInfoDto(GameConstants.CASUAL, roomId, p1.data.nickname, p2.data.nickname, 0)); // 게임 시작 정보 알려줌
 		p2.emit("startGame", new GameInfoDto(GameConstants.CASUAL, roomId, p1.data.nickname, p2.data.nickname, 1));
-	} 
+	}
+
+	@Interval('casual_p', 7000)
+	async checkCasualPowerGame() {
+		if (this.gameQ[GameConstants.CASUAL_P].getCount() < 2) // 큐에 두개 이하면 실행 안함
+			return;
+		const p1 = await this.checkPlayer(GameConstants.CASUAL_P, this.gameQ[GameConstants.CASUAL_P].peek(1), 1);
+		if (p1 === null)
+			return;
+		const p2 = await this.checkPlayer(GameConstants.CASUAL_P, this.gameQ[GameConstants.CASUAL_P].peek(2), 2);
+		if (p1 === null)
+			return;
+		if (p1.data.nickname === p2.data.nickname) {
+			this.gameQ[GameConstants.CASUAL_P].deQueue();
+			return ;
+		}
+		this.gameQ[GameConstants.CASUAL_P].deQueue(); // 두명을 큐에서 뻄
+		this.gameQ[GameConstants.CASUAL_P].deQueue();
+		this.memberRepository.updateStatus(p1.data.nickname, MemberConstants.INGAME); // 두명을 인게임으로 변경해
+		this.memberRepository.updateStatus(p2.data.nickname, MemberConstants.INGAME);
+		const roomId = randomBytes(Math.ceil(25 / 2)).toString('hex').slice(0, 25);
+		p1.join(roomId);
+		p2.join(roomId);
+		p1.emit("startGame", new GameInfoDto(GameConstants.CASUAL_P, roomId, p1.data.nickname, p2.data.nickname, 0)); // 게임 시작 정보 알려줌
+		p2.emit("startGame", new GameInfoDto(GameConstants.CASUAL_P, roomId, p1.data.nickname, p2.data.nickname, 1));
+	}
+
+	@Interval('ladder', 7000)
+	async checkLadderGame() {
+		if (this.gameQ[GameConstants.LADDER].getCount() < 2) // 큐에 두개 이하면 실행 안함
+			return;
+		const p1 = await this.checkPlayer(GameConstants.LADDER, this.gameQ[GameConstants.LADDER].peek(1), 1);
+		if (p1 === null)
+			return;
+		const p2 = await this.checkPlayer(GameConstants.LADDER, this.gameQ[GameConstants.LADDER].peek(2), 2);
+		if (p1 === null)
+			return;
+		if (p1.data.nickname === p2.data.nickname) {
+			this.gameQ[GameConstants.LADDER].deQueue();
+			return ;
+		}
+		this.gameQ[GameConstants.LADDER].deQueue(); // 두명을 큐에서 뻄
+		this.gameQ[GameConstants.LADDER].deQueue();
+		this.memberRepository.updateStatus(p1.data.nickname, MemberConstants.INGAME); // 두명을 인게임으로 변경해
+		this.memberRepository.updateStatus(p2.data.nickname, MemberConstants.INGAME);
+		const roomId = randomBytes(Math.ceil(25 / 2)).toString('hex').slice(0, 25);
+		p1.join(roomId);
+		p2.join(roomId);
+		p1.emit("startGame", new GameInfoDto(GameConstants.LADDER, roomId, p1.data.nickname, p2.data.nickname, 0)); // 게임 시작 정보 알려줌
+		p2.emit("startGame", new GameInfoDto(GameConstants.LADDER, roomId, p1.data.nickname, p2.data.nickname, 1));
+	}
+
 
 	async checkPlayer(type: number, name: string, flag: number): Promise<Socket> {
 		if (this.gameQ[type].getCount() < 2)
