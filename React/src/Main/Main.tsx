@@ -7,7 +7,7 @@ import { SocketContext } from "../Socket/SocketContext";
 import { useNavigate } from "react-router-dom";
 import { InviteGameModal, useInviteGame } from "../Socket/InviteGameModal";
 import { StartGameModal, useStartGame } from "../Socket/StartGameModal";
-import CustomAxios from "../Etc/CustomAxios";
+import CustomAxios from "../Util/CustomAxios";
 
 function Main() {
   const socket = useContext(SocketContext);

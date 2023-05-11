@@ -98,10 +98,11 @@
     display: none;
 }
 
-#sign-up #profile-form #file-wrapper div {
+#sign-up #profile-form #file-wrapper #file-name {
     font-size: max(25px, 2.5vw);
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 90%;
 }
 
 #sign-up #profile-form #auth-check {

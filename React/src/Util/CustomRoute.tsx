@@ -8,7 +8,7 @@ interface AuthRouteProps {
     isVerify: boolean,
 }
 
-interface PrivateGameProps {
+interface PrivateRouteProps {
     component: JSX.Element
 }
 
@@ -25,32 +25,42 @@ const AuthRoute = (props: AuthRouteProps) => {
             setIsAllowed(0);
     }, [props.isSignUp, props.isVerify]);
 
-    if (isAllowed === 1)
-        return (props.component);
-    else if (isAllowed === 0)
-        nav('/');
-    else
-        return (<img src="../spinner.gif" alt="img"></img>);
+    useEffect(() => {
+        if (isAllowed === 0)
+            nav('/');
+    }, [isAllowed, nav]);
+
+    return (
+        <>
+        { isAllowed === 1 ? props.component : null }
+        </>
+    );
 }
 
-const PrivateRoute = ({component}: PrivateGameProps) => {
+const PrivateRoute = ({component}: PrivateRouteProps) => {
     const [isAllowed, setIsAllowed] = useState(-1);
     const nav = useNavigate();
 
-    if (localStorage.getItem('token')) {
-        CustomAxios.get('/auth/jwt-verify')
-        .then(() => {
-            setIsAllowed(1);
-        });
-    } else
-        setIsAllowed(0);
+    useEffect(() => {
+        if (localStorage.getItem('token')) {
+            CustomAxios.get('/auth/jwt-verify')
+            .then(() => {
+                setIsAllowed(1);
+            });
+        } else
+            setIsAllowed(0);
+    }, []);
 
-    if (isAllowed === 1)
-        return (component);
-    else if (isAllowed === 0)
-        nav('/');
-    else
-        return (<img src="../spinner.gif" alt="img"></img>);
+    useEffect(() => {
+        if (isAllowed === 0)
+            nav('/');
+    }, [isAllowed, nav]);
+
+    return (
+        <>
+        { isAllowed === 1 ? component : null }
+        </>
+    );
 }
 
 export const CustomRoute = {
