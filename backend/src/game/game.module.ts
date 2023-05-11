@@ -8,6 +8,7 @@ import { MemberService } from 'src/member/member.service';
 
 @Module({
   controllers: [GameController],
-  providers: [GameService, GameRepository, MemberService, MemberRepository, ChannelService]
+  providers: [GameService, GameRepository, MemberService, MemberRepository, ChannelService],
+  exports: [GameService]
 })
-export class GameModule {}
+export class GameModule { }
