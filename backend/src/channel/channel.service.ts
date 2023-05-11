@@ -367,11 +367,14 @@ export class ChannelService {
 					message: `You are not admin`,
 				});
 			} else {
-				throw new Error(`${data.nickname} is not admin`);
+				this.userList[socket.data.nickname].isAdmin = false;
+				const index = this.chatRoomList[socket.data.roomId].adminList.indexOf(data.nickname);
+				if (index !== -1) {
+					this.chatRoomList[socket.data.roomId].adminList.splice(index, 1);
+				}
+				target.emit('isNotAdmin');
+				socket.emit('system', `${data.nickname} leaves admin`);
 			}
-			this.userList[socket.data.nickname].isAdmin = false;
-			target.emit('isNotAdmin');
-			socket.emit('system', `${data.nickname} leaves admin`);
 		} else {
 			throw new Error(`cannot find ${data.nickname}`);
 		}
