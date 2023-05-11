@@ -72,11 +72,11 @@
 }
 
 #profile #left-wrapper #user-info #name-button-wrapper #friend.add {
-    background-image: url('../../public/friend-add-button.svg');
+    background-image: url('../../public/img/friend-add-button.svg');
 }
 
 #profile #left-wrapper #user-info #name-button-wrapper #friend.del {
-    background-image: url('../../public/friend-del-button.svg');
+    background-image: url('../../public/img/friend-del-button.svg');
 }
 
 #profile #left-wrapper #user-info #name-button-wrapper #friend.me {

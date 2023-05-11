@@ -87,7 +87,7 @@
 #sign-up #profile-form #file-wrapper label #upload-button {
     width: 10%;
     height: 100%;
-    background-image: url("../../public/upload-button.svg");
+    background-image: url("../../public/img/upload-button.svg");
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
