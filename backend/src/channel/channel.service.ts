@@ -446,4 +446,9 @@ export class ChannelService {
     }
     return null;
   }
+
+  async sendErrorMsg(name: string, msg: string): Promise<void> {
+    const socket = await this.findSocketByName(name);
+    socket.emit('errorMessage', msg);
+  }
 }

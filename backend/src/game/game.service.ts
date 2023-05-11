@@ -36,8 +36,10 @@ export class GameService {
 
 	@SubscribeMessage('enterGame') // 희망 게임을 보내줘야 함 0 casual, 1 casual power, 2 ladder, 3 ladder power
 	waitGame(@MessageBody() type: number, @ConnectedSocket() socket: Socket) {
-		if (!this.gameQ[type].enQueue(socket.data.nickname))
-			this.server.emit("errorMessage", { message: "The waiting list is full. Please try again later." });
+		if (!this.gameQ[type].enQueue(socket.data.nickname)) {
+			socket.emit('errorMessage', "The waiting list is full. Please try again later.");
+			return ;
+		}
 		socket.emit('addQueue', socket.data.nickname); // 큐에 넣어졌음을 알려줌. 굳이 응답 안해줘도 되면 삭제해도 됨.
 	}
 
@@ -95,8 +97,13 @@ export class GameService {
 	async inviteGame(@MessageBody() data: { type: number, invitee: string }, @ConnectedSocket() socket: Socket) {
 		// 게임 종류랑 초대할 사람 담아서 보내주기
 		const {status} = await this.memberRepository.getStatus(data.invitee);
-		if (status !== MemberConstants.ONLINE)
-		this.server.emit("errorMessage", {message : "The ."});
+		if (status !== MemberConstants.ONLINE) {
+			socket.emit('errorMessage', {
+				nickname: '<system>',
+				message: 'The invitee\'s status is not online. Please try again later.',
+			});
+			return ;
+		}
 		const inviteeSocket = await this.channelService.findSocketByName(data.invitee); // 초대 당한 애 소켓 찾기
 		const gameType = data.type;
 		const inviter = socket.data.nickname;

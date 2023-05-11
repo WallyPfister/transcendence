@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards, ValidationPipe } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards, ValidationPipe } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiUnauthorizedResponse, ApiConflictResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags, ApiBadRequestResponse } from '@nestjs/swagger';
 import { MemberService } from './member.service';
 import { MemberRepository } from './member.repository';
@@ -12,6 +12,7 @@ import { Payload } from 'src/auth/decorators/payload';
 import { JwtSignUpAuthGuard } from 'src/auth/guards/jwt.signup.guard';
 import { IssueJwtTokenDTO } from 'src/auth/dto/issue.jwt';
 import { JwtTokenDTO } from '../auth/dto/jwt.dto';
+import { ChannelService } from 'src/channel/channel.service';
 
 @ApiTags("Member")
 @Controller('member')
@@ -20,6 +21,7 @@ export class MemberController {
 		private readonly memberService: MemberService,
 		private memberRepository: MemberRepository,
 		private readonly authService: AuthService,
+		private readonly channelService: ChannelService
 	) { };
 
 	@ApiOperation({
@@ -234,18 +236,26 @@ export class MemberController {
 	@ApiOkResponse({
 		description: 'Add a friend successfully.'
 	})
-	@ApiNotFoundResponse({
-		description: 'There is no such member with the given name.'
-	})
 	@ApiUnauthorizedResponse({
 		description:
 			'(1) [Invalid access token] Redirect to 42 login. \
 			(2) [Expired access token] Refresh the access token.',
 	})
+	@ApiBadRequestResponse({
+		description: 'The member has already been added as a friend.'
+	})
+	@ApiNotFoundResponse({
+		description: 'There is no such member with the given name.'
+	})
 	@ApiBearerAuth()
 	@Post('friend/:friendName')
 	@UseGuards(JwtAuthGuard)
 	async addFriend(@Payload() payload: any, @Param('friendName') friendName: string): Promise<void> {
+		const name = payload['sub']
+		if (this.memberRepository.isFriend(name, friendName)) {
+			this.channelService.sendErrorMsg(name, `${friendName} has already been added as a friend.`);
+			throw new BadRequestException();
+		}
 		return await this.memberRepository.addFriend(payload['sub'], friendName);
 	}
 
