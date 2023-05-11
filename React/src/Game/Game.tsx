@@ -21,7 +21,7 @@ function Game() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (gameData.roomId == undefined) {
+    if (gameData == undefined || gameData. roomId == undefined) {
       console.log("Gamedata undifined");
       navigate("/login");
       return;
