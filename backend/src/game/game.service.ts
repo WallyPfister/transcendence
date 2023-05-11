@@ -17,7 +17,7 @@ import { randomBytes } from 'crypto';
 @WebSocketGateway(3001, {
 	// transports: ['websocket'],
 	cors: {
-		origin: process.env.FRONT_PORT,
+		origin: '*',
 		methods: ['GET', 'POST'],
 		credentials: true,
 	},
