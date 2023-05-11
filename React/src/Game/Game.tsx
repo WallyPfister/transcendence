@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import { useContext } from "react";
 import { SocketContext } from "../Socket/SocketContext";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface Ball {
   x: number;
@@ -17,6 +17,18 @@ function Game() {
   const socket = useContext(SocketContext);
   const location = useLocation();
   const gameData = location.state;
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (gameData == undefined || gameData. roomId == undefined) {
+      console.log("Gamedata undifined");
+      navigate("/login");
+      return;
+    }
+    socket.emit("register", { roomId: gameData.roomId });
+    console.log("send register");
+  }, []);
 
   const canvasRef = useRef(null);
   let canvas;
