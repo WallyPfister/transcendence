@@ -185,9 +185,9 @@ export class Pong {
             gameResult.loseScore = this.gameRoomList[roomId].playerB.score;
         } else {
             gameResult.winner = this.gameRoomList[roomId].playerB.nickname;
-            gameResult.loser = this.gameRoomList[roomId].playerB.nickname;
-            gameResult.winScore = this.gameRoomList[roomId].playerA.score;
-            gameResult.loseScore = this.gameRoomList[roomId].playerB.score;
+            gameResult.loser = this.gameRoomList[roomId].playerA.nickname;
+            gameResult.winScore = this.gameRoomList[roomId].playerB.score;
+            gameResult.loseScore = this.gameRoomList[roomId].playerA.score;
         }
         gameResult.type = this.gameRoomList[roomId].type;
         this.gameService.updateGameResult(gameResult);
