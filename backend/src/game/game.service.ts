@@ -36,13 +36,13 @@ export class GameService {
 
 	@SubscribeMessage('enterGame') // 희망 게임을 보내줘야 함 0 casual, 1 casual power, 2 ladder, 3 ladder power
 	waitGame(@MessageBody() type: number, @ConnectedSocket() socket: Socket) {
-		if (!this.gameQ[type].enQueue(socket.id))
+		if (!this.gameQ[type].enQueue(socket.data.nickname))
 			this.server.emit("errorMessage", { message: "The waiting list is full. Please try again later." });
 		socket.emit('addQueue', socket.data.nickname); // 큐에 넣어졌음을 알려줌. 굳이 응답 안해줘도 되면 삭제해도 됨.
 	}
 
 	// 이건 스케쥴링으로 계속 돌아야 함, casualPower, ladder, ladderPower 각각 함수 만들어야 함. 정리 후 복붙
-	// @Interval('casualGame', 10000)
+	@Interval('casualGame', 7000)
 	async checkCasualGame() {
 		if (this.gameQ[GameConstants.CASUAL].getCount() < 2) // 큐에 두개 이하면 실행 안함
 			return;
@@ -61,8 +61,7 @@ export class GameService {
 		p2.join(roomId);
 		p1.emit("startGame", new GameInfoDto(GameConstants.CASUAL, roomId, p1.data.nickname, p2.data.nickname, 0)); // 게임 시작 정보 알려줌
 		p2.emit("startGame", new GameInfoDto(GameConstants.CASUAL, roomId, p1.data.nickname, p2.data.nickname, 1));
-	} // 아마 프론트 머 몇초 후 겜방으로 이동합니다 창 띄운다음에 쫌 이따 게임창 띄워주고 백에 성훈이 게임 시작 함수 호출.
-	// 그러면 백에서 해야 하는 거 게임방 만들고, 두명 게임에 넣고, 게임 그리기 시작
+	} 
 
 	async checkPlayer(type: number, name: string, flag: number): Promise<Socket> {
 		if (this.gameQ[type].getCount() < 2)
