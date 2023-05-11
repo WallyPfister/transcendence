@@ -17,7 +17,7 @@ import { randomBytes } from 'crypto';
 @WebSocketGateway(3001, {
 	// transports: ['websocket'],
 	cors: {
-		origin: 'http://localhost:3000',
+		origin: process.env.FRONT_PORT,
 		methods: ['GET', 'POST'],
 		credentials: true,
 	},
@@ -61,7 +61,7 @@ export class GameService {
 		p2.join(roomId);
 		p1.emit("startGame", new GameInfoDto(GameConstants.CASUAL, roomId, p1.data.nickname, p2.data.nickname, 0)); // 게임 시작 정보 알려줌
 		p2.emit("startGame", new GameInfoDto(GameConstants.CASUAL, roomId, p1.data.nickname, p2.data.nickname, 1));
-	} 
+	}
 
 	async checkPlayer(type: number, name: string, flag: number): Promise<Socket> {
 		if (this.gameQ[type].getCount() < 2)
@@ -94,9 +94,9 @@ export class GameService {
 	@SubscribeMessage('invite') // 채널 리스트 or 친구 중 상태가 online인 사람만 초대할 수 있게 버튼이 떠야함
 	async inviteGame(@MessageBody() data: { type: number, invitee: string }, @ConnectedSocket() socket: Socket) {
 		// 게임 종류랑 초대할 사람 담아서 보내주기
-		const {status} = await this.memberRepository.getStatus(data.invitee);
+		const { status } = await this.memberRepository.getStatus(data.invitee);
 		if (status !== MemberConstants.ONLINE)
-		this.server.emit("errorMessage", {message : "The ."});
+			this.server.emit("errorMessage", { message: "The ." });
 		const inviteeSocket = await this.channelService.findSocketByName(data.invitee); // 초대 당한 애 소켓 찾기
 		const gameType = data.type;
 		const inviter = socket.data.nickname;
