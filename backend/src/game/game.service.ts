@@ -17,7 +17,7 @@ import { randomBytes } from 'crypto';
 @WebSocketGateway(3001, {
 	// transports: ['websocket'],
 	cors: {
-		origin: 'http://localhost:3000',
+		origin: '*',
 		methods: ['GET', 'POST'],
 		credentials: true,
 	},
@@ -38,7 +38,7 @@ export class GameService {
 	waitGame(@MessageBody() type: number, @ConnectedSocket() socket: Socket) {
 		if (!this.gameQ[type].enQueue(socket.data.nickname)) {
 			socket.emit('errorMessage', "The waiting list is full. Please try again later.");
-			return ;
+			return;
 		}
 		socket.emit('addQueue', socket.data.nickname); // 큐에 넣어졌음을 알려줌. 굳이 응답 안해줘도 되면 삭제해도 됨.
 	}
@@ -56,7 +56,7 @@ export class GameService {
 			return;
 		if (p1.data.nickname === p2.data.nickname) {
 			this.gameQ[GameConstants.CASUAL].deQueue();
-			return ;
+			return;
 		}
 		this.gameQ[GameConstants.CASUAL].deQueue(); // 두명을 큐에서 뻄
 		this.gameQ[GameConstants.CASUAL].deQueue();
@@ -81,7 +81,7 @@ export class GameService {
 			return;
 		if (p1.data.nickname === p2.data.nickname) {
 			this.gameQ[GameConstants.CASUAL_P].deQueue();
-			return ;
+			return;
 		}
 		this.gameQ[GameConstants.CASUAL_P].deQueue(); // 두명을 큐에서 뻄
 		this.gameQ[GameConstants.CASUAL_P].deQueue();
@@ -106,7 +106,7 @@ export class GameService {
 			return;
 		if (p1.data.nickname === p2.data.nickname) {
 			this.gameQ[GameConstants.LADDER].deQueue();
-			return ;
+			return;
 		}
 		this.gameQ[GameConstants.LADDER].deQueue(); // 두명을 큐에서 뻄
 		this.gameQ[GameConstants.LADDER].deQueue();
@@ -151,13 +151,13 @@ export class GameService {
 	@SubscribeMessage('invite') // 채널 리스트 or 친구 중 상태가 online인 사람만 초대할 수 있게 버튼이 떠야함
 	async inviteGame(@MessageBody() data: { type: number, invitee: string }, @ConnectedSocket() socket: Socket) {
 		// 게임 종류랑 초대할 사람 담아서 보내주기
-		const {status} = await this.memberRepository.getStatus(data.invitee);
+		const { status } = await this.memberRepository.getStatus(data.invitee);
 		if (status !== MemberConstants.ONLINE) {
 			socket.emit('errorMessage', {
 				nickname: '<system>',
 				message: 'The invitee\'s status is not online. Please try again later.',
 			});
-			return ;
+			return;
 		}
 		const inviteeSocket = await this.channelService.findSocketByName(data.invitee); // 초대 당한 애 소켓 찾기
 		const gameType = data.type;

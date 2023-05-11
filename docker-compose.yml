@@ -21,14 +21,13 @@ services:
     postgres:
         container_name: postgres
         image: postgres:14
-        restart: always
+        restart: on-failure
         ports:
             - "5432:5432"
         env_file:
             - .env
         networks:
             - trans
-        init: true
         # volumes:
         #     - postgres-volume:/var/lib/postgresql/data
         tty: true
@@ -36,7 +35,7 @@ services:
         container_name: nestjs
         build: ./backend/
         image: node:transcendence
-        restart: always
+        restart: on-failure
         env_file:
             - .env
         depends_on:
@@ -46,12 +45,11 @@ services:
             - "4000:3000"
         networks:
             - trans
-        init: true
     react:
         container_name: react
         build: ./React/
         image: react:transcendence
-        restart: always
+        restart: on-failure
         ports:
             - "3000:3000"
         depends_on:
@@ -60,4 +58,3 @@ services:
             - .env
         networks:
             - trans
-        init: true
