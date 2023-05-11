@@ -20,18 +20,27 @@ function Main() {
     message: string;
   }
 
+  interface FriendData {
+    level: number;
+    nickname: string;
+    status: number;
+  }
+
   const [nickname, setNickname] = useState("");
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [roomName, setRoomName] = useState<string>("");
   const [selectedTab, setSelectedTab] = useState("channel");
-  const [friends, setFriends] = useState<string[]>([]);
+  const [friends, setFriends] = useState<FriendData[]>([]);
   const [channelUser, setChannelUser] = useState<string[]>([]);
   const [showChannel, setChannel] = useState<boolean>(false);
   const [selectUser, setSelectUser] = useState<string>("");
   const [privateRoomName, setPrivateRoomName] = useState<string>("");
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [inviteGameSelect, setInviteGameSelect] = useState<boolean>(false);
+  const [isComposing, setIsComposing] = useState<boolean>(false);
+  const [isChief, setIsChief] = useState<boolean>(false);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   const chatWindowRef = useRef<HTMLDivElement>(null); // create a ref for the chat window
 
@@ -41,9 +50,12 @@ function Main() {
       setNickname(res.data);
     }
     fetchData();
+  }, []);
+
+  useEffect(() => {
     console.log(nickname);
-    socket.emit("setUser", { nickname: nickname });
-  }, []); // test
+    if (nickname !== "") socket.emit("setUser", { nickname: nickname });
+  }, [nickname]);
 
   useEffect(() => {
     if (chatWindowRef.current) {
@@ -65,6 +77,35 @@ function Main() {
       setChannelUser(userList);
     });
 
+    socket.on("isChief", () => {
+      setIsChief(true);
+      setIsAdmin(true);
+      const newMessage: Message = {
+        nickname: "<system>",
+        message: " I need a weapon. - Master Cheif -",
+      };
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+    });
+
+    socket.on("isNotChief", () => {
+      setIsChief(false);
+      setIsAdmin(false);
+    });
+
+    socket.on("isAdmin", () => {
+      setIsChief(false);
+      setIsAdmin(false);
+    });
+
+    socket.on("isNotAdmin", () => {
+      setIsChief(false);
+      setIsAdmin(false);
+    });
+
+    socket.on("kick", () => {
+      socket.emit("joinRoom", "lobby");
+    });
+
     socket.on("newMessage", (newMessage: Message) => {
       setMessages((prevMessages) => [...prevMessages, newMessage]);
     });
@@ -77,7 +118,19 @@ function Main() {
       setMessages((prevMessages) => [...prevMessages, newMessage]);
     });
 
-    socket.on("errorMessage", (newMessage: Message) => {
+    socket.on("errorMessage", (message: string) => {
+      const newMessage: Message = {
+        nickname: "<error>",
+        message: message,
+      };
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+    });
+
+    socket.on("systemMessage", (message: string) => {
+      const newMessage: Message = {
+        nickname: "<system>",
+        message: message,
+      };
       setMessages((prevMessages) => [...prevMessages, newMessage]);
     });
 
@@ -85,12 +138,23 @@ function Main() {
       setPrivateRoomName(body.roomName);
       setShowPasswordModal(true);
     });
-    // socket.on("channelList", (data: any) => {
-    //   console.log(data);
-    // });
   }, []);
 
-  const handleFriendListClick = () => setSelectedTab("friends");
+  const handleFriendListClick = () => {
+    CustomAxios.get("/member/friend/").then((res) => {
+      console.log(res);
+      const friendDataArray: FriendData[] = res.data.map((friend: any) => {
+        return {
+          level: friend.level,
+          nickname: friend.name,
+          status: friend.status,
+        };
+      });
+      setFriends(friendDataArray);
+    });
+    setSelectedTab("friends");
+  };
+
   const handleChannelListClick = () => setSelectedTab("channel");
 
   const handleCasualGame = (user: string) => {
@@ -101,8 +165,6 @@ function Main() {
     socket.emit("enterGame", 2);
   };
 
-  const [isComposing, setIsComposing] = useState<boolean>(false);
-
   const handleCompositionStart = () => {
     setIsComposing(true);
   };
@@ -112,13 +174,12 @@ function Main() {
   };
 
   const goToRanking = (user: string) => {
-    // You can pass user as a parameter if you need it in the profile page
     navigate("/rank", { state: { user } });
   };
 
   const goToProfile = (user: string) => {
     // You can pass user as a parameter if you need it in the profile page
-    navigate("/profile", { state: { user } });
+    navigate(`/profile/${user}`);
   };
 
   const handleChatKeyDown = (e: React.KeyboardEvent) => {
@@ -134,7 +195,6 @@ function Main() {
   };
 
   const handleCloseChannel = () => {
-    // socket.emit( )
     setChannel(false);
   };
 
@@ -147,36 +207,50 @@ function Main() {
     }
   };
 
-  const userProfile = (user: string) => {
-    const newMessage: Message = {
-      nickname: "<system>",
-      message: ` go to ${user} profile.`,
-    };
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
-  };
-
   const addFriend = (user: string) => {
-    const newMessage: Message = {
-      nickname: "<system>",
-      message: ` Add ${user} as friend.`,
-    };
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
+    CustomAxios.post("/member/friend/" + user)
+      .then(() => {
+        const newMessage: Message = {
+          nickname: "<system>",
+          message: ` ${user} is added to friend list.`,
+        };
+        setMessages((prevMessages) => [...prevMessages, newMessage]);
+      })
+      .catch((err) => {
+        if (err.response.status === 404) {
+          const newMessage: Message = {
+            nickname: "<error>",
+            message: ` ${user} not found.`,
+          };
+          setMessages((prevMessages) => [...prevMessages, newMessage]);
+        }
+      });
   };
 
   const deleteFriend = (user: string) => {
-    const newMessage: Message = {
-      nickname: "<system>",
-      message: ` ${user} is deleted from friend list.`,
-    };
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
+    CustomAxios.delete("/member/friend/" + user).then(() => {
+      const newMessage: Message = {
+        nickname: "<system>",
+        message: ` ${user} is added to friend list.`,
+      };
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+    });
+  };
+
+  const setAdmin = (user: string) => {
+    socket.emit("setAdmin", { nickname: user });
+  };
+
+  const unsetAdmin = (user: string) => {
+    socket.emit("unSetAdmin", { nickname: user });
+  };
+
+  const muteUser = (user: string) => {
+    socket.emit("mute", { nickname: user });
   };
 
   const banUser = (user: string) => {
-    const newMessage: Message = {
-      nickname: "<system>",
-      message: ` You have banned ${user}.`,
-    };
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
+    socket.emit("ban", { nickname: user });
   };
 
   const inviteGame = (event: React.MouseEvent) => {
@@ -231,7 +305,11 @@ function Main() {
       </div>
       <div id="chat-interface">
         <div id="chat-box">
-          <div id="chat-name">{roomName}</div>
+          <div id="chat-status">
+            <div id="chat-name">{roomName}</div>
+            {isAdmin === true && <div id="is-admin">Admin</div>}
+            {isAdmin === true && <div id="is-cheif">Chief</div>}
+          </div>
           <div id="chat-window" ref={chatWindowRef}>
             {messages.map(
               (msg: Message, index: number) =>
@@ -243,6 +321,8 @@ function Main() {
                         ? "system-message"
                         : msg.nickname === nickname
                         ? "my-message"
+                        : msg.nickname === "<error>"
+                        ? "error-message"
                         : ""
                     }
                   >
@@ -283,36 +363,46 @@ function Main() {
               <div>
                 {friends.map((user) => (
                   <div
-                    key={user}
-                    onClick={() => handleUserClick(user)}
-                    className={selectUser === user ? "user-selected" : ""}
+                    key={user.nickname}
+                    onClick={() => handleUserClick(user.nickname)}
+                    className={
+                      selectUser === user.nickname ? "user-selected" : ""
+                    }
                   >
-                    {user}
-                    {selectUser === user && (
+                    {user.level}
+                    {user.nickname}
+                    {user.status}
+                    {selectUser === user.nickname && (
                       <div className="button-container">
-                        <button onClick={() => userProfile(user)}>
+                        <button onClick={() => goToProfile(user.nickname)}>
                           Profile
                         </button>
-                        <button onClick={() => deleteFriend(user)}>
+                        <button onClick={() => deleteFriend(user.nickname)}>
                           delete user
                         </button>
                         <button onClick={(event) => inviteGame(event)}>
                           1vs1
                         </button>
-                        <div className="button-invite-type">
-                          <button
-                            className="button-normal-invite"
-                            onClick={() => selectGametype(user, "normal")}
-                          >
-                            Normal
-                          </button>
-                          <button
-                            className="button-power-invite"
-                            onClick={() => selectGametype(user, "Power")}
-                          >
-                            Power
-                          </button>
-                        </div>
+                        {inviteGameSelect === true && (
+                          <div className="button-invite-type">
+                            <button
+                              className="button-normal-invite"
+                              onClick={() =>
+                                selectGametype(user.nickname, "normal")
+                              }
+                            >
+                              Normal
+                            </button>
+                            <button
+                              className="button-power-invite"
+                              onClick={() =>
+                                selectGametype(user.nickname, "Power")
+                              }
+                            >
+                              Power
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -330,13 +420,28 @@ function Main() {
                     {user}
                     {selectUser === user && selectUser !== nickname && (
                       <div className="button-container">
-                        <button onClick={() => userProfile(user)}>
+                        <button onClick={() => goToProfile(user)}>
                           Profile
                         </button>
                         <button onClick={() => addFriend(user)}>
                           Add Friend
                         </button>
-                        <button onClick={() => banUser(user)}>Ban</button>
+                        {isChief === true && (
+                          <div id="owner-button">
+                            <button onClick={() => setAdmin(user)}>
+                              Set Admin
+                            </button>
+                            <button onClick={() => unsetAdmin(user)}>
+                              Unset Admin
+                            </button>
+                          </div>
+                        )}
+                        {isAdmin === true && (
+                          <div id="admin-button">
+                            <button onClick={() => banUser(user)}>Ban</button>
+                            <button onClick={() => muteUser(user)}>Mute</button>
+                          </div>
+                        )}
                         <button onClick={(event) => inviteGame(event)}>
                           1vs1
                         </button>

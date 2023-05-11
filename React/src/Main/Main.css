@@ -56,7 +56,15 @@
   box-sizing: border-box;
 }
 
-#main #chat-interface #chat-box #chat-name {
+#main #chat-interface #chat-box #chat-status {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+#main #chat-interface #chat-box #chat-status #chat-name {
+  width: 90%;
   overflow: hidden;
   font-size: 32px;
   padding-top: 4px;
@@ -74,12 +82,16 @@
   margin-left: 20px
 }
 
+#main #chat-interface #chat-box #chat-window .error-message {
+  color: #ff2f2f;
+}
+
 #main #chat-interface #chat-box #chat-window .system-message {
-  color: red;
+  color: #65ff4b;
 }
 
 #main #chat-interface #chat-box #chat-window .my-message {
-  color: yellow;
+  color: #fff84b;
 }
 
 #main #chat-interface #chat-box input {

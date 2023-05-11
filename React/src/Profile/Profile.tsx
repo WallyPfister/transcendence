@@ -63,13 +63,13 @@ const getHistory = async (user: string): Promise<Array<HistoryData>> => {
 function Profile() {
     const userName: string = window.location.pathname.split('/')[2] || '@'; 
     const { data: profileData, isLoading: profileLoading, isError: profileError } = useQuery<ProfileData>('profile-data', ()=>getProfileData(userName), {retry: false, staleTime: 60 * 1000});
-    const { data: history, isLoading: historyLoading, isError: histotyError } = useQuery<Array<HistoryData>>('history-data', ()=>getHistory(userName), {retry: false});
+    const { data: history, isLoading: historyLoading, isError: histotyError } = useQuery<Array<HistoryData>>('history-data', ()=>getHistory(userName), {retry: false, staleTime: 60 * 1000});
     const socket = useContext(SocketContext);
     const { showInvite, closeInvite, inviteData } = useInviteGame(socket);
     const { showStart, closeStart, startData } = useStartGame(socket);
 
     if (profileLoading || historyLoading)
-        return (<img src="../spinner.gif" alt="img"></img>);
+        return (<img src="../img/spinner.gif" alt="img"></img>);
     if (profileError || histotyError)
         return (<NotFound/>);
 
@@ -119,25 +119,25 @@ function Profile() {
                             <div id="stat-title">STAT</div>
                             <div id="stat-content">
                                 <div id="level-wrapper">
-                                    <img id="tier" src={"../tier" + profileData.level + ".png"} alt="img"></img>
+                                    <img id="tier" src={"../img/tier" + profileData.level + ".png"} alt="img"></img>
                                     <div id="point">{profileData.score} pt</div>
                                 </div>
                                 <div id="win-lose">{profileData.win}W / {profileData.lose}L<br/>{profileData.win === 0 ? '0' : (profileData.win / (profileData.win + profileData.lose) * 100).toFixed(2)}%</div>
                                 <div id="achieve">
                                     <div id="achieve-1">
-                                        <img className="off" src={'../achieve-' + (profileData.achieve1 ? 'star' : 'non') + '.svg'} alt="img"></img>
+                                        <img className="off" src={'../img/achieve-' + (profileData.achieve1 ? 'star' : 'non') + '.svg'} alt="img"></img>
                                         <p>Win 5 times in a row</p>
                                     </div>
                                     <div id="achieve-2">
-                                        <img className="off" src={'../achieve-' + (profileData.achieve2 ? 'star' : 'non') + '.svg'} alt="img"></img>
+                                        <img className="off" src={'../img/achieve-' + (profileData.achieve2 ? 'star' : 'non') + '.svg'} alt="img"></img>
                                         <p>Win 10 times in a row</p>
                                     </div>
                                     <div id="achieve-3">
-                                        <img className="off" src={'../achieve-' + (profileData.achieve3 ? 'star' : 'non') + '.svg'} alt="img"></img>
+                                        <img className="off" src={'../img/achieve-' + (profileData.achieve3 ? 'star' : 'non') + '.svg'} alt="img"></img>
                                         <p>Perfect game winner</p>
                                     </div>
                                     <div id="achieve-4">
-                                        <img className="off" src={'../achieve-' + (profileData.achieve4 ? 'star' : 'non') + '.svg'} alt="img"></img>
+                                        <img className="off" src={'../img/achieve-' + (profileData.achieve4 ? 'star' : 'non') + '.svg'} alt="img"></img>
                                         <p>Master Hunter</p>
                                     </div>
                                 </div>
