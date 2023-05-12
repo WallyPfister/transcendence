@@ -38,15 +38,19 @@ function Game() {
 
   useEffect(() => {
     socket.on("endGame", () => {
-      const winner = playerA.score > playerB.score ? playerA : playerB;
-      const loser = playerA.score > playerB.score ? playerB : playerA;
-      CustomAxios.post("/game", {
-        winner: winner,
-        loser: loser,
-        winScore: winner.score,
-        loseScore: loser.score,
-        type: gameData.roomId,
-      });
+      if (gameData.side === 0) {
+        CustomAxios.post("/game", {
+          winner:
+            playerA.score > playerB.score ? gameData.playerA : gameData.playerB,
+          loser:
+            playerA.score < playerB.score ? gameData.playerA : gameData.playerB,
+          winScore:
+            playerA.score > playerB.score ? playerA.score : playerB.score,
+          loseScore:
+            playerA.score < playerB.score ? playerA.score : playerB.score,
+          type: gameData.type,
+        });
+      }
     });
   }, []);
 
