@@ -176,20 +176,12 @@ export class Pong {
 			const user = this.server.sockets.sockets.get(socketId);
 			user.leave(roomId);
 		}
-		let gameResult = new GameResultDto();
-		if (this.gameRoomList[roomId].playerA.score > this.gameRoomList[roomId].playerB.score) {
-			gameResult.winner = this.gameRoomList[roomId].playerA.nickname;
-			gameResult.loser = this.gameRoomList[roomId].playerB.nickname;
-			gameResult.winScore = this.gameRoomList[roomId].playerA.score;
-			gameResult.loseScore = this.gameRoomList[roomId].playerB.score;
-		} else {
-			gameResult.winner = this.gameRoomList[roomId].playerB.nickname;
-			gameResult.loser = this.gameRoomList[roomId].playerA.nickname;
-			gameResult.winScore = this.gameRoomList[roomId].playerB.score;
-			gameResult.loseScore = this.gameRoomList[roomId].playerA.score;
-		}
-		gameResult.type = this.gameRoomList[roomId].type;
-		this.gameService.updateGameResult(gameResult);
+		let result;
+		if (this.gameRoomList[roomId].playerA.score > this.gameRoomList[roomId].playerB.score)
+			result = new GameResultDto(this.gameRoomList[roomId].playerA.nickname, this.gameRoomList[roomId].playerB.nickname, this.gameRoomList[roomId].playerA.score, this.gameRoomList[roomId].playerB.score, this.gameRoomList[roomId].type);
+		else
+			result = new GameResultDto(this.gameRoomList[roomId].playerB.nickname, this.gameRoomList[roomId].playerA.nickname, this.gameRoomList[roomId].playerB.score, this.gameRoomList[roomId].playerA.score, this.gameRoomList[roomId].type);
+		this.gameService.updateGameResult(result);
 		delete this.gameRoomList[roomId];
 	}
 }
