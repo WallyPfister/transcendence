@@ -62,6 +62,7 @@ export class GameService {
 		const roomId = randomBytes(Math.ceil(25 / 2)).toString('hex').slice(0, 25);
 		p1.join(roomId);
 		p2.join(roomId);
+		console.log(`p1 = ${p1.data.nickname}, p2 = ${p2.data.nickname}`);
 		p1.emit("startGame", new GameInfoDto(GameConstants.CASUAL, roomId, p1.data.nickname, p2.data.nickname, 0)); // 게임 시작 정보 알려줌
 		p2.emit("startGame", new GameInfoDto(GameConstants.CASUAL, roomId, p1.data.nickname, p2.data.nickname, 1));
 	}
@@ -115,7 +116,6 @@ export class GameService {
 		p1.emit("startGame", new GameInfoDto(GameConstants.LADDER, roomId, p1.data.nickname, p2.data.nickname, 0)); // 게임 시작 정보 알려줌
 		p2.emit("startGame", new GameInfoDto(GameConstants.LADDER, roomId, p1.data.nickname, p2.data.nickname, 1));
 	}
-
 
 	async checkPlayer(type: number, name: string, flag: number): Promise<Socket> {
 		if (this.gameQ[type].getCount() < 2)
@@ -199,12 +199,11 @@ export class GameService {
 	}
 
 	updateGameResult(result: GameResultDto): void { // api로 할지 소켓으로 할지 
-		this.memberService.updateWinGameResult(result.winner, result.type, result.winScore, result.loser); // 위너 게임 결과 기록
+		this.memberService.updateWinGameResult(result); // 위너 게임 결과 기록
 		this.memberService.updateLoseGameResult(result.loser, result.type); // 루저 게임 결과 기록
 		this.gameRepository.createHistory(result.winner, result.loser, result.winScore, result.loseScore, true, result.type); // 게임 결과 디비 저장
 		this.gameRepository.createHistory(result.loser, result.winner, result.loseScore, result.winScore, false, result.type); // 게임 결과 디비 저장
 		this.memberRepository.updateStatus(result.winner, MemberConstants.ONLINE); // 인게임->온라인
 		this.memberRepository.updateStatus(result.loser, MemberConstants.ONLINE); // 인게임->온라인
 	}
-
 }
