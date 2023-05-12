@@ -57,7 +57,10 @@ export class ChannelService {
 		)
 		if (!user)
 			return;
-		const index = this.channelList[user.roomId].adminList.indexOf(user.nickname);
+		const room = this.channelList[user.roomId]
+		if (!room)
+			return;
+		const index = room.adminList.indexOf(user.nickname);
 		if (user.isChief == true) {
 			const sockets = this.server.sockets.adapter.rooms.get(user.roomId);
 			if (sockets) {
