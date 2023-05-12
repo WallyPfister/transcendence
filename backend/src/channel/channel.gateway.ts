@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
 import { ChatRoomListDto, userDto } from './chatRoom.dto';
 import {
 	SubscribeMessage,
@@ -554,5 +553,5 @@ export class ChannelGateway {
 	async sendErrorMsg(name: string, msg: string): Promise<void> {
 		const socket = await this.findSocketByName(name);
 		socket.emit('errorMessage', msg);
-	  }
+	}
 }

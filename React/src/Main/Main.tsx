@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
 
 import "./Main.css";
-import ChannelWindow from "./ChannelWindow";
-import PasswordModal from "./PasswordWindow";
+import ChannelWindow from "./Components/ChannelWindow/ChannelWindow";
+import PasswordModal from "./Components/PasswordModal/PasswordModal";
+import Gamebuttons from "./Components/Gamebuttons/Gamebuttons"
 import { SocketContext } from "../Socket/SocketContext";
 import { useNavigate } from "react-router-dom";
 import { InviteGameModal, useInviteGame } from "../Socket/InviteGameModal";
 import { StartGameModal, useStartGame } from "../Socket/StartGameModal";
 import CustomAxios from "../Util/CustomAxios";
+import { removeToken } from "../Util/errorHandler";
 
 function Main() {
   const socket = useContext(SocketContext);
@@ -53,7 +55,6 @@ function Main() {
   }, []);
 
   useEffect(() => {
-    console.log(nickname);
     if (nickname !== "") socket.emit("setUser", { nickname: nickname });
   }, [nickname]);
 
@@ -112,8 +113,8 @@ function Main() {
 
     socket.on("addUser", (nickname: string) => {
       const newMessage: Message = {
-        nickname: nickname,
-        message: " has joined the room",
+        nickname: "@join",
+        message: nickname + " has joined the room",
       };
       setMessages((prevMessages) => [...prevMessages, newMessage]);
     });
@@ -287,20 +288,13 @@ function Main() {
   return (
     <div id="main">
       <div id="top-buttons">
-        <div id="game-buttons">
-          <button id="casual-button" onClick={() => handleCasualGame(nickname)}>
-            1 vs 1
+        <Gamebuttons nickname={nickname} />
+        <div id="personal-buttons">
+          <button id="profile-button" onClick={() => goToProfile(nickname)}>
+            My Profile
           </button>
-          <button id="ladder-button" onClick={() => handleLadderGame(nickname)}>
-            Rank
-          </button>
-          <button id="ranking-button" onClick={() => goToRanking(nickname)}>
-            Ranking
-          </button>
+          <button id="logout-button" onClick={() => CustomAxios.get('/auth/logout').then(() => {removeToken(); navigate('/');})}>Logout</button>
         </div>
-        <button id="profile-button" onClick={() => goToProfile(nickname)}>
-          My Profile
-        </button>
       </div>
       <div id="chat-interface">
         <div id="chat-box">
@@ -325,7 +319,7 @@ function Main() {
                             : ""
                     }
                   >
-                    {msg.nickname}: {msg.message}
+                    {msg.nickname === "@join" ? msg.message : (msg.nickname + ': ' + msg.message)}
                   </div>
                 )
             )}

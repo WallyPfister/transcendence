@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import "./PasswordWindow.css";
+import "./PasswordModal.css";
 
 type Props = {
   onSubmit: (body: any) => void;
