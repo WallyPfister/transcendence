@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useContext } from "react";
 import "./Main.css";
 import ChannelWindow from "./Components/ChannelWindow/ChannelWindow";
 import PasswordModal from "./Components/PasswordModal/PasswordModal";
-import Gamebuttons from "./Components/Gamebuttons/Gamebuttons"
+import Gamebuttons from "./Components/Gamebuttons/Gamebuttons";
 import { SocketContext } from "../Socket/SocketContext";
 import { useNavigate } from "react-router-dom";
 import { InviteGameModal, useInviteGame } from "../Socket/InviteGameModal";
@@ -43,6 +43,8 @@ function Main() {
   const [isComposing, setIsComposing] = useState<boolean>(false);
   const [isChief, setIsChief] = useState<boolean>(false);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isPrivate, setIsPrivate] = useState<boolean>(false);
+  const [privateUser, setPrivateUser] = useState<string>("");
 
   const chatWindowRef = useRef<HTMLDivElement>(null); // create a ref for the chat window
 
@@ -75,6 +77,7 @@ function Main() {
     });
 
     socket.on("userList", (userList: string[]) => {
+      setSelectUser("");
       setChannelUser(userList);
     });
 
@@ -108,6 +111,14 @@ function Main() {
     });
 
     socket.on("newMessage", (newMessage: Message) => {
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+    });
+
+    socket.on("privateMessage", ({ nickname: nickname, message: message }) => {
+      const newMessage: Message = {
+        nickname: "@private",
+        message: nickname + ": " + message,
+      };
       setMessages((prevMessages) => [...prevMessages, newMessage]);
     });
 
@@ -154,10 +165,7 @@ function Main() {
     });
     setSelectedTab("friends");
   };
-
   const handleChannelListClick = () => setSelectedTab("channel");
-
-
 
   const handleCompositionStart = () => {
     setIsComposing(true);
@@ -178,7 +186,16 @@ function Main() {
 
   const handleChatKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !isComposing) {
-      socket.emit("sendMessage", { message: message });
+      if (isPrivate === true) {
+        socket.emit("privateMessage", {
+          nickname: privateUser,
+          message: message,
+        });
+        setPrivateUser("");
+        setIsPrivate(false);
+      } else {
+        socket.emit("sendMessage", { message: message });
+      }
       setMessage("");
     }
   };
@@ -268,26 +285,37 @@ function Main() {
     setInviteGameSelect(false);
   };
 
-  useEffect(() => {
-    // Handle password required event
-  }, []);
-
   const handlePasswordSubmit = (submit: any) => {
-    // Send the password to the server
     socket.emit("sendPassword", submit);
     console.log(submit);
     setShowPasswordModal(false);
   };
 
+  const privateMode = (user: string) => {
+    setMessage("");
+    setPrivateUser(user);
+    setIsPrivate(true);
+  };
+
   return (
     <div id="main">
       <div id="top-buttons">
-        <Gamebuttons nickname={nickname}/>
+        <Gamebuttons nickname={nickname} />
         <div id="personal-buttons">
           <button id="profile-button" onClick={() => goToProfile(nickname)}>
             My Profile
           </button>
-          <button id="logout-button" onClick={() => CustomAxios.get('/auth/logout').then(() => {removeToken(); navigate('/');})}>Logout</button>
+          <button
+            id="logout-button"
+            onClick={() =>
+              CustomAxios.get("/auth/logout").then(() => {
+                removeToken();
+                navigate("/");
+              })
+            }
+          >
+            Logout
+          </button>
         </div>
       </div>
       <div id="chat-interface">
@@ -307,13 +335,17 @@ function Main() {
                       msg.nickname === "<system>"
                         ? "system-message"
                         : msg.nickname === nickname
-                          ? "my-message"
-                          : msg.nickname === "<error>"
-                            ? "error-message"
-                            : ""
+                        ? "my-message"
+                        : msg.nickname === "<error>"
+                        ? "error-message"
+                        : msg.nickname === "@private"
+                        ? "private-message"
+                        : ""
                     }
                   >
-                    {msg.nickname === "@join" ? msg.message : (msg.nickname + ': ' + msg.message)}
+                    {msg.nickname === "@join" || msg.nickname === "@private"
+                      ? msg.message
+                      : msg.nickname + ": " + msg.message}
                   </div>
                 )
             )}
@@ -326,6 +358,8 @@ function Main() {
             onKeyUp={(e) => handleChatKeyDown(e)}
             onCompositionStart={handleCompositionStart}
             onCompositionEnd={handleCompositionEnd}
+            placeholder={isPrivate ? `${privateUser}` : ""}
+            className={isPrivate ? "private-input" : ""}
           />
         </div>
         <div id="switch-box">
@@ -364,8 +398,11 @@ function Main() {
                         <button onClick={() => goToProfile(user.nickname)}>
                           Profile
                         </button>
+                        <button onClick={() => privateMode(user.nickname)}>
+                          Private Message
+                        </button>
                         <button onClick={() => deleteFriend(user.nickname)}>
-                          delete user
+                          Delete Friend
                         </button>
                         <button onClick={(event) => inviteGame(event)}>
                           1vs1

@@ -448,12 +448,18 @@ export class ChannelGateway {
 		@ConnectedSocket() socket: Socket,
 	) {
 		const user = await this.findSocketByName(data.nickname);
-		if (!user) {
-			user.emit('message', {
-				nickname: socket.data.nickname,
-				message: data.message,
+		if (user) {
+			socket.emit('privateMessage', {
+			  nickname: data.nickname,
+			  message: data.message,
 			});
-		}
+			user.emit('privateMessage', {
+			  nickname: socket.data.nickname,
+			  message: data.message,
+			});
+		  } else {
+			socket.emit('errorMessage', 'cannot find user');
+		  }
 	}
 
 	kick(nickname: string, roomId: string) {
