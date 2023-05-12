@@ -168,11 +168,11 @@ function Game() {
     function movePaddle(evt) {
       let rect = canvas.getBoundingClientRect();
       console.log(gameData.nickname);
-      if (gameData.nickname == gameData.playerA) {
+      if (gameData.side == 0) {
         playerA.y = evt.clientY - rect.top - playerA.height / 2;
         socket.emit("paddleA", { roomId: gameData.roomId, y: playerA.y });
       } else {
-        playerB.y = evt.clientY - rect.top - playerA.height / 2;
+        playerB.y = evt.clientY - rect.top - playerB.height / 2;
         socket.emit("paddleB", { roomId: gameData.roomId, y: playerB.y });
       }
     }
