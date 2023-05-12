@@ -5,13 +5,15 @@ import { Player } from "./pong.interface";
 import { Server, Socket } from 'socket.io';
 import { Interval } from '@nestjs/schedule';
 import { gameRoomDto } from "./gameRoomDto";
+import { GameResultDto } from "src/game/dto/gameResult.dto";
+import { GameService } from "src/game/game.service";
 
 
 @Injectable()
 @WebSocketGateway(3001, {
 	// transports: ['websocket'],
 	cors: {
-		origin: 'http://localhost:3000',
+		origin: '*',
 		methods: ['GET', 'POST'],
 		credentials: true
 	}
@@ -20,10 +22,9 @@ export class Pong {
 
 	@WebSocketServer()
 	server: Server;
-
 	gameRoomList: Record<string, gameRoomDto>;
 
-	constructor() {
+	constructor(private gameService: GameService) {
 		this.gameRoomList = {};
 	}
 
@@ -37,7 +38,7 @@ export class Pong {
 	//   }
 
 	@SubscribeMessage("register")
-	async register(@MessageBody() data: { roomId: string, type: string }, @ConnectedSocket() socket: Socket) {
+	async register(@MessageBody() data: { roomId: string, type: number, playerA: string, playerB: string }, @ConnectedSocket() socket: Socket) {
 		if (this.server.sockets.adapter.rooms.get(data.roomId) == undefined)
 			return;
 		this.gameRoomList[data.roomId] = {
@@ -56,6 +57,7 @@ export class Pong {
 				width: 10,
 				height: 100,
 				color: "BLACK",
+				nickname: data.playerA,
 				score: 0
 			},
 			playerB: {
@@ -64,11 +66,12 @@ export class Pong {
 				width: 10,
 				height: 100,
 				color: "BLACK",
+				nickname: data.playerB,
 				score: 0
 			},
 			type: data.type
 		}
-		if (data.type == "1") {
+		if (data.type == 1) {
 			this.gameRoomList[data.roomId].ball.radius = 20;
 			this.gameRoomList[data.roomId].ball.speed = 15;
 		}
@@ -150,7 +153,7 @@ export class Pong {
 	}
 
 	resetBall(roomId: string) {
-		if (this.gameRoomList[roomId].type == "1") {
+		if (this.gameRoomList[roomId].type == 1) {
 			this.gameRoomList[roomId].ball.x = 450;
 			this.gameRoomList[roomId].ball.y = 300;
 			this.gameRoomList[roomId].ball.speed = 15;
@@ -173,7 +176,20 @@ export class Pong {
 			const user = this.server.sockets.sockets.get(socketId);
 			user.leave(roomId);
 		}
+		let gameResult: GameResultDto
+		if (this.gameRoomList[roomId].playerA.score > this.gameRoomList[roomId].playerB.score) {
+			gameResult.winner = this.gameRoomList[roomId].playerA.nickname;
+			gameResult.loser = this.gameRoomList[roomId].playerB.nickname;
+			gameResult.winScore = this.gameRoomList[roomId].playerA.score;
+			gameResult.loseScore = this.gameRoomList[roomId].playerB.score;
+		} else {
+			gameResult.winner = this.gameRoomList[roomId].playerB.nickname;
+			gameResult.loser = this.gameRoomList[roomId].playerA.nickname;
+			gameResult.winScore = this.gameRoomList[roomId].playerB.score;
+			gameResult.loseScore = this.gameRoomList[roomId].playerA.score;
+		}
+		gameResult.type = this.gameRoomList[roomId].type;
+		this.gameService.updateGameResult(gameResult);
 		delete this.gameRoomList[roomId];
 	}
-
 }

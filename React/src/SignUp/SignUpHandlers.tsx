@@ -71,7 +71,7 @@ const register = (event: React.MouseEvent<HTMLButtonElement>, nickPass: boolean,
     else if (codePass === false)
         Swal.fire('Please confirm email code');
     else if (files && files.length === 0) {
-        registerApiRequest(name, "../default-avatar.jpeg", mail, tfa, nav);
+        registerApiRequest(name, "../img/default-avatar.jpeg", mail, tfa, nav);
     } else if (files) {
         const fileReader: FileReader = new FileReader();
         fileReader.readAsDataURL(files[0]);

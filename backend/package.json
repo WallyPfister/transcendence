@@ -74,6 +74,7 @@
     "nanoid": "^3.3.6",
     "nestjs-session": "^2.0.0",
     "nodemailer": "^6.9.1",
+    "openssl": "^2.0.0",
     "prettier": "^2.3.2",
     "prisma": "^4.13.0",
     "source-map-support": "^0.5.20",
