@@ -51,9 +51,11 @@ export class ChannelGateway {
 		)
 		if (!user)
 			return;
-		const room = this.channelList[user.roomId]
-		if (!room)
+			const room = this.channelList[user.roomId];
+		if (!room){
+			delete this.userList[user.nickname];
 			return;
+			}
 		const index = room.adminList.indexOf(user.nickname);
 		if (user.isChief == true) {
 			const sockets = this.server.sockets.adapter.rooms.get(user.roomId);
@@ -74,6 +76,7 @@ export class ChannelGateway {
 					this.channelList[user.roomId].adminList.slice(index, 1);
 			}
 		}
+		delete this.userList[user.nickname];
 		this.authService.logout(user.nickname);
 	}
 
@@ -319,9 +322,9 @@ export class ChannelGateway {
 				this.userList[user.data.nickname].isChief = true;
 				this.userList[user.data.nickname].isAdmin = true;
 				delete this.chatRoomList[socket.data.roomId].adminList[socket.data.nickname];
-				this.userList[socket.data.nickname].isChief = false;
-				this.userList[socket.data.nickname].isAdmin = false;
 			}
+			this.userList[socket.data.nickname].isChief = false;
+			this.userList[socket.data.nickname].isAdmin = false;
 		}
 	}
 
