@@ -19,7 +19,7 @@ const prisma = new PrismaClient();
 @WebSocketGateway(3001, {
 	// transports: ['websocket'],
 	cors: {
-		origin: 'http://localhost:3000',
+		origin: '*',
 		methods: ['GET', 'POST'],
 		credentials: true,
 	},
@@ -55,9 +55,9 @@ export class ChannelService {
 			(out) => out.socketId === socket.id,
 		)
 		if (!user)
-			return ;
+			return;
 		const index = this.channelList[user.roomId].adminList.indexOf(user.nickname);
-		if (user.isChief == true){
+		if (user.isChief == true) {
 			const sockets = this.server.sockets.adapter.rooms.get(user.roomId);
 			if (sockets) {
 				const socketId = Array.from(sockets.values())[0];
@@ -70,8 +70,8 @@ export class ChannelService {
 			else
 				delete this.channelList[user.roomId];
 		}
-		if (user.isAdmin == true){
-			if (this.channelList[user.roomId]){
+		if (user.isAdmin == true) {
+			if (this.channelList[user.roomId]) {
 				if (index > -1)
 					this.channelList[user.roomId].adminList.slice(index, 1);
 			}
@@ -554,5 +554,5 @@ export class ChannelService {
 	async sendErrorMsg(name: string, msg: string): Promise<void> {
 		const socket = await this.findSocketByName(name);
 		socket.emit('errorMessage', msg);
-	  }
+	}
 }
