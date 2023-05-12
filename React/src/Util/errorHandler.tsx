@@ -40,7 +40,7 @@ async function errorHandler(error: AxiosError) {
         console.log(error);
 }
 
-const removeToken = () => {
+export const removeToken = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('rtoken');
     localStorage.removeItem('ltoken');
