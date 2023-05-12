@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { InviteGameModal, useInviteGame } from "../Socket/InviteGameModal";
 import { StartGameModal, useStartGame } from "../Socket/StartGameModal";
 import CustomAxios from "../Util/CustomAxios";
+import { removeToken } from "../Util/errorHandler";
 
 function Main() {
   const socket = useContext(SocketContext);
@@ -53,7 +54,6 @@ function Main() {
   }, []);
 
   useEffect(() => {
-    console.log(nickname);
     if (nickname !== "") socket.emit("setUser", { nickname: nickname });
   }, [nickname]);
 
@@ -298,9 +298,12 @@ function Main() {
             Ranking
           </button>
         </div>
-        <button id="profile-button" onClick={() => goToProfile(nickname)}>
-          My Profile
-        </button>
+        <div id="personal-buttons">
+          <button id="profile-button" onClick={() => goToProfile(nickname)}>
+            My Profile
+          </button>
+          <button id="logout-button" onClick={() => CustomAxios.get('/auth/logout').then(() => {removeToken(); navigate('/');})}>Logout</button>
+        </div>
       </div>
       <div id="chat-interface">
         <div id="chat-box">
