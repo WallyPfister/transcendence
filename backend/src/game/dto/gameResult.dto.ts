@@ -15,4 +15,12 @@ export class GameResultDto {
 
 	@ApiProperty({ description: 'the type of the game' })
 	type: number;
+
+	constructor(winner, loser, winScore, loseScore, type) {
+		this.winner = winner;
+		this.loser = loser;
+		this.winScore = winScore;
+		this.loseScore = loseScore;
+		this.type = type;
+	}
 }

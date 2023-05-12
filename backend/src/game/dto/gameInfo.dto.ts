@@ -5,7 +5,7 @@ export class GameInfoDto {
 	playerB: string;
 	side: number;
 	
-	constructor(type: number, roomId:string, playerA: string, playerB: string, side: number) {
+	constructor(type, roomId, playerA, playerB, side) {
 		this.type = type;
 		this.roomId = roomId;
 		this.playerA = playerA;
