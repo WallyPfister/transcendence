@@ -21,27 +21,8 @@
   height: max(70px, 5vw);
   border-radius: 10px;
   border: none;
-  font-size: 28px;
+  font-size: 24px;
   cursor: pointer;
-}
-
-#main #top-buttons #game-buttons {
-  width: 60%;
-  display: flex;
-  justify-content: space-between;
-}
-
-#main #casual-button {
-  background-color: #65ff4b;
-}
-
-#main #ladder-button {
-  background-color: #fff84b;
-  margin: 0 10px 0 10px;
-}
-
-#main #ranking-button {
-  background-color: #ff2f2f;
 }
 
 #main #chat-interface {
@@ -79,7 +60,7 @@
   scroll-behavior: smooth;
   font-size: 24px;
   overflow-anchor: bottom;
-  margin-left: 20px
+  margin-left: 20px;
 }
 
 #main #chat-interface #chat-box #chat-window .error-message {
@@ -175,11 +156,11 @@
   cursor: pointer;
 }
 
-#main #chat-interface #switch-box #list-window .button-normal-invite  {
+#main #chat-interface #switch-box #list-window .button-normal-invite {
   background-color: #378f28;
 }
 
-#main #chat-interface #switch-box #list-window .button-power-invite  {
+#main #chat-interface #switch-box #list-window .button-power-invite {
   background-color: #ff4b7b;
 }
 
@@ -190,7 +171,3 @@
 #main #chat-interface #switch-box #list-window .user-selected {
   padding-bottom: 5px;
 }
-
-
-
-
