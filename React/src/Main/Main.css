@@ -46,7 +46,7 @@
 
 #main #top-buttons #personal-buttons #profile-button {
   width: 67%;
-  font-size: clamp(20px, 2.5vw, 30px)
+  font-size: clamp(20px, 2.5vw, 30px);
 }
 
 #main #top-buttons #personal-buttons #logout-button {
@@ -99,6 +99,10 @@
   color: #65ff4b;
 }
 
+#main #chat-interface #chat-box #chat-window .private-message {
+  color: #8be9fd;
+}
+
 #main #chat-interface #chat-box #chat-window .my-message {
   color: #fff84b;
 }
@@ -111,6 +115,11 @@
   background-color: transparent;
   color: white;
   font-size: 24px;
+}
+
+#main #chat-interface #chat-box .private-input {
+  border-bottom: 1px solid white;
+  background: linear-gradient(#00000000, #8be9fd40);
 }
 
 #main #chat-interface #chat-box input:focus {
