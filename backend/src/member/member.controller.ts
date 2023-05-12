@@ -12,7 +12,6 @@ import { Payload } from 'src/auth/decorators/payload';
 import { JwtSignUpAuthGuard } from 'src/auth/guards/jwt.signup.guard';
 import { IssueJwtTokenDTO } from 'src/auth/dto/issue.jwt';
 import { JwtTokenDTO } from '../auth/dto/jwt.dto';
-import { ChannelService } from 'src/channel/channel.service';
 
 @ApiTags("Member")
 @Controller('member')
@@ -21,7 +20,6 @@ export class MemberController {
 		private readonly memberService: MemberService,
 		private memberRepository: MemberRepository,
 		private readonly authService: AuthService,
-		private readonly channelService: ChannelService
 	) { };
 
 	@ApiOperation({
@@ -254,7 +252,7 @@ export class MemberController {
 		const name = payload['sub']
 		const isFriend = await this.memberRepository.isFriend(name, friendName);
 		if (isFriend.length !== 0) {
-			this.channelService.sendErrorMsg(name, `${friendName} has already been added as a friend.`);
+			// this.channelService.sendErrorMsg(name, `${friendName} has already been added as a friend.`);
 			throw new BadRequestException();
 		}
 		return await this.memberRepository.addFriend(payload['sub'], friendName);
