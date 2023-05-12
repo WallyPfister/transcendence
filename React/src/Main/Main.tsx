@@ -117,7 +117,7 @@ function Main() {
     socket.on("privateMessage", ({ nickname: nickname, message: message }) => {
       const newMessage: Message = {
         nickname: "@private",
-        message: nickname + " : " + message,
+        message: nickname + ": " + message,
       };
       setMessages((prevMessages) => [...prevMessages, newMessage]);
     });
@@ -402,7 +402,7 @@ function Main() {
                           Private Message
                         </button>
                         <button onClick={() => deleteFriend(user.nickname)}>
-                          delete user
+                          Delete Friend
                         </button>
                         <button onClick={(event) => inviteGame(event)}>
                           1vs1
