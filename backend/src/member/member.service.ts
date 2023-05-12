@@ -6,6 +6,7 @@ import { memberProfileDto } from './dto/memberProfile.dto';
 import { MemberGameInfoDto } from './dto/memberGameInfo.dto';
 import { MemberGameHistoryDto } from './dto/memberGameHistory.dto';
 import { matches } from 'class-validator';
+import { GameConstants } from 'src/game/gameConstants';
 
 @Injectable()
 export class MemberService {
@@ -50,7 +51,7 @@ export class MemberService {
 	async updateWinGameResult(name: string, type: number, gameScore: number, opponent: string): Promise<void> {
 		let member = await this.memberRepository.getGameInfo(name);
 		member.win += 1;
-		if (type === 1)
+		if (type === GameConstants.LADDER)
 			member = await this.updateScoreAndLevel(member, 5);
 		const opponentLevel = (await this.memberRepository.getGameInfo(opponent)).level;
 		member.achieve = await this.checkAchieve(member, gameScore, opponentLevel);
@@ -60,7 +61,7 @@ export class MemberService {
 	async updateLoseGameResult(name: string, type: number): Promise<void> {
 		let member = await this.memberRepository.getGameInfo(name);
 		member.lose += 1;
-		if (type === 1)
+		if (type === GameConstants.LADDER)
 			member = await this.updateScoreAndLevel(member, -3);
 		this.memberRepository.updateGameResult(member);
 	}

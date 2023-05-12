@@ -176,7 +176,7 @@ export class Pong {
 			const user = this.server.sockets.sockets.get(socketId);
 			user.leave(roomId);
 		}
-		let gameResult: GameResultDto
+		let gameResult = new GameResultDto();
 		if (this.gameRoomList[roomId].playerA.score > this.gameRoomList[roomId].playerB.score) {
 			gameResult.winner = this.gameRoomList[roomId].playerA.nickname;
 			gameResult.loser = this.gameRoomList[roomId].playerB.nickname;
