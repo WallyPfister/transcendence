@@ -62,7 +62,7 @@ const getHistory = async (user: string): Promise<Array<HistoryData>> => {
 
 function Profile() {
     const userName: string = window.location.pathname.split('/')[2] || '@'; 
-    const { data: profileData, isLoading: profileLoading, isError: profileError } = useQuery<ProfileData>('profile-data', ()=>getProfileData(userName), {retry: false, staleTime: 60 * 1000});
+    const { data: profileData, isLoading: profileLoading, isError: profileError } = useQuery<ProfileData>('profile-data-' + userName, ()=>getProfileData(userName), {retry: false, staleTime: 60 * 1000});
     const { data: history, isLoading: historyLoading, isError: histotyError } = useQuery<Array<HistoryData>>('history-data', ()=>getHistory(userName), {retry: false, staleTime: 60 * 1000});
     const socket = useContext(SocketContext);
     const { showInvite, closeInvite, inviteData } = useInviteGame(socket);
