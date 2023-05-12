@@ -164,7 +164,7 @@ export class PongGateway {
 	}
 
 	endGame(roomId: string) {
-		this.server.to(roomId).emit("endgame", {});
+		this.server.to(roomId).emit("endGame", {});
 		const room = this.server.sockets.adapter.rooms.get(roomId);
 		if (!room)
 			return;
