@@ -113,8 +113,8 @@ function Main() {
 
     socket.on("addUser", (nickname: string) => {
       const newMessage: Message = {
-        nickname: nickname,
-        message: " has joined the room",
+        nickname: "@join",
+        message: nickname + " has joined the room",
       };
       setMessages((prevMessages) => [...prevMessages, newMessage]);
     });
@@ -316,7 +316,7 @@ function Main() {
                             : ""
                     }
                   >
-                    {msg.nickname}: {msg.message}
+                    {msg.nickname === "@join" ? msg.message : (msg.nickname + ': ' + msg.message)}
                   </div>
                 )
             )}

@@ -21,7 +21,7 @@
   height: max(70px, 5vw);
   border-radius: 10px;
   border: none;
-  font-size: 24px;
+  font-size: clamp(20px, 2.5vw, 30px);
   cursor: pointer;
 }
 
@@ -33,7 +33,7 @@
   width: 60%;
   border: 3px solid #d9d9d9;
   border-radius: 20px;
-  padding: 20px 50px 40px 30px;
+  padding: 0 30px;
   box-sizing: border-box;
 }
 
@@ -48,19 +48,17 @@
   width: 90%;
   overflow: hidden;
   font-size: 32px;
-  padding-top: 4px;
-  padding-bottom: 3px;
+  padding-bottom: 5px;
   border-bottom: 3px solid #d9d9d9;
-  margin-bottom: 10px;
+  margin: 15px 0;
 }
 
 #main #chat-interface #chat-box #chat-window {
-  height: 90%;
+  height: 78%;
   overflow-y: auto;
   scroll-behavior: smooth;
   font-size: 24px;
   overflow-anchor: bottom;
-  margin-left: 20px;
 }
 
 #main #chat-interface #chat-box #chat-window .error-message {
@@ -94,7 +92,7 @@
   overflow-y: auto;
   border: 3px solid #d9d9d9;
   border-radius: 20px;
-  padding: 10px 10px 20px 10px;
+  padding: 10px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -109,7 +107,6 @@
 
 #main #chat-interface #switch-box button {
   width: 95%;
-
   background-color: transparent;
   border-radius: 10px;
   color: white;
@@ -118,8 +115,17 @@
   text-align: center;
   border: 2px solid #d9d9d9;
   padding: 6px 12px;
-  font-size: clamp(6px, 2vw, 20px);
+  font-size: clamp(15px, 2vw, 20px);
   margin: 0px 2px 0px 2px;
+}
+
+#main #chat-interface #switch-box #switch-buttons button {
+  padding: 6px 6px;
+  width: 48%;
+}
+
+#main #chat-interface #switch-box #join-channel {
+  width: 100%;
 }
 
 #main #chat-interface #switch-box button.selected {
@@ -131,7 +137,7 @@
 #main #chat-interface #switch-box #list-window {
   height: 100%;
   overflow-y: scroll;
-  padding: 20px 0px 10px 0px;
+  padding: 20px 5px;
 }
 
 #main #chat-interface #switch-box #list-window .button-container {
