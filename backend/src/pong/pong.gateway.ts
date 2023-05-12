@@ -128,10 +128,9 @@ export class PongGateway {
 				this.gameRoomList[roomId].playerA.score++
 				this.resetBall(roomId);
 			}
+			this.server.to(roomId).emit("update", { ball: this.gameRoomList[roomId].ball, playerA: this.gameRoomList[roomId].playerA, playerB: this.gameRoomList[roomId].playerB });
 			if (this.gameRoomList[roomId].playerA.score > 2 || this.gameRoomList[roomId].playerB.score > 2)
 				await this.endGame(roomId);
-			this.server.to(roomId).emit("update", { ball: this.gameRoomList[roomId].ball, playerA: this.gameRoomList[roomId].playerA, playerB: this.gameRoomList[roomId].playerB });
-			// this.server.emit("update", {ball: this.gameRoomList[roomId].ball, playerA: this.gameRoomList[roomId].playerA, playerB: this.gameRoomList[roomId].playerB});
 		}
 	}
 
@@ -165,7 +164,7 @@ export class PongGateway {
 	}
 
 	endGame(roomId: string) {
-		this.server.to(roomId).emit("endgame", { ball: this.gameRoomList[roomId].ball, playerA: this.gameRoomList[roomId].playerA, playerB: this.gameRoomList[roomId].playerB });
+		this.server.to(roomId).emit("endgame", {});
 		const room = this.server.sockets.adapter.rooms.get(roomId);
 		if (!room)
 			return;
