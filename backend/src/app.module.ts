@@ -5,12 +5,13 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { MemberModule } from './member/member.module';
 import { MailerModule } from '@nestjs-modules/mailer';
-import { GameModule } from './game/game.module';
 import { ScheduleModule } from '@nestjs/schedule';
-import { Pong } from './pong/pong.gateway';
+import { ChannelModule } from './channel/channel.module';
+import { GameModule } from './game/game.module';
+import { PongModule } from './pong/pong.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, MemberModule, GameModule,
+  imports: [PrismaModule, AuthModule, MemberModule, ChannelModule, GameModule, PongModule,
     MailerModule.forRoot({
       transport: {
         service: 'Naver',
@@ -22,8 +23,9 @@ import { Pong } from './pong/pong.gateway';
         },
       },
     }),
-    ScheduleModule.forRoot()],
+    ScheduleModule.forRoot(),
+    PongModule],
   controllers: [AppController],
-  providers: [AppService, Pong],
+  providers: [AppService],
 })
 export class AppModule { }

@@ -1,20 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
-import { ChatRoomListDto, userDto } from './chatRoomDto';
+import { ChatRoomListDto, userDto } from './chatRoom.dto';
 import {
 	SubscribeMessage,
 	WebSocketGateway,
 	MessageBody,
 	WebSocketServer,
-	OnGatewayConnection,
-	OnGatewayDisconnect,
 	ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
-
-
-const prisma = new PrismaClient();
 
 @Injectable()
 @WebSocketGateway(3001, {
@@ -25,7 +19,7 @@ const prisma = new PrismaClient();
 		credentials: true,
 	},
 })
-export class ChannelService {
+export class ChannelGateway {
 	@WebSocketServer()
 	server: Server;
 	chatRoomList: Record<string, ChatRoomListDto>;
