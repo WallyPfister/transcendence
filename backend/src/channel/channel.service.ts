@@ -11,6 +11,7 @@ import {
 	ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { AuthService } from 'src/auth/auth.service';
 
 
 const prisma = new PrismaClient();
@@ -29,8 +30,8 @@ export class ChannelService {
 	server: Server;
 	chatRoomList: Record<string, ChatRoomListDto>;
 	userList: Record<string, userDto>;
-	
-	constructor() {
+
+	constructor(private authService: AuthService) {
 		this.chatRoomList = {
 			lobby: {
 				roomId: 'lobby',
@@ -55,12 +56,12 @@ export class ChannelService {
 			(out) => out.socketId === socket.id,
 		)
 		if (!user)
-			return ;
+			return;
 		const room = this.channelList[user.roomId]
 		if (!room)
-			return ;
+			return;
 		const index = room.adminList.indexOf(user.nickname);
-		if (user.isChief == true){
+		if (user.isChief == true) {
 			const sockets = this.server.sockets.adapter.rooms.get(user.roomId);
 			if (sockets) {
 				const socketId = Array.from(sockets.values())[0];
@@ -73,12 +74,13 @@ export class ChannelService {
 			else
 				delete this.channelList[user.roomId];
 		}
-		if (user.isAdmin == true){
-			if (this.channelList[user.roomId]){
+		if (user.isAdmin == true) {
+			if (this.channelList[user.roomId]) {
 				if (index > -1)
 					this.channelList[user.roomId].adminList.slice(index, 1);
 			}
 		}
+		this.authService.logout(user.nickname);
 	}
 
 	@SubscribeMessage('setUser')
@@ -557,5 +559,5 @@ export class ChannelService {
 	async sendErrorMsg(name: string, msg: string): Promise<void> {
 		const socket = await this.findSocketByName(name);
 		socket.emit('errorMessage', msg);
-	  }
+	}
 }
