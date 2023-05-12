@@ -14,7 +14,7 @@ export class MemberService {
 	constructor(private memberRepository: MemberRepository) { }
 
 	async checkName(name: string): Promise<{ name: string }> {
-		const regex = /^[a-zA-Z0-9]{2,16}$/;
+		const regex = /^[a-zA-Z0-9]{2,8}$/;
 		const check = matches(name, regex);
 		console.log(check);
 		if (!check)
