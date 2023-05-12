@@ -157,13 +157,7 @@ function Main() {
 
   const handleChannelListClick = () => setSelectedTab("channel");
 
-  const handleCasualGame = (user: string) => {
-    socket.emit("enterGame", 0);
-  };
 
-  const handleLadderGame = (user: string) => {
-    socket.emit("enterGame", 2);
-  };
 
   const handleCompositionStart = () => {
     setIsComposing(true);
@@ -288,7 +282,7 @@ function Main() {
   return (
     <div id="main">
       <div id="top-buttons">
-        <Gamebuttons nickname={nickname} />
+        <Gamebuttons nickname={nickname}/>
         <div id="personal-buttons">
           <button id="profile-button" onClick={() => goToProfile(nickname)}>
             My Profile
