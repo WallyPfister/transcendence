@@ -3,6 +3,7 @@ import { useContext } from "react";
 import { SocketContext } from "../Socket/SocketContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import CustomAxios from "../Util/CustomAxios";
+import './Game.css';
 
 interface Ball {
   x: number;
@@ -14,12 +15,20 @@ interface Ball {
   color: string;
 }
 
+interface PlayerData {
+  name: string,
+  avatar: string,
+  level: number,
+}
+
 function Game() {
+  const navigate = useNavigate();
   const socket = useContext(SocketContext);
   const location = useLocation();
   const gameData = location.state;
 
-  const navigate = useNavigate();
+  const [aInfo, setAInfo] = useState<PlayerData>();
+  const [bInfo, setBInfo] = useState<PlayerData>();
 
   useEffect(() => {
     if (gameData == undefined || gameData.roomId == undefined) {
@@ -27,16 +36,22 @@ function Game() {
       navigate("/login");
       return;
     }
+
+    CustomAxios.get('/member/profile', {params: {userName: gameData.playerA}}).then((res) => {
+      setAInfo({name: res.data.name, avatar: res.data.avatar, level: res.data.level});
+    });
+
+    CustomAxios.get('/member/profile', {params: {userName: gameData.playerB}}).then((res) => {
+      setBInfo({name: res.data.name, avatar: res.data.avatar, level: res.data.level});
+    });
+
     socket.emit("register", {
       roomId: gameData.roomId,
       type: gameData.type,
       playerA: gameData.playerA,
       playerB: gameData.playerB,
     });
-    console.log("send register");
-  }, []);
 
-  useEffect(() => {
     socket.on("endGame", () => {
       const winner = playerA.score > playerB.score ? playerA : playerB;
       const loser = playerA.score > playerB.score ? playerB : playerA;
@@ -124,7 +139,6 @@ function Game() {
 
     function movePaddle(evt) {
       let rect = canvas.getBoundingClientRect();
-      console.log(gameData.nickname);
       if (gameData.side == 0) {
         playerA.y = evt.clientY - rect.top - playerA.height / 2;
         socket.emit("paddleA", { roomId: gameData.roomId, y: playerA.y });
@@ -201,17 +215,36 @@ function Game() {
   }
 
   return (
-    <div id="main">
-      <button
-        id="casual-button"
-        onClick={() => socket.emit("register", { roomId: "1" })}
-      >
-        1 vs 1
-      </button>
-      <canvas ref={canvasRef} width="900" height="600">
-        {" "}
-      </canvas>
-    </div>
+      <div id="game">
+        {
+          (aInfo && bInfo) ? (
+            <div id="info">
+              <div id="playerA" className="player-box">
+                <img className="avatar" src={aInfo.avatar} alt="img"/>
+                <div className="name-level">
+                  <p className="nickname">{aInfo.name}</p>
+                  <p className="level">
+                    <img className="tier-img" src={'../img/tier' + (aInfo.level > 5 ? 5 : aInfo.level) + '.png'} alt="tier"/>
+                    Lv. {aInfo.level}
+                  </p>
+                </div>
+              </div>
+              <div id="game-type">{gameData.type === 2 ? 'Rank' : '1 VS 1'}</div>
+              <div id="playerB" className="player-box">
+                <div className="name-level">
+                  <p className="nickname">{bInfo.name}</p>
+                  <p className="level">
+                    <img className="tier-img" src={'../img/tier' + (bInfo.level > 5 ? 5 : bInfo.level) + '.png'} alt="tier"/>
+                      LV. {bInfo.level}
+                  </p>
+                </div>
+                <img className="avatar" src={bInfo.avatar} alt="img"/>
+              </div>
+            </div>
+          ) : null
+        }
+          <canvas ref={canvasRef} width="900" height="600" className={(aInfo && bInfo) ? "" : "wait"}>{" "}</canvas>
+        </div>
   );
 }
 
