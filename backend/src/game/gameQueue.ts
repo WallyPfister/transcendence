@@ -23,6 +23,7 @@ export class GameQueue {
 		this.queue[this.rear] = data;
 		this.rear = (this.rear + 1) % this.capacity;
 		this.count++;
+		this.print();
 		return true;
 	}
 
@@ -47,5 +48,13 @@ export class GameQueue {
 
 	public getCount(): number {
 		return this.count;
+	}
+
+	public print(): void {
+		let i = this.front;
+		while (i != this.rear) {
+			console.log(`queue[${i}] = ${this.queue[i]}`);
+			i = (i + 1) % this.capacity; 
+		}
 	}
 }

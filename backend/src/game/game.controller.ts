@@ -1,7 +1,11 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards, ValidationPipe } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 import { GameResultDto } from './dto/gameResult.dto';
 import { GameService } from './game.service';
+import { JwtSignUpAuthGuard } from 'src/auth/guards/jwt.signup.guard';
+import { Payload } from 'src/auth/decorators/payload';
+import { JwtTokenDTO } from 'src/auth/dto/jwt.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 
 @Controller('game')
 export class GameController {
@@ -19,7 +23,8 @@ export class GameController {
 			Lastly, the status of both players is updated from \'ingame\' to \'online\'.'
 	})
 	@Post()
-	async updateGameResultAndHistory(@Body() gameResult: GameResultDto): Promise<void> {
+	@UseGuards(JwtAuthGuard)
+	async updateGameResultAndHistory(@Body(new ValidationPipe()) gameResult: GameResultDto): Promise<void> {
 		await this.gameService.updateGameResult(gameResult);
 	}
 }

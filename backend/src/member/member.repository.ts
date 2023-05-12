@@ -163,6 +163,7 @@ export class MemberRepository {
 		return await this.prisma.member.findMany({
 			orderBy: [
 				{ level: 'desc' },
+				{ score: 'desc' },
 				{ name: 'asc' }
 			],
 			select: {
