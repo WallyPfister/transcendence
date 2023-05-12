@@ -11,6 +11,7 @@ import {
 	ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { AuthService } from 'src/auth/auth.service';
 
 
 const prisma = new PrismaClient();
@@ -30,7 +31,7 @@ export class ChannelService {
 	chatRoomList: Record<string, ChatRoomListDto>;
 	userList: Record<string, userDto>;
 
-	constructor() {
+	constructor(private authService: AuthService) {
 		this.chatRoomList = {
 			lobby: {
 				roomId: 'lobby',
@@ -76,6 +77,7 @@ export class ChannelService {
 					this.channelList[user.roomId].adminList.slice(index, 1);
 			}
 		}
+		this.authService.logout(user.nickname);
 	}
 
 	@SubscribeMessage('setUser')
