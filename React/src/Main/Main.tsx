@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
 
 import "./Main.css";
-import ChannelWindow from "./ChannelWindow";
-import PasswordModal from "./PasswordWindow";
+import ChannelWindow from "./Components/ChannelWindow/ChannelWindow";
+import PasswordModal from "./Components/PasswordModal/PasswordModal";
+import Gamebuttons from "./Components/Gamebuttons/Gamebuttons"
 import { SocketContext } from "../Socket/SocketContext";
 import { useNavigate } from "react-router-dom";
 import { InviteGameModal, useInviteGame } from "../Socket/InviteGameModal";
@@ -287,17 +288,7 @@ function Main() {
   return (
     <div id="main">
       <div id="top-buttons">
-        <div id="game-buttons">
-          <button id="casual-button" onClick={() => handleCasualGame(nickname)}>
-            1 vs 1
-          </button>
-          <button id="ladder-button" onClick={() => handleLadderGame(nickname)}>
-            Rank
-          </button>
-          <button id="ranking-button" onClick={() => goToRanking(nickname)}>
-            Ranking
-          </button>
-        </div>
+        <Gamebuttons nickname={nickname} />
         <div id="personal-buttons">
           <button id="profile-button" onClick={() => goToProfile(nickname)}>
             My Profile

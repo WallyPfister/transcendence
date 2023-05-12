@@ -31,19 +31,6 @@
   cursor: pointer;
 }
 
-#main #casual-button {
-  background-color: #65ff4b;
-}
-
-#main #ladder-button {
-  background-color: #fff84b;
-  margin: 0 10px 0 10px;
-}
-
-#main #ranking-button {
-  background-color: #ff2f2f;
-}
-
 #main #top-buttons #personal-buttons {
   width: 35%;
   display: flex;
@@ -205,11 +192,11 @@
   cursor: pointer;
 }
 
-#main #chat-interface #switch-box #list-window .button-normal-invite  {
+#main #chat-interface #switch-box #list-window .button-normal-invite {
   background-color: #378f28;
 }
 
-#main #chat-interface #switch-box #list-window .button-power-invite  {
+#main #chat-interface #switch-box #list-window .button-power-invite {
   background-color: #ff4b7b;
 }
 
