@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import './Gamebuttons.css';
+import { SocketContext } from "../../../Socket/SocketContext";
 
 function GameButtons({ nickname }) {
+  const socket = useContext(SocketContext);
+
   const [casualClicked, setCasualClicked] = useState(false);
   const [ladderClicked, setLadderClicked] = useState(false);
   const [casualTime, setCasualTime] = useState(0);
@@ -15,6 +18,8 @@ function GameButtons({ nickname }) {
     if (!casualClicked) {
       setCasualClicked(true);
       startTimer(setCasualTime);
+      socket.emit("enterGame", 0);
+      console.log(socket);
     }
   };
 
@@ -22,6 +27,7 @@ function GameButtons({ nickname }) {
     if (!ladderClicked) {
       setLadderClicked(true);
       startTimer(setLadderTime);
+      socket.emit("enterGame", 2);
     }
   };
 
