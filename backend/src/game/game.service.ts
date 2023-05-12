@@ -6,7 +6,6 @@ import { MemberRepository } from 'src/member/member.repository';
 import { MemberConstants } from 'src/member/memberConstants';
 import { Interval } from '@nestjs/schedule';
 import { GameQueue } from './gameQueue';
-import { ChannelService } from 'src/channel/channel.service';
 import { GameInfoDto } from './dto/gameInfo.dto';
 import { MemberService } from 'src/member/member.service';
 import { GameResultDto } from './dto/gameResult.dto';
@@ -27,12 +26,10 @@ export class GameService {
 	@WebSocketServer()
 	server: Server;
 
-	constructor(
-		private gameRepository: GameRepository,
-		private readonly memberService: MemberService,
-		private memberRepository: MemberRepository,
-		private readonly channelService: ChannelService
-	) { this.gameQ = Array.from({ length: 3 }, () => new GameQueue(30)); }
+	constructor( private memberService: MemberService,
+				private memberRepository: MemberRepository,
+				private gameRepository: GameRepository )
+				{ this.gameQ = Array.from({ length: 3 }, () => new GameQueue(30)); }
 
 	@SubscribeMessage('enterGame') // 희망 게임을 보내줘야 함 0 casual, 1 casual power, 2 ladder
 	waitGame(@MessageBody() type: number, @ConnectedSocket() socket: Socket) {
@@ -137,7 +134,7 @@ export class GameService {
 	async checkSocket(type: number, name: string, flag: number): Promise<Socket> {
 		if (this.gameQ[type].getCount() < 2)
 			return null;
-		const socket = await this.channelService.findSocketByName(name); // 소켓 찾기
+		const socket = await this.findSocketByName(name); // 소켓 찾기
 		if (socket === null) {
 			if (flag === 1)
 				this.gameQ[type].deQueue();
@@ -146,6 +143,14 @@ export class GameService {
 			this.checkSocket(type, this.gameQ[type].peek(flag), flag); // 재귀
 		}
 		return socket; // 소켓이 있을 때 소켓 반환
+	}
+
+	async findSocketByName(name: string): Promise<Socket> {
+		const sockets = this.server.sockets.sockets;
+		for (const [_, socket] of sockets) {
+			if (socket.data.nickname === name) return socket;
+		}
+		return null;
 	}
 
 	@SubscribeMessage('invite') // 채널 리스트 or 친구 중 상태가 online인 사람만 초대할 수 있게 버튼이 떠야함
@@ -159,7 +164,7 @@ export class GameService {
 			});
 			return;
 		}
-		const inviteeSocket = await this.channelService.findSocketByName(data.invitee); // 초대 당한 애 소켓 찾기
+		const inviteeSocket = await this.findSocketByName(data.invitee); // 초대 당한 애 소켓 찾기
 		const gameType = data.type;
 		const inviter = socket.data.nickname;
 		inviteeSocket.emit("invite", { gameType, inviter }) // 초대된 게임타입, 초대자 이름 초대 받은 애한테 보내주기
@@ -169,7 +174,7 @@ export class GameService {
 	@SubscribeMessage('inviteAccept') // 초대 수락 버튼 누름
 	async startGame(@MessageBody() data: { type: number, inviterName: string }, @ConnectedSocket() socket: Socket) {
 		const { status } = await this.memberRepository.getStatus(data.inviterName); // 초대자 상태 확인
-		const inviter = await this.channelService.findSocketByName(data.inviterName); // 초대자 소켓 찾기
+		const inviter = await this.findSocketByName(data.inviterName); // 초대자 소켓 찾기
 		if (status !== MemberConstants.WAIT || inviter === null) { // 웨잇 아니면, 소켓 못찾으면
 			socket.emit("lost", data.inviterName); // 초대자가 연결이 끊김. (로그아웃 등등) 잃어버렸음을 알려줌
 			return;
@@ -186,7 +191,7 @@ export class GameService {
 
 	@SubscribeMessage('inviteReject') // 거절 버튼 누름
 	async rejectGame(@MessageBody() inviterName: string, @ConnectedSocket() socket: Socket) {
-		const inviter = await this.channelService.findSocketByName(inviterName);
+		const inviter = await this.findSocketByName(inviterName);
 		if (inviter === null)
 			return; // 초대자 사라지면 암것도 안함. 접속 끊기면서 offline 처리 됐겠지;
 		this.memberRepository.updateStatus(inviterName, MemberConstants.ONLINE);

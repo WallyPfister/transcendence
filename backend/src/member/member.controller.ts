@@ -12,7 +12,6 @@ import { Payload } from 'src/auth/decorators/payload';
 import { JwtSignUpAuthGuard } from 'src/auth/guards/jwt.signup.guard';
 import { IssueJwtTokenDTO } from 'src/auth/dto/issue.jwt';
 import { JwtTokenDTO } from '../auth/dto/jwt.dto';
-import { ChannelService } from 'src/channel/channel.service';
 
 @ApiTags("Member")
 @Controller('member')
@@ -21,7 +20,6 @@ export class MemberController {
 		private readonly memberService: MemberService,
 		private memberRepository: MemberRepository,
 		private readonly authService: AuthService,
-		// private readonly channelService: ChannelService
 	) { };
 
 	@ApiOperation({

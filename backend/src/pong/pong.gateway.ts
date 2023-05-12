@@ -4,9 +4,8 @@ import { Ball } from "./pong.interface"
 import { Player } from "./pong.interface";
 import { Server, Socket } from 'socket.io';
 import { Interval } from '@nestjs/schedule';
-import { gameRoomDto } from "./gameRoomDto";
+import { gameRoomDto } from "./gameRoom.dto";
 import { GameResultDto } from "src/game/dto/gameResult.dto";
-import { GameService } from "src/game/game.service";
 
 
 @Injectable()
@@ -18,15 +17,13 @@ import { GameService } from "src/game/game.service";
 		credentials: true
 	}
 })
-export class Pong {
+export class PongGateway {
 
 	@WebSocketServer()
 	server: Server;
 	gameRoomList: Record<string, gameRoomDto>;
 
-	constructor(private gameService: GameService) {
-		this.gameRoomList = {};
-	}
+	constructor() { this.gameRoomList = {}; }
 
 	handleConnection(socket: Socket) {
 		console.log("This is Pong socket server");
@@ -45,8 +42,8 @@ export class Pong {
 			ball: {
 				x: 450,
 				y: 300,
-				radius: 20,
-				speed: 15,
+				radius: 10,
+				speed: 10,
 				velocityX: 5,
 				velocityY: 5,
 				color: "BLACK"
@@ -176,12 +173,6 @@ export class Pong {
 			const user = this.server.sockets.sockets.get(socketId);
 			user.leave(roomId);
 		}
-		let result;
-		if (this.gameRoomList[roomId].playerA.score > this.gameRoomList[roomId].playerB.score)
-			result = new GameResultDto(this.gameRoomList[roomId].playerA.nickname, this.gameRoomList[roomId].playerB.nickname, this.gameRoomList[roomId].playerA.score, this.gameRoomList[roomId].playerB.score, this.gameRoomList[roomId].type);
-		else
-			result = new GameResultDto(this.gameRoomList[roomId].playerB.nickname, this.gameRoomList[roomId].playerA.nickname, this.gameRoomList[roomId].playerB.score, this.gameRoomList[roomId].playerA.score, this.gameRoomList[roomId].type);
-		this.gameService.updateGameResult(result);
 		delete this.gameRoomList[roomId];
 	}
 }
