@@ -448,7 +448,7 @@ export class ChannelGateway {
 		@ConnectedSocket() socket: Socket,
 	) {
 		const user = await this.findSocketByName(data.nickname);
-		if (!user) {
+		if (user) {
 			user.emit('message', {
 				nickname: socket.data.nickname,
 				message: data.message,
