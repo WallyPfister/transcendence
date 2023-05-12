@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from "react";
 import { useContext } from "react";
 import { SocketContext } from "../Socket/SocketContext";
 import { useLocation, useNavigate } from "react-router-dom";
+import CustomAxios from "../Util/CustomAxios";
 
 interface Ball {
   x: number;
@@ -26,8 +27,27 @@ function Game() {
       navigate("/login");
       return;
     }
-    socket.emit("register", { roomId: gameData.roomId });
+    socket.emit("register", {
+      roomId: gameData.roomId,
+      type: gameData.type,
+      playerA: gameData.playerA,
+      playerB: gameData.playerB,
+    });
     console.log("send register");
+  }, []);
+
+  useEffect(() => {
+    socket.on("endGame", () => {
+      const winner = playerA.score > playerB.score ? playerA : playerB;
+      const loser = playerA.score > playerB.score ? playerB : playerA;
+      CustomAxios.post("/game", {
+        winner: winner,
+        loser: loser,
+        winScore: winner.score,
+        loseScore: loser.score,
+        type: gameData.roomId,
+      });
+    });
   }, []);
 
   const canvasRef = useRef(null);
@@ -61,69 +81,6 @@ function Game() {
     velocityY: 5,
     color: "BLACK",
   });
-
-  useEffect(() => {
-    socket.emit("register", { roomId: gameData.roomId, type: gameData.type, playerA: gameData.playerA, playerB: gameData.playerB });
-    console.log("send register");
-  }, []);
-
-  function drawRect(x, y, w, h, c) {
-    context.fillStyle = c;
-    context.fillRect(x, y, w, h);
-  }
-
-  function drawNet() {
-    const net = {
-      x: canvas.width / 2 - 1,
-      y: 0,
-      width: 2,
-      height: 10,
-      color: "BLACK",
-    };
-
-    for (let i = 0; i <= canvas.height; i += 15) {
-      drawRect(net.x, net.y + i, net.width, net.height, net.color);
-    }
-  }
-
-  function drawText(text, x, y, color) {
-    context.fillStyle = color;
-    context.font = "45px Arial";
-    context.fillText(text, x, y);
-  }
-
-  function drawCircle(x, y, r, color) {
-    context.fillStyle = color;
-    context.beginPath();
-    context.arc(x, y, r, 0, Math.PI * 2, false);
-    context.closePath();
-    context.fill();
-  }
-
-  function render() {
-    drawRect(0, 0, 900, 600, "WHITE");
-    drawNet();
-
-    drawText(playerA.score, canvas.width / 4, canvas.height / 5, "BLACK");
-    drawText(playerB.score, (3 * canvas.width) / 4, canvas.height / 5, "BLACK");
-
-    drawRect(
-      playerA.x,
-      playerA.y,
-      playerA.width,
-      playerA.height,
-      playerA.color
-    );
-    drawRect(
-      playerB.x,
-      playerB.y,
-      playerB.width,
-      playerB.height,
-      playerB.color
-    );
-
-    drawCircle(ball.x, ball.y, ball.radius, ball.color);
-  }
 
   useEffect(() => {
     canvas = canvasRef.current;
@@ -184,6 +141,64 @@ function Game() {
     context = canvas.getContext("2d");
     render();
   }, [ball]);
+
+  function drawRect(x, y, w, h, c) {
+    context.fillStyle = c;
+    context.fillRect(x, y, w, h);
+  }
+
+  function drawNet() {
+    const net = {
+      x: canvas.width / 2 - 1,
+      y: 0,
+      width: 2,
+      height: 10,
+      color: "BLACK",
+    };
+
+    for (let i = 0; i <= canvas.height; i += 15) {
+      drawRect(net.x, net.y + i, net.width, net.height, net.color);
+    }
+  }
+
+  function drawText(text, x, y, color) {
+    context.fillStyle = color;
+    context.font = "45px Arial";
+    context.fillText(text, x, y);
+  }
+
+  function drawCircle(x, y, r, color) {
+    context.fillStyle = color;
+    context.beginPath();
+    context.arc(x, y, r, 0, Math.PI * 2, false);
+    context.closePath();
+    context.fill();
+  }
+
+  function render() {
+    drawRect(0, 0, 900, 600, "WHITE");
+    drawNet();
+
+    drawText(playerA.score, canvas.width / 4, canvas.height / 5, "BLACK");
+    drawText(playerB.score, (3 * canvas.width) / 4, canvas.height / 5, "BLACK");
+
+    drawRect(
+      playerA.x,
+      playerA.y,
+      playerA.width,
+      playerA.height,
+      playerA.color
+    );
+    drawRect(
+      playerB.x,
+      playerB.y,
+      playerB.width,
+      playerB.height,
+      playerB.color
+    );
+
+    drawCircle(ball.x, ball.y, ball.radius, ball.color);
+  }
 
   return (
     <div id="main">
