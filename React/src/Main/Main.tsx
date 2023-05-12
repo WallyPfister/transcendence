@@ -79,7 +79,6 @@ function Main() {
     socket.on("userList", (userList: string[]) => {
       setSelectUser("");
       setChannelUser(userList);
-      setChannelUser(["hello", "you"]);
     });
 
     socket.on("isChief", () => {
