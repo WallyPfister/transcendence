@@ -1,7 +1,7 @@
 export interface ChatRoomListDto {
 	roomId: string;
 	roomName: string;
-	chiefId: string | null;
+	chiefName: string | null;
 	adminList: string[];
 	banList: string[];
 	muteList: Record<string, Date>;
