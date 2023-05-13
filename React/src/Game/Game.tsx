@@ -3,7 +3,8 @@ import { useContext } from "react";
 import { SocketContext } from "../Socket/SocketContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import CustomAxios from "../Util/CustomAxios";
-import './Game.css';
+import "./Game.css";
+import ResultModal from "./ResultModal";
 
 interface Ball {
   x: number;
@@ -16,9 +17,9 @@ interface Ball {
 }
 
 interface PlayerData {
-  name: string,
-  avatar: string,
-  level: number,
+  name: string;
+  avatar: string;
+  level: number;
 }
 
 function Game() {
@@ -29,20 +30,33 @@ function Game() {
 
   const [aInfo, setAInfo] = useState<PlayerData>();
   const [bInfo, setBInfo] = useState<PlayerData>();
+  const [showResult, setShowResult] = useState<boolean>(false);
+  const [winner, setWinner] = useState<PlayerData>(null);
 
   useEffect(() => {
     if (gameData == undefined || gameData.roomId == undefined) {
-      console.log("Gamedata undifined");
       navigate("/login");
       return;
     }
 
-    CustomAxios.get('/member/profile', {params: {userName: gameData.playerA}}).then((res) => {
-      setAInfo({name: res.data.name, avatar: res.data.avatar, level: res.data.level});
+    CustomAxios.get("/member/profile", {
+      params: { userName: gameData.playerA },
+    }).then((res) => {
+      setAInfo({
+        name: res.data.name,
+        avatar: res.data.avatar,
+        level: res.data.level,
+      });
     });
 
-    CustomAxios.get('/member/profile', {params: {userName: gameData.playerB}}).then((res) => {
-      setBInfo({name: res.data.name, avatar: res.data.avatar, level: res.data.level});
+    CustomAxios.get("/member/profile", {
+      params: { userName: gameData.playerB },
+    }).then((res) => {
+      setBInfo({
+        name: res.data.name,
+        avatar: res.data.avatar,
+        level: res.data.level,
+      });
     });
 
     socket.emit("register", {
@@ -51,8 +65,13 @@ function Game() {
       playerA: gameData.playerA,
       playerB: gameData.playerB,
     });
+  }, []);
 
+  useEffect(() => {
     socket.on("endGame", () => {
+      console.log("endgame");
+      setWinner(playerA.score > playerB.score ? aInfo : bInfo);
+
       if (gameData.side === 0) {
         CustomAxios.post("/game", {
           winner:
@@ -66,8 +85,9 @@ function Game() {
           type: gameData.type,
         });
       }
+      setShowResult(true);
     });
-  }, []);
+  }, [aInfo, bInfo]);
 
   const canvasRef = useRef(null);
   let canvas;
@@ -219,36 +239,58 @@ function Game() {
   }
 
   return (
-      <div id="game">
-        {
-          (aInfo && bInfo) ? (
-            <div id="info">
-              <div id="playerA" className="player-box">
-                <img className="avatar" src={aInfo.avatar} alt="img"/>
-                <div className="name-level">
-                  <p className="nickname">{aInfo.name}</p>
-                  <p className="level">
-                    <img className="tier-img" src={'../img/tier' + (aInfo.level > 5 ? 5 : aInfo.level) + '.png'} alt="tier"/>
-                    Lv. {aInfo.level}
-                  </p>
-                </div>
-              </div>
-              <div id="game-type">{gameData.type === 2 ? 'Rank' : '1 VS 1'}</div>
-              <div id="playerB" className="player-box">
-                <div className="name-level">
-                  <p className="nickname">{bInfo.name}</p>
-                  <p className="level">
-                    <img className="tier-img" src={'../img/tier' + (bInfo.level > 5 ? 5 : bInfo.level) + '.png'} alt="tier"/>
-                      LV. {bInfo.level}
-                  </p>
-                </div>
-                <img className="avatar" src={bInfo.avatar} alt="img"/>
-              </div>
+    <div id="game">
+      {aInfo && bInfo ? (
+        <div id="info">
+          <div id="playerA" className="player-box">
+            <img className="avatar" src={aInfo.avatar} alt="img" />
+            <div className="name-level">
+              <p className="nickname">{aInfo.name}</p>
+              <p className="level">
+                <img
+                  className="tier-img"
+                  src={
+                    "../img/tier" + (aInfo.level > 5 ? 5 : aInfo.level) + ".png"
+                  }
+                  alt="tier"
+                />
+                Lv. {aInfo.level}
+              </p>
             </div>
-          ) : null
-        }
-          <canvas ref={canvasRef} width="900" height="600" className={(aInfo && bInfo) ? "" : "wait"}>{" "}</canvas>
+          </div>
+          <div id="game-type">{gameData.type === 2 ? "Rank" : "1 VS 1"}</div>
+          <div id="playerB" className="player-box">
+            <div className="name-level">
+              <p className="nickname">{bInfo.name}</p>
+              <p className="level">
+                <img
+                  className="tier-img"
+                  src={
+                    "../img/tier" + (bInfo.level > 5 ? 5 : bInfo.level) + ".png"
+                  }
+                  alt="tier"
+                />
+                LV. {bInfo.level}
+              </p>
+            </div>
+            <img className="avatar" src={bInfo.avatar} alt="img" />
+          </div>
         </div>
+      ) : null}
+      <canvas
+        ref={canvasRef}
+        width="900"
+        height="600"
+        className={aInfo && bInfo ? "" : "wait"}
+      >
+        {" "}
+      </canvas>
+      {showResult && winner && (
+        <div className="result-modal-overlay">
+          <ResultModal playerData={winner} />
+        </div>
+      )}
+    </div>
   );
 }
 
