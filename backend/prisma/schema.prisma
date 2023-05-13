@@ -12,26 +12,25 @@ datasource db {
 }
 
 model member {
-  name      String    @id @db.VarChar(20)
-  email     String    @db.VarChar(50)
-  intraId   String    @db.VarChar(20) @unique
-  avatar    String
-  status    Int       @default(1)
-  win       Int       @default(0)
-  lose      Int       @default(0)
-  level     Int       @default(0)
-  score     Int       @default(1000)
-  achieve   Int       @default(0)
-  socket    Int       @default(-1)
-  friend    member[] @relation("friend", map: "friend_member")
-  blackList member[] @relation("blackList", map: "blackList_member")
-  game      game[]
-  twoFactor Boolean   @default(false)
-  tfaCode   String?   @db.VarChar(512)
-  tfaTime   DateTime?
+	name		String		@id @db.VarChar(20)
+	email		String		@db.VarChar(50)
+	intraId		String		@db.VarChar(20) @unique
+	avatar		String
+	status		Int			@default(1)
+	win			Int			@default(0)
+	lose		Int			@default(0)
+	level		Int			@default(0)
+	score		Int			@default(1000)
+	achieve		Int			@default(0)
+	friend		member[]	@relation("friend", map: "friend_member")
+	blackList	member[]	@relation("blackList", map: "blackList_member")
+	game		game[]
+	twoFactor	Boolean		@default(false)
+	tfaCode		String?		@db.VarChar(512)
+	tfaTime		DateTime?
 
-  friendOf member[]  @relation("friend")
-  blackListOf member[]  @relation("blackList")
+	friendOf member[]  @relation("friend")
+	blackListOf member[]  @relation("blackList")
 }
 
 model game {
