@@ -86,7 +86,7 @@ function Main() {
       setIsAdmin(true);
       const newMessage: Message = {
         nickname: "<system>",
-        message: " I need a weapon. - Master Cheif -",
+        message: "I need a weapon. -Master Chief-",
       };
       setMessages((prevMessages) => [...prevMessages, newMessage]);
     });
@@ -323,7 +323,7 @@ function Main() {
           <div id="chat-status">
             <div id="chat-name">{roomName}</div>
             {isAdmin === true && <div id="is-admin">Admin</div>}
-            {isAdmin === true && <div id="is-cheif">Chief</div>}
+            {isChief === true && <div id="is-cheif">Chief</div>}
           </div>
           <div id="chat-window" ref={chatWindowRef}>
             {messages.map(
@@ -335,12 +335,12 @@ function Main() {
                       msg.nickname === "<system>"
                         ? "system-message"
                         : msg.nickname === nickname
-                        ? "my-message"
-                        : msg.nickname === "<error>"
-                        ? "error-message"
-                        : msg.nickname === "@private"
-                        ? "private-message"
-                        : ""
+                          ? "my-message"
+                          : msg.nickname === "<error>"
+                            ? "error-message"
+                            : msg.nickname === "@private"
+                              ? "private-message"
+                              : ""
                     }
                   >
                     {msg.nickname === "@join" || msg.nickname === "@private"
