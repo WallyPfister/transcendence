@@ -107,7 +107,7 @@ function Main() {
     });
 
     socket.on("kick", () => {
-      socket.emit("joinRoom", "lobby");
+      socket.emit("joinRoom", {roomId: "lobby"});
     });
 
     socket.on("newMessage", (newMessage: Message) => {

@@ -165,7 +165,7 @@ export class ChannelGateway {
 			(room) => room.roomId === roomId,
 		);
 		if (Room === undefined) {
-			this.server.emit('errorMessage', {
+			socket.emit('errorMessage', {
 				message: 'The room does not exists.',
 			});
 			return;
