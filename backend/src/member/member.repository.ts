@@ -187,13 +187,16 @@ export class MemberRepository {
 		}
 	}
 
-	async isFriend(name: string, checkMember: string): Promise<{ name: string }[]> {
-		return await this.prisma.member.findUnique({
+	async isFriend(name: string, checkMember: string): Promise<boolean> {
+		const friend = await this.prisma.member.findUnique({
 			where: { name: name },
 		}).friend({
 			where: { name: checkMember },
 			select: { name: true }
 		})
+		if (friend.length === 0)
+			return false;
+		return true;
 	}
 
 	async addFriend(name: string, friendName: string): Promise<void> {
@@ -236,6 +239,54 @@ export class MemberRepository {
 			data: {
 				friend: {
 					disconnect: { name: friendName }
+				}
+			}
+		});
+	}
+
+	async isBlack(name: string, checkMember: string): Promise<boolean> {
+		const black = await this.prisma.member.findUnique({
+			where: { name: name },
+		}).blackList({
+			where: { name: checkMember },
+			select: { name: true }
+		})
+		if (black.length === 0)
+			return false;
+		return true;
+	}
+
+	async addBlackList(name: string, blackName: string): Promise<void> {
+		try {
+			await this.prisma.member.update({
+				where: { name: name },
+				data: {
+					blackList: {
+						connect: { name: blackName }
+					}
+				}
+			});
+		} catch (err) {
+			throw new NotFoundException(`There is no such member with name ${blackName}.`);
+		}
+	}
+
+	async getBlackList(name: string): Promise<string[]> {
+		const blackList = await this.prisma.member.findUnique({
+			where: { name: name },
+		}).blackList({
+			orderBy: { name: 'asc' },
+			select: { name: true }
+		});
+		return blackList.map((item) => item.name);
+	}
+
+	async deleteBlackList(name: string, blackName: string): Promise<void> {
+		await this.prisma.member.update({
+			where: { name: name },
+			data: {
+				blackList: {
+					disconnect: { name: blackName }
 				}
 			}
 		});

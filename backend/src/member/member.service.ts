@@ -74,13 +74,8 @@ export class MemberService {
 		user.name = userName;
 		if (name === userName)
 			user.whois = 0;
-		else {
-			const isFriend = await this.memberRepository.isFriend(name, userName);
-			if (isFriend.length !== 0)
-				user.whois = 1;
-			else
-				user.whois = 2;
-		}
+		else
+			user.whois = await this.memberRepository.isFriend(name, userName) ? 1 : 2;
 		return user;
 	}
 
