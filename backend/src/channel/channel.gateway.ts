@@ -337,7 +337,7 @@ export class ChannelGateway {
 				if (
 					chatRoom.adminList.find((value) => value === data.nickname) === undefined
 				) {
-					socket.emit('errorMessage', `You are not on the adminstrator list.`);
+					socket.emit('errorMessage', `The person is not on the adminstrator list already.`);
 				} else {
 					this.userList[socket.data.nickname].isAdmin = false;
 					const index = this.chatRoomList[socket.data.roomId].adminList.indexOf(data.nickname);
@@ -463,7 +463,7 @@ export class ChannelGateway {
 		const chatRoom = this.chatRoomList[roomId];
 		if (!chatRoom)
 			throw new Error(`Room ${roomId} not found`);
-		else if (chatRoom.adminList.find((value) => value === nickname) === undefined)
+		else if (chatRoom.adminList.find((value) => value === socket.data.nickname) === undefined)
 			throw new Error(`You are not the administrator of the room ${roomId}.`);
 		else if (chatRoom.chiefName === nickname)
 			throw new Error(`You cannot ban the chief of the room ${roomId}.`);
