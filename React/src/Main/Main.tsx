@@ -374,8 +374,10 @@ function Main() {
         <div id="chat-box">
           <div id="chat-status">
             <div id="chat-name">{roomName}</div>
-            {isAdmin === true && <div id="is-admin">Admin</div>}
-            {isChief === true && <div id="is-cheif">Chief</div>}
+            <div id="chat-authority">
+              {isChief === true && <div id="is-cheif">Chief</div>}
+              {isAdmin === true && <div id="is-admin">Admin</div>}
+            </div>
           </div>
           <div id="chat-window" ref={chatWindowRef}>
             {messages.map(
@@ -383,6 +385,7 @@ function Main() {
                 msg.message !== "" && (
                   <div
                     key={index}
+                    style={{ marginBottom: "8px", marginTop: "8px" }}
                     className={
                       msg.nickname === nickname
                         ? "my-message"

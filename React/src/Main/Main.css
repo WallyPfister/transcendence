@@ -83,6 +83,23 @@
   margin: 15px 0;
 }
 
+#main #chat-interface #chat-box #chat-status #chat-authority {
+  display: flex;
+  flex-direction: column;
+}
+
+#main #chat-interface #chat-box #chat-status #chat-authority div{
+  margin-top: 6px
+}
+
+#main #chat-interface #chat-box #chat-status #chat-authority #is-cheif{
+  color: #8be9fd;
+}
+
+#main #chat-interface #chat-box #chat-status #chat-authority #is-admin{
+  color: #65ff4b;
+}
+
 #main #chat-interface #chat-box #chat-window {
   height: 78%;
   overflow-y: auto;

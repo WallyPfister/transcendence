@@ -12,9 +12,32 @@
 }
 
 .startgame-modal {
-  background-color: white;
-  border: 1px solid black;
-  color: red;
-  font: 20px;
-  padding: 20px;
+  border: 3px solid #d9d9d9;
+  border-radius: 20px;
+  padding: 30px 30px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.startgame-modal .startgame-title {
+  color: #ff2f2f;
+  font-size: clamp(40px, 6vw, 60px);
+  margin: 1vw;
+  text-align: center;
+}
+
+.startgame-modal #startgame-opponent {
+  color: #65ff4b;
+  font-size: clamp(25px, 5vw, 40px);
+  margin: 1vw;
+  text-align: center;
+}
+
+.startgame-modal #startgame-timer {
+  font-size: clamp(10px, 2vw, 20px);
+  margin: 1vw;
+  text-align: center;
 }

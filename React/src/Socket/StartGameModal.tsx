@@ -58,9 +58,10 @@ export function StartGameModal(props: Props) {
 
   return (
     <div className={"startgame-modal"}>
-      <div>Here Comes A New Challenger</div>
-      <div>${opponent}</div>
-      <div>{timer} seconds</div>
+      <div className="startgame-title">Here Comes A New </div>
+      <div className="startgame-title">Challenger</div>
+      <div id="startgame-opponent">{opponent}</div>
+      <div id="startgame-timer">{timer} seconds</div>
     </div>
   );
 }
