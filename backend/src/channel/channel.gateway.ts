@@ -271,7 +271,7 @@ export class ChannelGateway {
 		this.userList[socket.data.nickname].roomId = roomId;
 	    socket.data.roomId = roomId;
 	    socket.data.roomName = roomId;
-	    await socket.join(roomId);
+	    socket.join(roomId);
 	  }
 
 	async changeChief(chatRoom: ChatRoomListDto, socket: Socket) {
@@ -438,8 +438,6 @@ export class ChannelGateway {
 			const target = this.server.sockets.sockets.get(socketId);
 			if (target.data.nickname === nickname) {
 				this.leaveRoom(target);
-				target.data.roomId = 'lobby';
-				target.data.roomName = 'lobby';
 				this.server
 					.to(roomId)
 					.emit('systemMessage', `${nickname} has been kicked from the room.`);
