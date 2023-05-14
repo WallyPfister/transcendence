@@ -107,6 +107,10 @@
   color: #fff84b;
 }
 
+#main #chat-interface #chat-box #chat-window .blocked {
+  display: none;
+}
+
 #main #chat-interface #chat-box input {
   width: 100%;
   padding: 5px;
@@ -185,6 +189,26 @@
   align-items: center;
   justify-content: center;
   height: 100%;
+}
+
+#main #chat-interface #switch-box #list-window #friends {
+  color: #65ff4b;
+}
+
+#main #chat-interface #switch-box #list-window .offline {
+  color: #d9d9d9;
+}
+
+#main #chat-interface #switch-box #list-window .online {
+  color: #65ff4b;
+}
+
+#main #chat-interface #switch-box #list-window .busy {
+  color: #fff84b;
+}
+
+#main #chat-interface #switch-box #list-window #blacked {
+  color: #ff2f2f;
 }
 
 #main #chat-interface #switch-box #list-window .button-invite-type {
