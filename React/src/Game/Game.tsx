@@ -40,7 +40,6 @@ function Game() {
       return;
     }
 
-    socket.emit("gameIn", gameData.roomId);
 
     CustomAxios.get("/member/profile", {
       params: { userName: gameData.playerA },
@@ -76,19 +75,19 @@ function Game() {
       setWinner(playerA.score > playerB.score ? aInfo : bInfo);
 
       if (gameData.side === 0) {
-        CustomAxios.post("/game", {
-          winner:
-            playerA.score > playerB.score ? gameData.playerA : gameData.playerB,
-          loser:
-            playerA.score < playerB.score ? gameData.playerA : gameData.playerB,
-          winScore:
-            playerA.score > playerB.score ? playerA.score : playerB.score,
-          loseScore:
-            playerA.score < playerB.score ? playerA.score : playerB.score,
-          type: gameData.type,
-        });
-      }
-      setShowResult(true);
+		  CustomAxios.post("/game", {
+			  winner:
+			  playerA.score > playerB.score ? gameData.playerA : gameData.playerB,
+			  loser:
+			  playerA.score < playerB.score ? gameData.playerA : gameData.playerB,
+			  winScore:
+			  playerA.score > playerB.score ? playerA.score : playerB.score,
+			  loseScore:
+			  playerA.score < playerB.score ? playerA.score : playerB.score,
+			  type: gameData.type,
+			});
+		}
+		setShowResult(true);
     });
   }, [aInfo, bInfo]);
 

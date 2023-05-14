@@ -86,14 +86,14 @@ export class PongGateway {
 			if (sockets.size === 1){
 				for (const socketId of sockets){
 					const socket = this.server.sockets.sockets.get(socketId);
-					if (socket.data.nickname == this.gameRoomList[roomId].playerA.nickname)
+					if (socket.data.nickname === this.gameRoomList[roomId].playerA.nickname)
 						this.gameRoomList[roomId].playerA.score = 3;
 					else
 						this.gameRoomList[roomId].playerB.score = 3;
 				}
 			}
 			else if (sockets.size === 0){
-				this.endGame(roomId);
+				await this.endGame(roomId);
 				return;
 			}
 			else{
@@ -107,12 +107,13 @@ export class PongGateway {
 						else{
 							this.gameRoomList[roomId].playerA.score = 3;
 							this.gameRoomList[roomId].playerB.score = 0;
-						}
-						this.endGame(roomId);
-						return ;
+						}					
+						break;
 					}
 				}
 			}
+			console.log(this.gameRoomList[roomId].playerA.score);
+			console.log(this.gameRoomList[roomId].playerB.score);
 			this.gameRoomList[roomId].ball.x += this.gameRoomList[roomId].ball.velocityX;
 			this.gameRoomList[roomId].ball.y += this.gameRoomList[roomId].ball.velocityY;
 
@@ -188,7 +189,7 @@ export class PongGateway {
 		const room = this.server.sockets.adapter.rooms.get(roomId);
 		delete this.gameRoomList[roomId];
 		if (!room)
-			return;
+		return;
 		for (const socketId of room) {
 			const user = this.server.sockets.sockets.get(socketId);
 			user.leave(roomId);
