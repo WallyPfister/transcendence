@@ -1,5 +1,5 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards, ValidationPipe } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiUnauthorizedResponse, ApiConflictResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags, ApiBadRequestResponse } from '@nestjs/swagger';
+import { BadRequestException, Body, ConflictException, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards, ValidationPipe } from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiUnauthorizedResponse, ApiConflictResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiTags, ApiBadRequestResponse } from '@nestjs/swagger';
 import { MemberService } from './member.service';
 import { MemberRepository } from './member.repository';
 import { CreateMemberDto } from './dto/create-member.dto';
@@ -239,7 +239,7 @@ export class MemberController {
 			'(1) [Invalid access token] Redirect to 42 login. \
 			(2) [Expired access token] Refresh the access token.',
 	})
-	@ApiBadRequestResponse({
+	@ApiConflictResponse({
 		description: 'The member has already been added as a friend.'
 	})
 	@ApiNotFoundResponse({
@@ -250,11 +250,8 @@ export class MemberController {
 	@UseGuards(JwtAuthGuard)
 	async addFriend(@Payload() payload: any, @Param('friendName') friendName: string): Promise<void> {
 		const name = payload['sub']
-		const isFriend = await this.memberRepository.isFriend(name, friendName);
-		if (isFriend.length !== 0) {
-			// this.channelService.sendErrorMsg(name, `${friendName} has already been added as a friend.`);
-			throw new BadRequestException();
-		}
+		if (await this.memberRepository.isFriend(name, friendName))
+			throw new ConflictException();
 		return await this.memberRepository.addFriend(payload['sub'], friendName);
 	}
 
@@ -302,5 +299,85 @@ export class MemberController {
 	@UseGuards(JwtAuthGuard)
 	async deleteFriend(@Payload() payload: any, @Param('friendName') friendName: string): Promise<void> {
 		return await this.memberRepository.deleteFriend(payload['sub'], friendName);
+	}
+
+	@ApiOperation({
+		summary: 'Add a balck member',
+		description: 'It adds a black list to the requester.'
+	})
+	@ApiParam({
+		name: 'blackName',
+		description: 'The name of the member that the requester wants to add as a black list member',
+		required: true,
+		type: String
+	})
+	@ApiOkResponse({
+		description: 'Add a black member successfully.'
+	})
+	@ApiUnauthorizedResponse({
+		description:
+			'(1) [Invalid access token] Redirect to 42 login. \
+			(2) [Expired access token] Refresh the access token.',
+	})
+	@ApiConflictResponse({
+		description: 'The member has already been added as a black list member.'
+	})
+	@ApiNotFoundResponse({
+		description: 'There is no such member with the given name.'
+	})
+	@ApiBearerAuth()
+	@Post('black/:blackName')
+	@UseGuards(JwtAuthGuard)
+	async addBlackList(@Payload() payload: any, @Param('blackName') blackName: string): Promise<void> {
+		const name = payload['sub']
+		if (await this.memberRepository.isBlack(name, blackName))
+			throw new ConflictException();
+		return await this.memberRepository.addBlackList(payload['sub'], blackName);
+	}
+
+	@ApiOperation({
+		summary: 'get member\'s black list',
+		description: 'It gets member\'s black list.'
+	})
+	@ApiOkResponse({
+		description: 'The black list of the authenticated member.',
+		type: String,
+		isArray: true
+	})
+	@ApiUnauthorizedResponse({
+		description:
+			'(1) [Invalid access token] Redirect to 42 login. \
+			(2) [Expired access token] Refresh the access token.',
+	})
+	@ApiBearerAuth()
+	@Get('black')
+	@UseGuards(JwtAuthGuard)
+	async getAllBlackList(@Payload() payload: any): Promise<string[]> {
+		return this.memberRepository.getBlackList(payload['sub']);
+	}
+
+	@ApiOperation({
+		summary: 'Delete a black',
+		description: 'It deletes a black from the requester.'
+	})
+	@ApiParam({
+		name: 'blackName',
+		description: 'The name of the member that the requester deletes from black.',
+		required: true,
+		type: String
+	})
+	@ApiOkResponse({
+		description: 'Delete a black successfully.'
+	})
+	@ApiUnauthorizedResponse({
+		description:
+			'(1) [Invalid access token] Redirect to 42 login. \
+			(2) [Expired access token] Refresh the access token.',
+	})
+	@ApiBearerAuth()
+	@Delete('black/:blackName')
+	@UseGuards(JwtAuthGuard)
+	async deleteBalckList(@Payload() payload: any, @Param('blackName') blackName: string): Promise<void> {
+		return await this.memberRepository.deleteBlackList(payload['sub'], blackName);
 	}
 }
