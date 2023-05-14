@@ -28,6 +28,6 @@ export class memberProfileDto {
 	@ApiProperty({ description: 'game achievements earned' })
 	achieve: number;
 
-	@ApiProperty({ description: 'friend or not'})
+	@ApiProperty({ description: 'friend or not' })
 	whois?: number;
 }
