@@ -54,7 +54,7 @@ export class ChannelGateway {
 		if (!room){
 			delete this.userList[user.nickname];
 			return;
-			}
+		}
 		const index = room.adminList.indexOf(user.nickname);
 		if (user.isChief == true) {
 			const sockets = this.server.sockets.adapter.rooms.get(user.roomId);
@@ -241,9 +241,6 @@ export class ChannelGateway {
 		const nickname = socket.data.nickname;
 		const message = data.message;
 		const chatRoom = this.chatRoomList[socket.data.roomId];
-		// console.log('=====send=====');
-		// console.log(this.chatRoomList);
-		// console.log(socket.data.roomId);
 		if (chatRoom && Object.keys(chatRoom.muteList).includes(nickname)) {
 			const now = new Date();
 			const diff =
@@ -257,7 +254,6 @@ export class ChannelGateway {
 		this.server
 			.to(socket.data.roomId)
 			.emit('newMessage', { nickname: nickname, message: message });
-		console.log(data);
 	}
 
 	@SubscribeMessage('chatRoomList')
@@ -434,9 +430,6 @@ export class ChannelGateway {
 	}
 
 	kick(nickname: string, roomId: string) {
-		console.log('===== kick =====');
-		console.log(nickname);
-		console.log(roomId);
 		const sockets = this.server.sockets.adapter.rooms.get(roomId);
 
 		for (const socketId of sockets) {
@@ -505,7 +498,6 @@ export class ChannelGateway {
 			const user = this.server.sockets.sockets.get(socketId);
 			users.push(user.data.nickname);
 		}
-		console.log(users);
 		this.server.to(roomId).emit('userList', users);
 	}
 

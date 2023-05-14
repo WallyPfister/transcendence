@@ -34,10 +34,13 @@ function Game() {
   const [winner, setWinner] = useState<PlayerData>(null);
 
   useEffect(() => {
+    
     if (gameData == undefined || gameData.roomId == undefined) {
       navigate("/login");
       return;
     }
+
+    socket.emit("gameIn", gameData.roomId);
 
     CustomAxios.get("/member/profile", {
       params: { userName: gameData.playerA },
