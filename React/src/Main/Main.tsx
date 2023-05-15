@@ -40,6 +40,7 @@ function Main() {
   const [selectUser, setSelectUser] = useState<string>("");
   const [privateRoomName, setPrivateRoomName] = useState<string>("");
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordMode, setPasswordMode] = useState<string>("");
   const [inviteGameSelect, setInviteGameSelect] = useState<boolean>(false);
   const [isComposing, setIsComposing] = useState<boolean>(false);
   const [isChief, setIsChief] = useState<boolean>(false);
@@ -167,6 +168,7 @@ function Main() {
     });
 
     socket.on("passwordRequired", (body: { roomName: string }) => {
+      setPasswordMode("join");
       setPrivateRoomName(body.roomName);
       setShowPasswordModal(true);
     });
@@ -216,12 +218,7 @@ function Main() {
     setIsComposing(false);
   };
 
-  const goToRanking = (user: string) => {
-    navigate("/rank", { state: { user } });
-  };
-
   const goToProfile = (user: string) => {
-    // You can pass user as a parameter if you need it in the profile page
     navigate(`/profile/${user}`);
   };
 
@@ -249,6 +246,11 @@ function Main() {
 
   const handleCloseChannel = () => {
     setChannel(false);
+  };
+
+  const handleChangePasswordClick = () => {
+    setPasswordMode("change");
+    setShowPasswordModal(true);
   };
 
   const handleUserClick = (user: string) => {
@@ -338,7 +340,15 @@ function Main() {
   };
 
   const handlePasswordSubmit = (submit: any) => {
-    socket.emit("sendPassword", submit);
+    if (submit.status === "join")
+      socket.emit("sendPassword", {
+        roomId: submit.roomId,
+        password: submit.password,
+      });
+    if (submit.status === "change") {
+      socket.emit("changeRoomPassword", { password: submit.password });
+      console.log(submit.password);
+    }
     console.log(submit);
     setShowPasswordModal(false);
   };
@@ -582,6 +592,11 @@ function Main() {
                 Join Channel
               </button>
             )}
+            {!showChannel && isChief === true && (
+              <button id="change-password" onClick={handleChangePasswordClick}>
+                Change Password
+              </button>
+            )}
             {showChannel && (
               <ChannelWindow
                 socket={socket}
@@ -597,6 +612,7 @@ function Main() {
           <PasswordModal
             onSubmit={handlePasswordSubmit}
             privateRoomName={privateRoomName}
+            status={passwordMode}
           />
         </div>
       )}
