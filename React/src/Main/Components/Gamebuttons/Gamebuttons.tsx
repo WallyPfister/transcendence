@@ -1,6 +1,6 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import './Gamebuttons.css';
+import "./Gamebuttons.css";
 import { SocketContext } from "../../../Socket/SocketContext";
 
 function GameButtons({ nickname }) {
@@ -14,10 +14,28 @@ function GameButtons({ nickname }) {
 
   const navigate = useNavigate();
 
+  useEffect(() => {
+    socket.on("addQueue", (type: number) => {
+      console.log(type);
+
+      if (type === 0) startTimer(setCasualTime);
+      else if (type === 2) startTimer(setLadderTime);
+    });
+
+    socket.on("failQueue", () => {
+      setCasualClicked(false);
+      setLadderClicked(false);
+    });
+
+    return () => {
+      socket.off("addQueue");
+      socket.off("failQueue");
+    };
+  });
+
   const handleCasualGame = () => {
     if (!casualClicked) {
       setCasualClicked(true);
-      startTimer(setCasualTime);
       socket.emit("enterGame", 0);
     }
   };
@@ -25,7 +43,6 @@ function GameButtons({ nickname }) {
   const handleLadderGame = () => {
     if (!ladderClicked) {
       setLadderClicked(true);
-      startTimer(setLadderTime);
       socket.emit("enterGame", 2);
     }
   };
@@ -35,7 +52,9 @@ function GameButtons({ nickname }) {
   };
 
   const formatTime = (time) => {
-    const minutes = Math.floor(time / 60).toString().padStart(2, "0");
+    const minutes = Math.floor(time / 60)
+      .toString()
+      .padStart(2, "0");
     const seconds = (time % 60).toString().padStart(2, "0");
     return `${minutes}:${seconds}`;
   };

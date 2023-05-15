@@ -38,9 +38,10 @@ export class GameService {
 		}
 		if (!this.gameQ[type].enQueue(socket.data.nickname)) {
 			socket.emit('errorMessage', "The waiting list is full. Please try again later.");
+			socket.emit('failQueue');
 			return;
 		}
-		socket.emit('addQueue', socket.data.nickname);
+		socket.emit('addQueue', type);
 	}
 
 	@Interval('casual', 7000)
