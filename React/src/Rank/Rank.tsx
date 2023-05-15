@@ -31,7 +31,7 @@ function Rank() {
                 {
                     data.length === 0 ? <div id="no-user">No User</div> :
                     data.map((user, idx) => (
-                        <RankUser user={user} idx={idx}/>
+                        <RankUser user={user} idx={idx} key={idx}/>
                     ))
                 }
             </div>

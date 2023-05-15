@@ -171,6 +171,10 @@ function Main() {
       setShowPasswordModal(true);
     });
 
+	socket.on("duplicateUser", () => {
+		navigate("/");
+	});
+
     return () => {
       socket.off("connect");
       socket.off("joinRoom");
@@ -186,6 +190,7 @@ function Main() {
       socket.off("errorMessage");
       socket.off("systemMessage");
       socket.off("passwordRequired");
+	  socket.off("duplicateUser");
     };
   }, []);
 
