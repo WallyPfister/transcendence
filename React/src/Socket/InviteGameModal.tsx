@@ -1,6 +1,5 @@
 import "./InviteGameModal.css";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
 export function useInviteGame(socket: Socket) {
@@ -13,6 +12,9 @@ export function useInviteGame(socket: Socket) {
       setInviteData(data);
       setShowInvite(true);
       console.log(data);
+      return () => {
+        socket.off("invite");
+      }
     });
   }, []);
 

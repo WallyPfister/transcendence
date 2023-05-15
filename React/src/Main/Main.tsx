@@ -10,11 +10,15 @@ import { InviteGameModal, useInviteGame } from "../Socket/InviteGameModal";
 import { StartGameModal, useStartGame } from "../Socket/StartGameModal";
 import CustomAxios from "../Util/CustomAxios";
 import { removeToken } from "../Util/errorHandler";
+import { InviteFailModal, useInviteFail } from "../Socket/InviteFailedModal";
 
 function Main() {
   const socket = useContext(SocketContext);
   const { showInvite, closeInvite, inviteData } = useInviteGame(socket);
   const { showStart, closeStart, startData } = useStartGame(socket);
+  const { showInviteFail, closeInviteFail, inviteFailData } =
+    useInviteFail(socket);
+
   const navigate = useNavigate();
 
   interface Message {
@@ -47,7 +51,7 @@ function Main() {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [isPrivate, setIsPrivate] = useState<boolean>(false);
   const [privateUser, setPrivateUser] = useState<string>("");
-  const [blackedUser, setBlackedUser] = useState<string[]>([]);
+  const [blackList, setBlackList] = useState<string[]>([]);
 
   const chatWindowRef = useRef<HTMLDivElement>(null); // create a ref for the chat window
 
@@ -55,13 +59,16 @@ function Main() {
     async function fetchData() {
       const res = await CustomAxios.get("/member");
       setNickname(res.data);
+      CustomAxios.get("/member/black/").then((res) => {
+        const blackedDataArray: string[] = res.data;
+        setBlackList(blackedDataArray);
+      });
     }
     fetchData();
   }, []);
 
   useEffect(() => {
-    if (nickname !== "") 
-      socket.emit("setUser", { nickname: nickname });
+    if (nickname !== "") socket.emit("setUser", { nickname: nickname });
   }, [nickname]);
 
   useEffect(() => {
@@ -70,7 +77,7 @@ function Main() {
     }
   }, [messages]);
 
-  useEffect(() => {}, [friends, blackedUser]);
+  useEffect(() => {}, [friends, blackList]);
 
   const addMessage = (nickname: string, message: string) => {
     const newMessage: Message = {
@@ -205,7 +212,7 @@ function Main() {
     });
     CustomAxios.get("/member/black/").then((res) => {
       const blackedDataArray: string[] = res.data;
-      setBlackedUser(blackedDataArray);
+      setBlackList(blackedDataArray);
     });
     setSelectedTab("friends");
   };
@@ -291,7 +298,7 @@ function Main() {
         addSystemMessage(user + " is added to Blacked list.");
         CustomAxios.get("/member/black/").then((res) => {
           const blackedDataArray: string[] = res.data;
-          setBlackedUser(blackedDataArray);
+          setBlackList(blackedDataArray);
         });
       })
       .catch((err) => {
@@ -404,7 +411,7 @@ function Main() {
                     className={
                       msg.nickname === nickname
                         ? "my-message"
-                        : blackedUser.includes(msg.nickname || "")
+                        : blackList.includes(msg.nickname || "")
                         ? "blocked"
                         : msg.type === 1
                         ? "private-message"
@@ -514,7 +521,7 @@ function Main() {
                   </div>
                 ))}
                 <button id="blacked">Blacked</button>
-                {blackedUser.map((user) => (
+                {blackList.map((user) => (
                   <div
                     key={user}
                     onClick={() => handleUserClick(user)}
@@ -633,6 +640,14 @@ function Main() {
       {showStart && (
         <div className="startgame-modal-overlay">
           <StartGameModal onClose={closeStart} data={startData} />
+        </div>
+      )}
+      {showInviteFail && (
+        <div className="invite-fail-overlay">
+          <InviteFailModal
+            onClose={closeInviteFail}
+            inviteFailData={inviteFailData}
+          />
         </div>
       )}
     </div>
