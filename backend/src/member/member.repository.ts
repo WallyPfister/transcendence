@@ -26,9 +26,7 @@ export class MemberRepository {
 				},
 			});
 		} catch (err) {
-			if (err.code === "P2002")
-				throw new ConflictException(`There is a member with the same Intra Id as ${memberInfo.intraId}.`);
-			throw err; // 확인 필요
+			throw new ConflictException(`There is a member with the same Intra Id as ${memberInfo.intraId}.`);
 		}
 	}
 
