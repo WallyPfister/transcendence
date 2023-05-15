@@ -198,7 +198,6 @@ export class AuthService {
 			})
 			.then(() => { return code; })
 			.catch((err) => {
-				console.log('Failed to send email.');
 				return "";
 			}
 			);
@@ -218,7 +217,6 @@ export class AuthService {
 			})
 			.then(() => { return code; })
 			.catch((err) => {
-				console.log('Failed to send email.');
 				return "";
 			}
 			);
