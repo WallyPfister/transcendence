@@ -51,11 +51,11 @@ export class ChannelGateway {
 		)
 		if (user === undefined)
 			return;
-			const room = this.channelList[user.roomId];
-		if (!room){
+		const room = this.channelList[user.roomId];
+		if (!room) {
 			delete this.userList[user.nickname];
 			return;
-			}
+		}
 		const index = room.adminList.indexOf(user.nickname);
 		if (user.isChief == true) {
 			const sockets = this.server.sockets.adapter.rooms.get(user.roomId);
@@ -153,6 +153,39 @@ export class ChannelGateway {
 		this.server.to(socket.data.roomId).emit('addUser', socket.data.nickname);
 		this.channelUserList(socket);
 		socket.emit('isChief');
+	}
+
+	@SubscribeMessage('changeRoomPassword')
+	async changePassword(
+		@MessageBody() data: { roomId: string; password: string },
+		@ConnectedSocket() socket: Socket,
+	) {
+		const roomId = data.roomId;
+		if (data.password === '') data.password = undefined;
+		if (roomId == undefined || roomId === '') {
+			this.server.emit('errorMessage', {
+				message: 'You cannot change a room password for a room with empty name.',
+			});
+			return;
+		}
+		const existingRoom = Object.values(this.chatRoomList).find(
+			(room) => room.roomId === roomId,
+		);
+		if (existingRoom === undefined) {
+			this.server.emit('errorMessage', {
+				message: `Room ${roomId} does not exist.`,
+			});
+			return;
+		}
+		else if (existingRoom.chiefName === socket.data.nickname) {
+			this.server.emit('errorMessage', {
+				message: `You are not the chief of the room ${roomId}.`,
+			});
+		}
+		this.chatRoomList[roomId].password = data.password;
+		this.server.emit('systemMessage', {
+			message: `You have changed the password of the room ${roomId}.`,
+		});
 	}
 
 	@SubscribeMessage('joinRoom')
