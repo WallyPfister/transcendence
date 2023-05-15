@@ -51,7 +51,6 @@
 #game #info .player-box .name-level .nickname {
     font-size: 20px;
     margin: 10px 0;
-    text-align: right;
     color: #65ff4b;
 }
 
@@ -67,8 +66,13 @@
     margin-right: 10px;
 }
 
+#game #info #playerA {
+    text-align: left;
+}
+
 #game #info #playerB {
     justify-content: right;
+    text-align: right;
 }
 
 #game #info #playerB .name-level .level {
