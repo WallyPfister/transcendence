@@ -17,7 +17,7 @@ const getRankData = async () => {
 function Rank() {
     const socket = useContext(SocketContext);
 
-    const { data, isLoading, isError } = useQuery('rank-data', getRankData, {retry: false, staleTime: 60 * 1000});
+    const { data, isLoading, isError } = useQuery('rank-data', getRankData, {retry: false, staleTime: 60 * 1000, refetchOnMount: 'always'});
     const { showInvite, closeInvite, inviteData } = useInviteGame(socket);
     const { showStart, closeStart, startData } = useStartGame(socket);
     const { showInviteFail, closeInviteFail, inviteFailData } =
