@@ -82,7 +82,6 @@ export class PongGateway {
 	@Interval(15)
 	async update() {
 		for (const roomId of Object.keys(this.gameRoomList)) {
-			console.log(this.gameRoomList);
 			if (this.endGameInstantly(roomId) === 0)
 				return;
 			this.gameRoomList[roomId].ball.x += this.gameRoomList[roomId].ball.velocityX;
@@ -190,8 +189,8 @@ export class PongGateway {
 		}
 	}
 
-	endGame(roomId: string) {
-		this.server.to(roomId).emit("endGame", {});
+	async endGame(roomId: string) {
+		this.server.to(roomId).emit("endGame", { playerA: this.gameRoomList[roomId].playerA, playerB: this.gameRoomList[roomId].playerB });
 		const room = this.server.sockets.adapter.rooms.get(roomId);
 		delete this.gameRoomList[roomId];
 		if (!room)
