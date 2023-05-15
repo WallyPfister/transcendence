@@ -44,7 +44,7 @@ export class AuthService {
 				.post(url, data, config)
 				.pipe(
 					tap((response: AxiosResponse) => {
-						if (response.status == 429) {
+						if (response.status === 429) {
 							throw new HttpException('Too many requests.', 429);
 						}
 						else if (response.status !== 200) {
@@ -72,7 +72,7 @@ export class AuthService {
 		const profile = await firstValueFrom(this.httpService.get(url, requestConfig)
 			.pipe(
 				tap((response: AxiosResponse) => {
-					if (response.status == 429) {
+					if (response.status === 429) {
 						throw new HttpException('Too many requests.', 429);
 					}
 					else if (response.status !== 200) {
