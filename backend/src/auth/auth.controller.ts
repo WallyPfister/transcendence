@@ -199,6 +199,9 @@ export class AuthController {
 	async verifyAccessToken(
 		@Payload() payload: any
 	): Promise<void> {
+		const isMember = await this.memberRepository.getMemberInfo(payload['sub']);
+		if (isMember === null)
+			throw new UnauthorizedException('Invalid access token.');
 		await this.authService.login(payload['sub']);
 	}
 

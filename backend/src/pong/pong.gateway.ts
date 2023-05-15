@@ -127,7 +127,7 @@ export class PongGateway {
 
 	endGameInstantly(roomId: string) {
 		const sockets = this.server.sockets.adapter.rooms.get(roomId);
-		if (sockets.size === 0) {
+		if (!sockets) {
 			delete this.gameRoomList[roomId];
 			return 0;
 		}
