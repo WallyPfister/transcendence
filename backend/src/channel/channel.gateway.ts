@@ -9,6 +9,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
+import { matches } from 'class-validator';
 
 @Injectable()
 @WebSocketGateway(3001, {
@@ -113,7 +114,16 @@ export class ChannelGateway {
     @ConnectedSocket() socket: Socket,
   ) {
     const roomId = data.roomId;
-    if (data.password === '') data.password = undefined;
+    if (data.password === '') 
+		data.password = undefined;
+	else {
+		const regex = /^[a-zA-Z0-9]{4,8}$/;
+		const check = matches(data.password, regex);
+		if (check === false){
+			socket.emit("errorMessage", 'invalid room password');
+			return ;
+		}
+	}
     if (data.roomId === undefined || data.roomId === '') {
       socket.emit('errorMessage', 'You cannot create a room with empty name.');
       return;
@@ -176,6 +186,12 @@ export class ChannelGateway {
       );
       return;
     }
+	const regex = /^[a-zA-Z0-9]{4,8}$/;
+	const check = matches(data.password, regex);
+	if (check === false){
+		socket.emit("errorMessage", 'invalid room password');
+		return ;
+	}
     this.chatRoomList[roomId].password = data.password;
     socket.emit(
       'systemMessage',
