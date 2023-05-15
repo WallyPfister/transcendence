@@ -6,16 +6,15 @@ export function useInviteGame(socket: Socket) {
   const [showInvite, setShowInvite] = useState(false);
   const [inviteData, setInviteData] = useState(null);
 
-  
   useEffect(() => {
     socket.on("invite", (data: any) => {
       setInviteData(data);
       setShowInvite(true);
-      console.log(data);
-      return () => {
-        socket.off("invite");
-      }
     });
+
+    return () => {
+      socket.off("invite");
+    };
   }, []);
 
   return { showInvite, closeInvite: () => setShowInvite(false), inviteData };
@@ -44,7 +43,9 @@ export function InviteGameModal(props: Props) {
 
   return (
     <div className="invite-modal">
-      {`${props.inviteData.inviter} has invited you to a ${props.inviteData.gameType === 0 ? 'normal' : 'power'} game` }
+      {`${props.inviteData.inviter} has invited you to a ${
+        props.inviteData.gameType === 0 ? "normal" : "power"
+      } game`}
       <div id="invite-response">
         <button className="invite-accept" onClick={handleAccept}>
           accept

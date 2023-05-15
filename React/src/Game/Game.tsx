@@ -139,7 +139,6 @@ function Game() {
     context = canvas.getContext("2d");
 
     socket.on("update", (data) => {
-		console.log(data);
       const updateBall: Ball = {
         x: data.ball.x,
         y: data.ball.y,
