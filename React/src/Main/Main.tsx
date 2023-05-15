@@ -77,8 +77,6 @@ function Main() {
     }
   }, [messages]);
 
-  useEffect(() => {}, [friends, blackList]);
-
   const addMessage = (nickname: string, message: string) => {
     const newMessage: Message = {
       type: 0,
