@@ -35,8 +35,8 @@ function Game() {
 
   useEffect(() => {
 
-    if (gameData === undefined || gameData.roomId === undefined) {
-      navigate("/login");
+    if (gameData == null) {
+      navigate("/");
       return;
     }
 
@@ -70,26 +70,27 @@ function Game() {
   }, []);
 
   useEffect(() => {
-    socket.on("endGame", () => {
-      console.log("endgame");
-      setWinner(playerA.score > playerB.score ? aInfo : bInfo);
-
-      if (gameData.side === 0) {
-        CustomAxios.post("/game", {
-          winner:
-            playerA.score > playerB.score ? gameData.playerA : gameData.playerB,
-          loser:
-            playerA.score < playerB.score ? gameData.playerA : gameData.playerB,
-          winScore:
-            playerA.score > playerB.score ? playerA.score : playerB.score,
-          loseScore:
-            playerA.score < playerB.score ? playerA.score : playerB.score,
-          type: gameData.type,
-        });
-      }
-      setShowResult(true);
+    socket.on("endGame", (data) => {
+		console.log("endgame");
+		console.log(data);
+		setWinner(data.playerA.score > data.playerB.score ? aInfo : bInfo);
+		if (gameData.side === 0) {
+			CustomAxios.post("/game", {
+				winner:
+				data.playerA.score > data.playerB.score ? gameData.playerA : gameData.playerB,
+				loser:
+				data.playerA.score < data.playerB.score ? gameData.playerA : gameData.playerB,
+				winScore:
+				data.playerA.score > data.playerB.score ? data.playerA.score : data.playerB.score,
+				loseScore:
+				data.playerA.score < data.playerB.score ? data.playerA.score : data.playerB.score,
+				type: gameData.type,
+			  });
+		  }
+		setShowResult(true);
     });
     return () => {
+		console.log(showResult, winner);
       socket.off("endGame");
     }
   }, [aInfo, bInfo]);
@@ -104,6 +105,7 @@ function Game() {
     width: 10,
     height: 100,
     color: "GRAY",
+	nickname: "default",
     score: 0,
   });
 
@@ -113,6 +115,7 @@ function Game() {
     width: 10,
     height: 100,
     color: "GRAY",
+	nickname: "default",
     score: 0,
   });
 
@@ -147,6 +150,7 @@ function Game() {
           width: 10,
           height: 100,
           color: "BLACK",
+		  nickname: data.playerB.nickname,
           score: data.playerB.score,
         };
         setPlayerB(updateplayerB);
@@ -157,6 +161,7 @@ function Game() {
           width: 10,
           height: 100,
           color: "BLACK",
+		  nickname: data.playerA.nickname,
           score: data.playerA.score,
         };
         setPlayerA(updateplayerA);
