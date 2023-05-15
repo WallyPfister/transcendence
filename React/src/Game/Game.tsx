@@ -34,13 +34,28 @@ function Game() {
   const [winner, setWinner] = useState<PlayerData>(null);
 
   useEffect(() => {
+    window.history.pushState(null, null, window.location.pathname);
+    window.onpopstate = function () {
+      window.history.pushState(null, null, window.location.pathname);
+      navigate("/");
+    };
 
+    return () => {
+      window.onpopstate = null;
+    };
+  }, []);
+
+  useEffect(() => {
     if (gameData === null) {
       navigate("/");
       return;
     }
+    socket.emit("gameIn", gameData.roomId);
+  
+    socket.on("gameOut", () => {
+      navigate("/");
+    });
 
-	socket.emit("gameIn", gameData.roomId);
 
     CustomAxios.get("/member/profile", {
       params: { userName: gameData.playerA },
@@ -68,37 +83,49 @@ function Game() {
       playerA: gameData.playerA,
       playerB: gameData.playerB,
     });
+
+    return () => {
+      socket.off("gameOut");
+    };
   }, []);
 
   useEffect(() => {
     socket.on("endGame", (data) => {
-		setWinner(data.playerA.score > data.playerB.score ? aInfo : bInfo);
-		if (gameData.side === 0) {
-			CustomAxios.post("/game", {
-				winner:
-				data.playerA.score > data.playerB.score ? gameData.playerA : gameData.playerB,
-				loser:
-				data.playerA.score < data.playerB.score ? gameData.playerA : gameData.playerB,
-				winScore:
-				data.playerA.score > data.playerB.score ? data.playerA.score : data.playerB.score,
-				loseScore:
-				data.playerA.score < data.playerB.score ? data.playerA.score : data.playerB.score,
-				type: gameData.type,
-			  });
-		  }
-		setShowResult(true);
+      setWinner(data.playerA.score > data.playerB.score ? aInfo : bInfo);
+      if (gameData.side === 0) {
+        CustomAxios.post("/game", {
+          winner:
+            data.playerA.score > data.playerB.score
+              ? gameData.playerA
+              : gameData.playerB,
+          loser:
+            data.playerA.score < data.playerB.score
+              ? gameData.playerA
+              : gameData.playerB,
+          winScore:
+            data.playerA.score > data.playerB.score
+              ? data.playerA.score
+              : data.playerB.score,
+          loseScore:
+            data.playerA.score < data.playerB.score
+              ? data.playerA.score
+              : data.playerB.score,
+          type: gameData.type,
+        });
+      }
+      setShowResult(true);
     });
     return () => {
       socket.off("endGame");
-    }
+    };
   }, [aInfo, bInfo]);
 
-  socket.on("gameOut", () => {
-	navigate('/');
-	return () => {
-		socket.off("gameOut");
-	  }
-  })
+  // socket.on("gameOut", () => {
+  //   navigate("/");
+  //   return () => {
+  //     socket.off("gameOut");
+  //   };
+  // });
 
   const canvasRef = useRef(null);
   let canvas;
@@ -110,7 +137,7 @@ function Game() {
     width: 10,
     height: 100,
     color: "GRAY",
-	nickname: "default",
+    nickname: "default",
     score: 0,
   });
 
@@ -120,7 +147,7 @@ function Game() {
     width: 10,
     height: 100,
     color: "GRAY",
-	nickname: "default",
+    nickname: "default",
     score: 0,
   });
 
@@ -155,7 +182,7 @@ function Game() {
           width: 10,
           height: 100,
           color: "BLACK",
-		  nickname: data.playerB.nickname,
+          nickname: data.playerB.nickname,
           score: data.playerB.score,
         };
         setPlayerB(updateplayerB);
@@ -166,7 +193,7 @@ function Game() {
           width: 10,
           height: 100,
           color: "BLACK",
-		  nickname: data.playerA.nickname,
+          nickname: data.playerA.nickname,
           score: data.playerA.score,
         };
         setPlayerA(updateplayerA);
@@ -187,6 +214,9 @@ function Game() {
       }
     }
     canvas.addEventListener("mousemove", movePaddle);
+    return () => {
+      socket.off("update");
+    };
   }, []);
 
   useEffect(() => {

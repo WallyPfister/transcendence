@@ -115,6 +115,7 @@ function Main() {
 
   useEffect(() => {
     socket.on("connect", () => {
+      console.log(socket.id);
       console.log("Socket.IO connected!");
     });
 
