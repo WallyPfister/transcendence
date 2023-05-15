@@ -10,11 +10,15 @@ import { InviteGameModal, useInviteGame } from "../Socket/InviteGameModal";
 import { StartGameModal, useStartGame } from "../Socket/StartGameModal";
 import CustomAxios from "../Util/CustomAxios";
 import { removeToken } from "../Util/errorHandler";
+import { InviteFailModal, useInviteFail } from "../Socket/InviteFailedModal";
 
 function Main() {
   const socket = useContext(SocketContext);
   const { showInvite, closeInvite, inviteData } = useInviteGame(socket);
   const { showStart, closeStart, startData } = useStartGame(socket);
+  const { showInviteFail, closeInviteFail, inviteFailData } =
+    useInviteFail(socket);
+
   const navigate = useNavigate();
 
   interface Message {
@@ -40,13 +44,14 @@ function Main() {
   const [selectUser, setSelectUser] = useState<string>("");
   const [privateRoomName, setPrivateRoomName] = useState<string>("");
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordMode, setPasswordMode] = useState<string>("");
   const [inviteGameSelect, setInviteGameSelect] = useState<boolean>(false);
   const [isComposing, setIsComposing] = useState<boolean>(false);
   const [isChief, setIsChief] = useState<boolean>(false);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [isPrivate, setIsPrivate] = useState<boolean>(false);
   const [privateUser, setPrivateUser] = useState<string>("");
-  const [blackedUser, setBlackedUser] = useState<string[]>([]);
+  const [blackList, setBlackList] = useState<string[]>([]);
 
   const chatWindowRef = useRef<HTMLDivElement>(null); // create a ref for the chat window
 
@@ -54,6 +59,10 @@ function Main() {
     async function fetchData() {
       const res = await CustomAxios.get("/member");
       setNickname(res.data);
+      CustomAxios.get("/member/black/").then((res) => {
+        const blackedDataArray: string[] = res.data;
+        setBlackList(blackedDataArray);
+      });
     }
     fetchData();
   }, []);
@@ -68,7 +77,7 @@ function Main() {
     }
   }, [messages]);
 
-  useEffect(() => {}, [friends, blackedUser]);
+  useEffect(() => {}, [friends, blackList]);
 
   const addMessage = (nickname: string, message: string) => {
     const newMessage: Message = {
@@ -150,7 +159,7 @@ function Main() {
       addMessage(newMessage.nickname, newMessage.message);
     });
 
-    socket.on("privateMessage", ({ nickname: nickname, message: message }) => {
+    socket.on("privateMessage", ({ nickname, message }) => {
       addPrivateMessage(nickname, message);
     });
 
@@ -167,6 +176,7 @@ function Main() {
     });
 
     socket.on("passwordRequired", (body: { roomName: string }) => {
+      setPasswordMode("join");
       setPrivateRoomName(body.roomName);
       setShowPasswordModal(true);
     });
@@ -202,7 +212,7 @@ function Main() {
     });
     CustomAxios.get("/member/black/").then((res) => {
       const blackedDataArray: string[] = res.data;
-      setBlackedUser(blackedDataArray);
+      setBlackList(blackedDataArray);
     });
     setSelectedTab("friends");
   };
@@ -216,12 +226,7 @@ function Main() {
     setIsComposing(false);
   };
 
-  const goToRanking = (user: string) => {
-    navigate("/rank", { state: { user } });
-  };
-
   const goToProfile = (user: string) => {
-    // You can pass user as a parameter if you need it in the profile page
     navigate(`/profile/${user}`);
   };
 
@@ -249,6 +254,11 @@ function Main() {
 
   const handleCloseChannel = () => {
     setChannel(false);
+  };
+
+  const handleChangePasswordClick = () => {
+    setPasswordMode("change");
+    setShowPasswordModal(true);
   };
 
   const handleUserClick = (user: string) => {
@@ -286,6 +296,10 @@ function Main() {
     CustomAxios.post("/member/black/" + user)
       .then(() => {
         addSystemMessage(user + " is added to Blacked list.");
+        CustomAxios.get("/member/black/").then((res) => {
+          const blackedDataArray: string[] = res.data;
+          setBlackList(blackedDataArray);
+        });
       })
       .catch((err) => {
         if (err.response.status === 404) {
@@ -338,7 +352,15 @@ function Main() {
   };
 
   const handlePasswordSubmit = (submit: any) => {
-    socket.emit("sendPassword", submit);
+    if (submit.status === "join")
+      socket.emit("sendPassword", {
+        roomId: submit.roomId,
+        password: submit.password,
+      });
+    if (submit.status === "change") {
+      socket.emit("changeRoomPassword", { password: submit.password });
+      console.log(submit.password);
+    }
     console.log(submit);
     setShowPasswordModal(false);
   };
@@ -389,7 +411,7 @@ function Main() {
                     className={
                       msg.nickname === nickname
                         ? "my-message"
-                        : blackedUser.includes(msg.nickname || "")
+                        : blackList.includes(msg.nickname || "")
                         ? "blocked"
                         : msg.type === 1
                         ? "private-message"
@@ -499,7 +521,7 @@ function Main() {
                   </div>
                 ))}
                 <button id="blacked">Blacked</button>
-                {blackedUser.map((user) => (
+                {blackList.map((user) => (
                   <div
                     key={user}
                     onClick={() => handleUserClick(user)}
@@ -582,6 +604,11 @@ function Main() {
                 Join Channel
               </button>
             )}
+            {!showChannel && isChief === true && (
+              <button id="change-password" onClick={handleChangePasswordClick}>
+                Change Password
+              </button>
+            )}
             {showChannel && (
               <ChannelWindow
                 socket={socket}
@@ -597,6 +624,7 @@ function Main() {
           <PasswordModal
             onSubmit={handlePasswordSubmit}
             privateRoomName={privateRoomName}
+            status={passwordMode}
           />
         </div>
       )}
@@ -612,6 +640,14 @@ function Main() {
       {showStart && (
         <div className="startgame-modal-overlay">
           <StartGameModal onClose={closeStart} data={startData} />
+        </div>
+      )}
+      {showInviteFail && (
+        <div className="invite-fail-overlay">
+          <InviteFailModal
+            onClose={closeInviteFail}
+            inviteFailData={inviteFailData}
+          />
         </div>
       )}
     </div>

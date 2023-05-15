@@ -10,6 +10,7 @@ import { useContext } from 'react';
 import { SocketContext } from '../Socket/SocketContext';
 import { InviteGameModal, useInviteGame } from '../Socket/InviteGameModal';
 import { StartGameModal, useStartGame } from '../Socket/StartGameModal';
+import { InviteFailModal, useInviteFail } from '../Socket/InviteFailedModal';
 
 const getProfileData = (user: string): Promise<ProfileData> => {
     return new Promise<ProfileData>(async (resolve, reject) => {
@@ -67,6 +68,8 @@ function Profile() {
     const socket = useContext(SocketContext);
     const { showInvite, closeInvite, inviteData } = useInviteGame(socket);
     const { showStart, closeStart, startData } = useStartGame(socket);
+    const { showInviteFail, closeInviteFail, inviteFailData } =
+      useInviteFail(socket);
 
     if (profileLoading || historyLoading)
         return (<img src="../img/spinner.gif" alt="img"></img>);
@@ -174,6 +177,14 @@ function Profile() {
       {showStart && (
         <div className="startgame-modal-overlay">
           <StartGameModal onClose={closeStart} data={startData} />
+        </div>
+      )}
+      {showInviteFail && (
+        <div className="invite-fail-overlay">
+          <InviteFailModal
+            onClose={closeInviteFail}
+            inviteFailData={inviteFailData}
+          />
         </div>
       )}
                 </div>

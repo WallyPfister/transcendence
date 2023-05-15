@@ -88,15 +88,15 @@
   flex-direction: column;
 }
 
-#main #chat-interface #chat-box #chat-status #chat-authority div{
-  margin-top: 6px
+#main #chat-interface #chat-box #chat-status #chat-authority div {
+  margin-top: 6px;
 }
 
-#main #chat-interface #chat-box #chat-status #chat-authority #is-cheif{
+#main #chat-interface #chat-box #chat-status #chat-authority #is-cheif {
   color: #8be9fd;
 }
 
-#main #chat-interface #chat-box #chat-status #chat-authority #is-admin{
+#main #chat-interface #chat-box #chat-status #chat-authority #is-admin {
   color: #65ff4b;
 }
 
@@ -188,6 +188,11 @@
   width: 100%;
 }
 
+#main #chat-interface #switch-box #change-password {
+  margin-top: 5px;
+  width: 100%;
+}
+
 #main #chat-interface #switch-box button.selected {
   background-color: #d9d9d9;
   color: black;
@@ -224,7 +229,7 @@
   color: #fff84b;
 }
 
-#main #chat-interface #switch-box #list-window #blacked {
+#main #chat-interface #switch-box #list-window #black {
   color: #ff2f2f;
 }
 
