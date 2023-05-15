@@ -33,7 +33,7 @@ export class GameService {
 	@SubscribeMessage('enterGame')
 	waitGame(@MessageBody() type: number, @ConnectedSocket() socket: Socket) {
 		if (socket.data.nickname === undefined) {
-			socket.emit("duplicateUser");
+			socket.emit("goLogin");
 			return ;
 		}
 		if (!this.gameQ[type].enQueue(socket.data.nickname)) {

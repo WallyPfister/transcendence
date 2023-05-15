@@ -213,7 +213,7 @@ export class ChannelGateway {
     @ConnectedSocket() socket: Socket,
   ) {
 	if (socket.data.nickname === undefined){
-		socket.emit('errorMessage', 'invalid error socket data.',);
+		socket.emit("goLogin");
 		return ;
 	}
     const roomId = data.roomId;
