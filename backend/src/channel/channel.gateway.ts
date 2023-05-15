@@ -216,6 +216,7 @@ export class ChannelGateway {
     socket.data.roomName = roomId;
     socket.join(roomId);
     this.userList[socket.data.nickname].roomId = roomId;
+    socket.emit('isNotChief');
     socket.emit('joinRoom', { roomName: roomId });
     this.server.to(socket.data.roomId).emit('addUser', socket.data.nickname);
     this.channelUserList(roomId);
@@ -253,6 +254,16 @@ export class ChannelGateway {
     socket.emit('joinRoom', { roomName: roomId });
     this.server.to(socket.data.roomId).emit('addUser', socket.data.nickname);
     this.channelUserList(roomId);
+  }
+
+  @SubscribeMessage('exitRoom')
+  async exitRoom(@ConnectedSocket() socket: Socket){
+      if (this.leaveRoom(socket) === false)
+          this.changeChief(this.chatRoomList[socket.data.roomId], socket);
+
+      this.userList[socket.data.nickname].isAdmin = false;
+      this.userList[socket.data.nickname].isChief = false;
+      this.userList[socket.data.nickname].roomId = 'tmp';
   }
 
   @SubscribeMessage('sendMessage')

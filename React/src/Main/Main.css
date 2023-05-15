@@ -256,6 +256,7 @@
 
 #main #chat-interface #switch-box #list-window #black {
   color: #ff2f2f;
+  margin-top: 5px;
 }
 
 #main #chat-interface #switch-box #list-window .button-invite-type {

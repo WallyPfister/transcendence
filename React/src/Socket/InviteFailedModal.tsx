@@ -54,7 +54,7 @@ export function InviteFailModal(props: Props) {
         <div id="invite-lost">no more user: {props.inviteFailData.name}.</div>
       )}
       {props.inviteFailData.state === "rejectedGame" && (
-        <div id="invite-reject">invte request declined by {props.inviteFailData.name}.</div>
+        <div id="invite-reject">Invite request declined by {props.inviteFailData.name}.</div>
       )}
       <button className="invite-fail-confirm" onClick={handleClose}>
         confirm

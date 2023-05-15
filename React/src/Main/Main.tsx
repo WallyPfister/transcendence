@@ -200,7 +200,8 @@ function Main() {
       socket.off("errorMessage");
       socket.off("systemMessage");
       socket.off("passwordRequired");
-	  socket.off("duplicateUser");
+      socket.emit("exitRoom");
+	    socket.off("duplicateUser");
     };
   }, []);
 
@@ -300,7 +301,7 @@ function Main() {
   const blackUser = (user: string) => {
     CustomAxios.post("/member/black/" + user)
       .then(() => {
-        addSystemMessage(user + " is added to Blacked list.");
+        addSystemMessage(user + " is added to Black list.");
         CustomAxios.get("/member/black/").then((res) => {
           const blackedDataArray: string[] = res.data;
           setBlackList(blackedDataArray);
@@ -318,7 +319,7 @@ function Main() {
 
   const unBlackUser = (user: string) => {
     CustomAxios.delete("/member/black/" + user).then(() => {
-      addSystemMessage(user + "is deleted from the Blacked list.");
+      addSystemMessage(user + "is deleted from the Black list.");
       handleFriendListClick();
     });
   };
@@ -529,7 +530,7 @@ function Main() {
                     )}
                   </div>
                 ))}
-                <button id="blacked">Blacked</button>
+                <button id="black">BlackList</button>
                 {blackList.map((user) => (
                   <div
                     key={user}

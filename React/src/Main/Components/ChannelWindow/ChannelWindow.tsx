@@ -48,7 +48,11 @@ function ChannelWindow(props: any) {
             placeholder="new channel"
             maxLength={24}
             value={channelName}
-            onChange={(e) => setChannelName(e.target.value)}
+            onChange={(e) => {
+              const inputValue = e.target.value;
+              const sanitizedValue = inputValue.replace(/[^a-zA-Z0-9]/g, "");
+              setChannelName(sanitizedValue);
+            }}
             onKeyDown={(e) => handleChanKeyDown(e)}
           />
           <input
@@ -58,10 +62,9 @@ function ChannelWindow(props: any) {
             value={password}
             maxLength={8}
             onChange={(e) => {
-              const re = /^[0-9\b]+$/; // regular expression to allow only numbers and backspace
-              if (e.target.value === "" || re.test(e.target.value)) {
-                setPassword(e.target.value);
-              }
+              const inputValue = e.target.value;
+              const sanitizedValue = inputValue.replace(/[^0-9]/g, "");
+              setPassword(sanitizedValue);
             }}
             onKeyDown={(e) => handleChanKeyDown(e)}
           />
