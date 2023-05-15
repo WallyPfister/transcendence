@@ -40,6 +40,7 @@ function Game() {
       return;
     }
 
+	socket.emit("gameIn", gameData.roomId);
 
     CustomAxios.get("/member/profile", {
       params: { userName: gameData.playerA },
@@ -92,6 +93,13 @@ function Game() {
     }
   }, [aInfo, bInfo]);
 
+  socket.on("gameOut", () => {
+	navigate('/');
+	return () => {
+		socket.off("gameOut");
+	  }
+  })
+
   const canvasRef = useRef(null);
   let canvas;
   let context;
@@ -131,6 +139,7 @@ function Game() {
     context = canvas.getContext("2d");
 
     socket.on("update", (data) => {
+		console.log(data);
       const updateBall: Ball = {
         x: data.ball.x,
         y: data.ball.y,

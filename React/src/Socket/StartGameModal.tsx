@@ -19,12 +19,8 @@ export function useStartGame(socket: Socket) {
       }) => {
         setStartData(data);
         setShowStart(true);
-        socket.emit("gameIn", data.roomId);
       }
     );
-    return () => {
-      socket.off("gameIn");
-    }
   }, []);
 
   return { showStart, closeStart: () => setShowStart(false), startData };
