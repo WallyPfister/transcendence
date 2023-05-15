@@ -3,6 +3,10 @@ import { IsNumber, IsString } from "class-validator";
 
 export class GameResultDto {
 	@IsString()
+	@ApiProperty({ description: 'the game room id '})
+	roomId: string;
+
+	@IsString()
 	@ApiProperty({ description: 'winner name' })
 	winner: string;
 

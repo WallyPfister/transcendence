@@ -5,9 +5,10 @@ import { PrismaService } from "src/prisma/prisma.service";
 export class GameRepository {
 	constructor(private prisma: PrismaService) {}
 
-	async createHistory(name: string, opponent: string, scoreA: number, scoreB: number, result: boolean, type: number): Promise<void> {
+	async createHistory(roomId: string, name: string, opponent: string, scoreA: number, scoreB: number, result: boolean, type: number): Promise<void> {
 		await this.prisma.game.create({
 			data: {
+				roomId: roomId,
 				name: name,
 				opponent: opponent,
 				scoreA: scoreA,
@@ -16,5 +17,15 @@ export class GameRepository {
 				type: type
 			}
 		})
+	}
+
+	async checkHistory(roomId: string): Promise<boolean> {
+		const history = await this.prisma.game.findUnique({
+			where: { roomId: roomId },
+			select: { roomId: true }
+		})
+		if (history.length === 0)
+			return false;
+		return true;
 	}
 }
