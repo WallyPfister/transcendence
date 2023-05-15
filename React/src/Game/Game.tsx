@@ -72,7 +72,6 @@ function Game() {
   useEffect(() => {
     socket.on("endGame", (data) => {
 		console.log("endgame");
-		console.log(data);
 		setWinner(data.playerA.score > data.playerB.score ? aInfo : bInfo);
 		if (gameData.side === 0) {
 			CustomAxios.post("/game", {
@@ -90,7 +89,6 @@ function Game() {
 		setShowResult(true);
     });
     return () => {
-		console.log(showResult, winner);
       socket.off("endGame");
     }
   }, [aInfo, bInfo]);
