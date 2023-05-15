@@ -127,36 +127,9 @@ export class PongGateway {
 
 	endGameInstantly(roomId: string) {
 		const sockets = this.server.sockets.adapter.rooms.get(roomId);
-		if (sockets.size === 1) {
-			for (const socketId of sockets) {
-				const socket = this.server.sockets.sockets.get(socketId);
-				if (socket.data.nickname === this.gameRoomList[roomId].playerA.nickname)
-					this.gameRoomList[roomId].playerA.score = 3;
-				else
-					this.gameRoomList[roomId].playerB.score = 3;
-			}
-			return 1;
-		}
-		else if (sockets.size === 0) {
+		if (sockets.size === 0) {
 			delete this.gameRoomList[roomId];
 			return 0;
-		}
-		else {
-			for (const socketId of sockets) {
-				const socket = this.server.sockets.sockets.get(socketId);
-				if (socket.data.roomId !== roomId) {
-					if (socket.data.nickname === this.gameRoomList[roomId].playerA.nickname) {
-						this.gameRoomList[roomId].playerA.score = 0;
-						this.gameRoomList[roomId].playerB.score = 3;
-					}
-					else {
-						this.gameRoomList[roomId].playerA.score = 3;
-						this.gameRoomList[roomId].playerB.score = 0;
-					}
-					break;
-				}
-			}
-			return 2;
 		}
 	}
 

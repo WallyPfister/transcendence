@@ -36,7 +36,7 @@ export class MemberService {
 			member.achieve = member.achieve | MemberConstants.TENWIN;
 		if (score === 3 && ((member.achieve & MemberConstants.PERFECTGAME) === 0))
 			member.achieve = member.achieve | MemberConstants.PERFECTGAME;
-		if ((opponentLevel - member.level > 3) && ((member.achieve & MemberConstants.BIGGAMEHUNTER) === 0))
+		if ((opponentLevel > 4) && ((member.achieve & MemberConstants.BIGGAMEHUNTER) === 0))
 			member.achieve = member.achieve | MemberConstants.BIGGAMEHUNTER;
 		return member.achieve;
 	}
