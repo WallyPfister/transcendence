@@ -56,7 +56,7 @@ export class ChannelGateway {
 			return;
 		}
 		const index = room.adminList.indexOf(user.nickname);
-		if (user.isChief == true) {
+		if (user.isChief === true) {
 			const sockets = this.server.sockets.adapter.rooms.get(user.roomId);
 			if (sockets) {
 				const socketId = Array.from(sockets.values())[0];
@@ -88,15 +88,15 @@ export class ChannelGateway {
 		const nickname = data.nickname;
 		if (this.userList[nickname] && this.userList[nickname].socketId != socket.id) {
 			socket.emit("duplicateUser");
-			return ;
+			return;
 		}
-		
+
 		this.userList[nickname] = {
-				roomId: "lobby",
-				nickname: nickname,
-				socketId: socket.id,
-				isAdmin: false,
-				isChief: false
+			roomId: "lobby",
+			nickname: nickname,
+			socketId: socket.id,
+			isAdmin: false,
+			isChief: false
 		}
 		socket.data.roomId = 'lobby';
 		socket.data.roomName = 'lobby';
@@ -114,7 +114,7 @@ export class ChannelGateway {
 	) {
 		const roomId = data.roomId;
 		if (data.password === '') data.password = undefined;
-		if (data.roomId == undefined || data.roomId === '') {
+		if (data.roomId === undefined || data.roomId === '') {
 			this.server.emit('errorMessage', {
 				message: 'You cannot create a room with empty name.',
 			});
@@ -160,7 +160,7 @@ export class ChannelGateway {
 	) {
 		const roomId = data.roomId;
 		if (data.password === '') data.password = undefined;
-		if (roomId == undefined || roomId === '') {
+		if (roomId === undefined || roomId === '') {
 			this.server.emit('errorMessage', {
 				message: 'You cannot change a room password for a room with empty name.',
 			});
@@ -294,22 +294,22 @@ export class ChannelGateway {
 		this.server.emit('channelList', Object.keys(this.chatRoomList));
 	}
 
-	  @SubscribeMessage('gameIn')
-	  async exitChannel(@MessageBody() roomId: string, @ConnectedSocket() socket: Socket) {
-	    if (this.leaveRoom(socket) === false) 
-	      this.changeChief(this.chatRoomList[socket.data.roomId], socket);
+	@SubscribeMessage('gameIn')
+	async exitChannel(@MessageBody() roomId: string, @ConnectedSocket() socket: Socket) {
+		if (this.leaveRoom(socket) === false)
+			this.changeChief(this.chatRoomList[socket.data.roomId], socket);
 
 		this.userList[socket.data.nickname].isAdmin = false;
 		this.userList[socket.data.nickname].isChief = false;
 		this.userList[socket.data.nickname].roomId = roomId;
-	    socket.data.roomId = roomId;
-	    socket.data.roomName = roomId;
-	    socket.join(roomId);
-	  }
+		socket.data.roomId = roomId;
+		socket.data.roomName = roomId;
+		socket.join(roomId);
+	}
 
 	async changeChief(chatRoom: ChatRoomListDto, socket: Socket) {
 		if (!chatRoom)
-			return ;
+			return;
 		if (chatRoom.chiefName === socket.data.nickname) {
 			socket.emit('isNotChief');
 			const sockets = this.server.sockets.adapter.rooms.get(socket.data.roomId);
@@ -520,7 +520,7 @@ export class ChannelGateway {
 		const sockets = this.server.sockets.adapter.rooms.get(roomId);
 
 		if (!sockets)
-			return ;
+			return;
 		for (const socketId of sockets) {
 			const user = this.server.sockets.sockets.get(socketId);
 			users.push(user.data.nickname);
