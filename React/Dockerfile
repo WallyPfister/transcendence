@@ -6,7 +6,7 @@ WORKDIR /usr/src/app
 
 COPY . .
 
-RUN apt-get update && apt-get install -y wait-for-it
+RUN apt-get update
 
 RUN set -eux && \
 	npm install
@@ -16,4 +16,3 @@ RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
 CMD ["npm", "run", "start"]
-# CMD ["npm", "run", "start:dev"]
