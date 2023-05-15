@@ -27,8 +27,10 @@ export class PongGateway {
 
 	@SubscribeMessage("register")
 	async register(@MessageBody() data: { roomId: string, type: number, playerA: string, playerB: string }, @ConnectedSocket() socket: Socket) {
-		if (this.server.sockets.adapter.rooms.get(data.roomId) === undefined)
+		if (this.server.sockets.adapter.rooms.get(data.roomId) === undefined){
+			socket.emit("gameOut");
 			return;
+		}
 		this.gameRoomList[data.roomId] = {
 			ball: {
 				x: 450,

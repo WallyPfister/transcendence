@@ -89,7 +89,7 @@ export class ChannelGateway {
   ) {
     const nickname = data.nickname;
     if (this.userList[nickname] && this.userList[nickname].socketId != socket.id) {
-      socket.emit("duplicateUser");
+      socket.emit("goLogin");
       return;
     }
 
@@ -206,6 +206,10 @@ export class ChannelGateway {
     @MessageBody() data: { roomId: string },
     @ConnectedSocket() socket: Socket,
   ) {
+	if (socket.data.nickname === undefined){
+		socket.emit('errorMessage', 'invalid error socket data.',);
+		return ;
+	}
     const roomId = data.roomId;
     const Room = Object.values(this.chatRoomList).find(
       (room) => room.roomId === roomId,
