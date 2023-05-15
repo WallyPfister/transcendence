@@ -60,9 +60,6 @@ export class GameService {
 		this.memberRepository.updateStatus(p1.data.nickname, MemberConstants.INGAME); // 두명을 인게임으로 변경해
 		this.memberRepository.updateStatus(p2.data.nickname, MemberConstants.INGAME);
 		const roomId = randomBytes(Math.ceil(25 / 2)).toString('hex').slice(0, 25);
-		p1.join(roomId);
-		p2.join(roomId);
-		console.log(`p1 = ${p1.data.nickname}, p2 = ${p2.data.nickname}`);
 		p1.emit("startGame", new GameInfoDto(GameConstants.CASUAL, roomId, p1.data.nickname, p2.data.nickname, 0)); // 게임 시작 정보 알려줌
 		p2.emit("startGame", new GameInfoDto(GameConstants.CASUAL, roomId, p1.data.nickname, p2.data.nickname, 1));
 	}
@@ -86,8 +83,6 @@ export class GameService {
 		this.memberRepository.updateStatus(p1.data.nickname, MemberConstants.INGAME); // 두명을 인게임으로 변경해
 		this.memberRepository.updateStatus(p2.data.nickname, MemberConstants.INGAME);
 		const roomId = randomBytes(Math.ceil(25 / 2)).toString('hex').slice(0, 25);
-		p1.join(roomId);
-		p2.join(roomId);
 		p1.emit("startGame", new GameInfoDto(GameConstants.CASUAL_P, roomId, p1.data.nickname, p2.data.nickname, 0)); // 게임 시작 정보 알려줌
 		p2.emit("startGame", new GameInfoDto(GameConstants.CASUAL_P, roomId, p1.data.nickname, p2.data.nickname, 1));
 	}
@@ -111,8 +106,6 @@ export class GameService {
 		this.memberRepository.updateStatus(p1.data.nickname, MemberConstants.INGAME); // 두명을 인게임으로 변경해
 		this.memberRepository.updateStatus(p2.data.nickname, MemberConstants.INGAME);
 		const roomId = randomBytes(Math.ceil(25 / 2)).toString('hex').slice(0, 25);
-		p1.join(roomId);
-		p2.join(roomId);
 		p1.emit("startGame", new GameInfoDto(GameConstants.LADDER, roomId, p1.data.nickname, p2.data.nickname, 0)); // 게임 시작 정보 알려줌
 		p2.emit("startGame", new GameInfoDto(GameConstants.LADDER, roomId, p1.data.nickname, p2.data.nickname, 1));
 	}
@@ -180,8 +173,6 @@ export class GameService {
 		this.memberRepository.updateStatus(data.inviterName, MemberConstants.INGAME);
 
 		const roomId = randomBytes(Math.ceil(25 / 2)).toString('hex').slice(0, 25);
-		socket.join(roomId);
-		inviter.join(roomId);
 		socket.emit("startGame", new GameInfoDto(data.type, roomId, data.inviterName, socket.data.nickname, 0));
 		inviter.emit("startGame", new GameInfoDto(data.type, roomId, data.inviterName, socket.data.nickname, 1));
 	}
