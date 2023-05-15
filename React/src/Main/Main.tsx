@@ -77,8 +77,6 @@ function Main() {
     }
   }, [messages]);
 
-  useEffect(() => {}, [friends, blackList]);
-
   const addMessage = (nickname: string, message: string) => {
     const newMessage: Message = {
       type: 0,
@@ -181,9 +179,9 @@ function Main() {
       setShowPasswordModal(true);
     });
 
-	socket.on("duplicateUser", () => {
-		navigate("/");
-	});
+    socket.on("duplicateUser", () => {
+      navigate("/");
+    });
 
     return () => {
       socket.off("connect");
@@ -201,7 +199,7 @@ function Main() {
       socket.off("systemMessage");
       socket.off("passwordRequired");
       socket.emit("exitRoom");
-	    socket.off("duplicateUser");
+      socket.off("duplicateUser");
     };
   }, []);
 

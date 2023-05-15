@@ -67,6 +67,7 @@ export class ChannelGateway {
         this.chatRoomList[user.roomId].chiefName = nextChief.data.nickname;
         this.userList[nextChief.data.nickname].isChief = true;
         this.userList[nextChief.data.nickname].isAdmin = true;
+        nextChief.emit("isChief");
       }
       else
         delete this.chatRoomList[user.roomId];
@@ -186,6 +187,11 @@ export class ChannelGateway {
         'errorMessage',
         `You are not the chief of the room ${roomId}.`,
       );
+      return;
+    }
+    if (data.password === undefined) {
+      socket.emit("systemMessage", 'Room is now a private room')
+      this.chatRoomList[roomId].password = data.password;
       return;
     }
     const regex = /^[a-zA-Z0-9]{4,8}$/;
@@ -339,6 +345,7 @@ export class ChannelGateway {
         this.chatRoomList[socket.data.roomId].chiefName = user.data.nickname;
         this.userList[user.data.nickname].isChief = true;
         this.userList[user.data.nickname].isAdmin = true;
+        user.emit("isChief");
         delete this.chatRoomList[socket.data.roomId].adminList[socket.data.nickname];
       }
       this.userList[socket.data.nickname].isChief = false;
