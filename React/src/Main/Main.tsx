@@ -334,6 +334,10 @@ function Main() {
     socket.emit("ban", { nickname: user });
   };
 
+  const kickUser = (user: string) => {
+    socket.emit("kick", { nickname: user });
+  };
+
   const inviteGame = (event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent event from bubbling up
     setInviteGameSelect(true);
@@ -568,6 +572,7 @@ function Main() {
                         {isAdmin === true && (
                           <div id="admin-button">
                             <button onClick={() => banUser(user)}>Ban</button>
+                            <button onClick={() => kickUser(user)}>kick</button>
                             <button onClick={() => muteUser(user)}>Mute</button>
                           </div>
                         )}

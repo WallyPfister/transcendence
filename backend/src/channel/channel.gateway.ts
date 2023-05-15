@@ -404,12 +404,31 @@ export class ChannelGateway {
         return;
       }
       this.chatRoomList[socket.data.roomId].banList.push(nickname);
-      this.kick(nickname, socket.data.roomId);
       socket.emit('systemMessage', `${nickname} is added to the banned list.`);
     } catch (err) {
       socket.emit('errorMessage', err.message);
     }
   }
+
+  @SubscribeMessage('kick')
+  kickUser(
+    @MessageBody() data: { nickname: string },
+    @ConnectedSocket() socket: Socket,
+  ) {
+    try {
+      const roomId = socket.data.roomId;
+      const chatRoom = this.chatRoomList[roomId];
+      if (!chatRoom)
+        throw new Error(`Room ${roomId} not found`);
+      else if (chatRoom.adminList.find((value) => value === socket.data.nickname) === undefined)
+        throw new Error(`You are not the administrator of the room ${roomId}.`);
+      else if (chatRoom.chiefName === data.nickname)
+        throw new Error(`You cannot ban the chief of the room ${roomId}.`);
+      this.kick(data.nickname, socket.data.roomId);
+    } catch (err) {
+    socket.emit('errorMessage', err.message);
+  }
+}
 
   // banList에서 사용자 제거
   @SubscribeMessage('banCancel')
