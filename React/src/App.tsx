@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import './App.css';
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { SocketContext, socket } from "./Socket/SocketContext";
 import Login from './Login/Login';
 import SignUp from './SignUp/SignUp';
 import Verify from './Verify/Verify';
@@ -7,11 +8,10 @@ import Main from './Main/Main';
 import Rank from './Rank/Rank';
 import Profile from './Profile/Profile';
 import OAuth from './Etc/OAuth';
-import { QueryClient, QueryClientProvider } from 'react-query';
-import { SocketContext, socket } from "./Socket/SocketContext";
 import NotFound from './Etc/NotFound';
 import Game from './Game/Game';
 import { CustomRoute } from './Util/CustomRoute';
+import './App.css';
 
 const queryClient: QueryClient = new QueryClient();
 
