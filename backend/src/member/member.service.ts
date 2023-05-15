@@ -16,7 +16,6 @@ export class MemberService {
 	async checkName(name: string): Promise<{ name: string }> {
 		const regex = /^[a-zA-Z0-9]{2,8}$/;
 		const check = matches(name, regex);
-		console.log(check);
 		if (!check)
 			throw new BadRequestException();
 		return await this.memberRepository.checkDuplicateName(name);
