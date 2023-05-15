@@ -60,7 +60,8 @@ function Main() {
   }, []);
 
   useEffect(() => {
-    if (nickname !== "") socket.emit("setUser", { nickname: nickname });
+    if (nickname !== "") 
+      socket.emit("setUser", { nickname: nickname });
   }, [nickname]);
 
   useEffect(() => {
@@ -151,7 +152,7 @@ function Main() {
       addMessage(newMessage.nickname, newMessage.message);
     });
 
-    socket.on("privateMessage", ({ nickname: nickname, message: message }) => {
+    socket.on("privateMessage", ({ nickname, message }) => {
       addPrivateMessage(nickname, message);
     });
 
@@ -288,6 +289,10 @@ function Main() {
     CustomAxios.post("/member/black/" + user)
       .then(() => {
         addSystemMessage(user + " is added to Blacked list.");
+        CustomAxios.get("/member/black/").then((res) => {
+          const blackedDataArray: string[] = res.data;
+          setBlackedUser(blackedDataArray);
+        });
       })
       .catch((err) => {
         if (err.response.status === 404) {
