@@ -434,7 +434,7 @@ export class ChannelGateway {
       else if (chatRoom.adminList.find((value) => value === socket.data.nickname) === undefined)
         throw new Error(`You are not the administrator of the room ${roomId}.`);
       else if (chatRoom.chiefName === data.nickname)
-        throw new Error(`You cannot ban the chief of the room ${roomId}.`);
+        throw new Error(`You cannot kick the chief of the room ${roomId}.`);
       this.kick(data.nickname, socket.data.roomId);
     } catch (err) {
     socket.emit('errorMessage', err.message);
