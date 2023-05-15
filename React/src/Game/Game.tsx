@@ -34,8 +34,8 @@ function Game() {
   const [winner, setWinner] = useState<PlayerData>(null);
 
   useEffect(() => {
-    
-    if (gameData == undefined || gameData.roomId == undefined) {
+
+    if (gameData === undefined || gameData.roomId === undefined) {
       navigate("/login");
       return;
     }
@@ -75,19 +75,19 @@ function Game() {
       setWinner(playerA.score > playerB.score ? aInfo : bInfo);
 
       if (gameData.side === 0) {
-		  CustomAxios.post("/game", {
-			  winner:
-			  playerA.score > playerB.score ? gameData.playerA : gameData.playerB,
-			  loser:
-			  playerA.score < playerB.score ? gameData.playerA : gameData.playerB,
-			  winScore:
-			  playerA.score > playerB.score ? playerA.score : playerB.score,
-			  loseScore:
-			  playerA.score < playerB.score ? playerA.score : playerB.score,
-			  type: gameData.type,
-			});
-		}
-		setShowResult(true);
+        CustomAxios.post("/game", {
+          winner:
+            playerA.score > playerB.score ? gameData.playerA : gameData.playerB,
+          loser:
+            playerA.score < playerB.score ? gameData.playerA : gameData.playerB,
+          winScore:
+            playerA.score > playerB.score ? playerA.score : playerB.score,
+          loseScore:
+            playerA.score < playerB.score ? playerA.score : playerB.score,
+          type: gameData.type,
+        });
+      }
+      setShowResult(true);
     });
     return () => {
       socket.off("endGame");
@@ -140,7 +140,7 @@ function Game() {
         velocityY: data.ball.velocityY,
         color: data.ball.color,
       };
-      if (gameData.side == 0) {
+      if (gameData.side === 0) {
         const updateplayerB = {
           x: data.playerB.x,
           y: data.playerB.y,
@@ -168,7 +168,7 @@ function Game() {
 
     function movePaddle(evt) {
       let rect = canvas.getBoundingClientRect();
-      if (gameData.side == 0) {
+      if (gameData.side === 0) {
         playerA.y = evt.clientY - rect.top - playerA.height / 2;
         socket.emit("paddleA", { roomId: gameData.roomId, y: playerA.y });
       } else {
