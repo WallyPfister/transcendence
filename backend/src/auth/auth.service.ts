@@ -10,7 +10,6 @@ import oauthConfig from 'src/config/oauth.config';
 import jwtConfig from 'src/config/jwt.config';
 import tfaConfig from 'src/config/tfa.config';
 import { MemberConstants } from '../member/memberConstants';
-import { LoginMemberDTO } from './dto/member.login.dto';
 
 @Injectable()
 export class AuthService {

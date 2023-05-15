@@ -12,6 +12,7 @@ import { Payload } from 'src/auth/decorators/payload';
 import { JwtSignUpAuthGuard } from 'src/auth/guards/jwt.signup.guard';
 import { IssueJwtTokenDTO } from 'src/auth/dto/issue.jwt';
 import { JwtTokenDTO } from '../auth/dto/jwt.dto';
+import { JwtLimitedAuthGuard } from 'src/auth/guards/jwt.limited.guard';
 
 @ApiTags("Member")
 @Controller('member')
@@ -67,13 +68,18 @@ export class MemberController {
 		type: String
 	})
 	@ApiOkResponse({
-		description: 'Whether the given name is available or not',
+		description: 'Check whether the given name is available or not',
 		type: Boolean
 	})
 	@ApiBadRequestResponse({
-		description: "The name don't match with regualr express \'/^[a-zA-Z0-9]{2,16}$/\'."
+		description: "The name doesn't match with regular expression \'/^[a-zA-Z0-9]{2,16}$/\'."
 	})
+	@ApiUnauthorizedResponse({
+		description: 'Invalid limited jwt token',
+	})
+	@ApiBearerAuth()
 	@Get('checkName')
+	@UseGuards(JwtLimitedAuthGuard)
 	async checkName(@Query('name') name: string): Promise<boolean> {
 		const check = await this.memberService.checkName(name);
 		if (check)
@@ -83,7 +89,7 @@ export class MemberController {
 
 	@ApiOperation({
 		summary: 'Get login member name.',
-		description: 'It gets a member who the authenticated member information.'
+		description: 'Returns the name of the member.'
 	})
 	@ApiOkResponse({
 		description: 'The profile information for the authenticated member information.',
@@ -136,7 +142,7 @@ export class MemberController {
 	})
 	@ApiParam({
 		name: 'status',
-		description: 'The current status of the member.',
+		description: 'The current status of the member',
 		required: true,
 		type: Number
 	})

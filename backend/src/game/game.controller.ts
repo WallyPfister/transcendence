@@ -2,16 +2,13 @@ import { Body, Controller, Post, UseGuards, ValidationPipe } from '@nestjs/commo
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GameResultDto } from './dto/gameResult.dto';
 import { GameService } from './game.service';
-import { JwtSignUpAuthGuard } from 'src/auth/guards/jwt.signup.guard';
-import { Payload } from 'src/auth/decorators/payload';
-import { JwtTokenDTO } from 'src/auth/dto/jwt.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 
 @ApiTags("game")
 @Controller('game')
 export class GameController {
-	constructor(private readonly gameService: GameService) {}
-	
+	constructor(private readonly gameService: GameService) { }
+
 	@ApiOperation({
 		summary: 'Update member ping game information',
 		description: 'It updates the game result information of two game players. \
