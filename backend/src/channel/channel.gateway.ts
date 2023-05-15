@@ -115,14 +115,14 @@ export class ChannelGateway {
     const roomId = data.roomId;
     if (data.password === '') data.password = undefined;
     if (data.roomId === undefined || data.roomId === '') {
-      this.server.emit('errorMessage', 'You cannot create a room with empty name.');
+      socket.emit('errorMessage', 'You cannot create a room with empty name.');
       return;
     }
     const existingRoom = Object.values(this.chatRoomList).find(
       (room) => room.roomId === roomId,
     );
     if (existingRoom !== undefined) {
-      this.server.emit('errorMessage', `Room ${roomId} already exists.`);
+      socket.emit('errorMessage', `Room ${roomId} already exists.`);
       return;
 		}
 		else if (this.leaveRoom(socket) === false) {
@@ -290,8 +290,8 @@ export class ChannelGateway {
   }
 
   @SubscribeMessage('chatRoomList')
-  async channelList() {
-    this.server.emit('channelList', Object.keys(this.chatRoomList));
+  async channelList(@ConnectedSocket() socket: Socket,) {
+    socket.emit('channelList', Object.keys(this.chatRoomList));
   }
 
   @SubscribeMessage('gameIn')

@@ -351,7 +351,6 @@ function Main() {
 
   const selectGametype = (user: string, type: string) => {
     // normal = 0, power = 1
-    console.log("invite");
     if (type === "normal") {
       socket.emit("invite", { type: 0, invitee: user });
     } else if (type === "power") {
@@ -369,9 +368,7 @@ function Main() {
       });
     if (submit.status === "change") {
       socket.emit("changeRoomPassword", { password: submit.password });
-      console.log(submit.password);
     }
-    console.log(submit);
     setShowPasswordModal(false);
   };
 

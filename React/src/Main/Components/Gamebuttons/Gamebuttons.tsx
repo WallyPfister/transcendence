@@ -19,7 +19,6 @@ function GameButtons({ nickname }) {
       setCasualClicked(true);
       startTimer(setCasualTime);
       socket.emit("enterGame", 0);
-      console.log(socket);
     }
   };
 
