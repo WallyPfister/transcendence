@@ -42,7 +42,6 @@ export class ChannelGateway {
 
 	handleConnection(socket: Socket) {
 		console.log(`Client connected with ID ${socket.id}`);
-		console.log(`data ==> ${socket.data.nickname}`);
 	}
 
 	handleDisconnect(@ConnectedSocket() socket: Socket) {
@@ -55,7 +54,7 @@ export class ChannelGateway {
 		if (!room){
 			delete this.userList[user.nickname];
 			return;
-			}
+		}
 		const index = room.adminList.indexOf(user.nickname);
 		if (user.isChief == true) {
 			const sockets = this.server.sockets.adapter.rooms.get(user.roomId);
@@ -77,6 +76,7 @@ export class ChannelGateway {
 			}
 		}
 		delete this.userList[user.nickname];
+		this.channelUserList(user.roomId);
 		this.authService.logout(user.nickname);
 	}
 
@@ -86,19 +86,17 @@ export class ChannelGateway {
 		@ConnectedSocket() socket: Socket,
 	) {
 		const nickname = data.nickname;
-		if (this.userList[socket.id]) {
-			socket.emit("errorMessage", {
-				message: "The user already exists.",
-			});
+		if (this.userList[nickname] && this.userList[nickname].socketId != socket.id) {
+			socket.emit("duplicateUser");
+			return ;
 		}
-		else {
-			this.userList[nickname] = {
+		
+		this.userList[nickname] = {
 				roomId: "lobby",
 				nickname: nickname,
 				socketId: socket.id,
 				isAdmin: false,
 				isChief: false
-			}
 		}
 		socket.data.roomId = 'lobby';
 		socket.data.roomName = 'lobby';
@@ -106,7 +104,7 @@ export class ChannelGateway {
 		socket.join(socket.data.roomId);
 		socket.emit('joinRoom', { roomName: 'lobby' });
 		this.server.to(socket.data.roomId).emit('addUser', nickname);
-		this.channelUserList(socket);
+		this.channelUserList('lobby');
 	}
 
 	@SubscribeMessage('createRoom')
@@ -151,7 +149,7 @@ export class ChannelGateway {
 		socket.join(roomId);
 		socket.emit('joinRoom', { roomName: roomId });
 		this.server.to(socket.data.roomId).emit('addUser', socket.data.nickname);
-		this.channelUserList(socket);
+		this.channelUserList(roomId);
 		socket.emit('isChief');
 	}
 
@@ -192,7 +190,7 @@ export class ChannelGateway {
 		this.userList[socket.data.nickname].roomId = roomId;
 		socket.emit('joinRoom', { roomName: roomId });
 		this.server.to(socket.data.roomId).emit('addUser', socket.data.nickname);
-		this.channelUserList(socket);
+		this.channelUserList(roomId);
 	}
 
 	@SubscribeMessage('sendPassword')
@@ -232,7 +230,7 @@ export class ChannelGateway {
 		socket.join(roomId);
 		socket.emit('joinRoom', { roomName: roomId });
 		this.server.to(socket.data.roomId).emit('addUser', socket.data.nickname);
-		this.channelUserList(socket);
+		this.channelUserList(roomId);
 	}
 
 	@SubscribeMessage('sendMessage')
@@ -243,9 +241,6 @@ export class ChannelGateway {
 		const nickname = socket.data.nickname;
 		const message = data.message;
 		const chatRoom = this.chatRoomList[socket.data.roomId];
-		// console.log('=====send=====');
-		// console.log(this.chatRoomList);
-		// console.log(socket.data.roomId);
 		if (chatRoom && Object.keys(chatRoom.muteList).includes(nickname)) {
 			const now = new Date();
 			const diff =
@@ -259,7 +254,6 @@ export class ChannelGateway {
 		this.server
 			.to(socket.data.roomId)
 			.emit('newMessage', { nickname: nickname, message: message });
-		console.log(data);
 	}
 
 	@SubscribeMessage('chatRoomList')
@@ -267,21 +261,22 @@ export class ChannelGateway {
 		this.server.emit('channelList', Object.keys(this.chatRoomList));
 	}
 
-	//   @SubscribeMessage('exitChannel')
-	//   async exitChannel(@ConnectedSocket() socket: Socket) {
-	//     const chatRoom = this.chatRoomList[socket.data.roomId];
+	  @SubscribeMessage('gameIn')
+	  async exitChannel(@MessageBody() roomId: string, @ConnectedSocket() socket: Socket) {
+	    if (this.leaveRoom(socket) === false) 
+	      this.changeChief(this.chatRoomList[socket.data.roomId], socket);
 
-	//     if (this.leaveRoom(socket) === false) {
-	//       this.isChief(this.chatRoomList[socket.data.roomId], socket);
-	//     }
-
-	//     socket.data.roomId = 'lobby';
-	//     socket.data.roomName = 'lobby';
-	//     socket.join('lobby');
-	//     socket.emit('newMessage', `채팅방을 나와 lobby로 나오셨습니다.`);
-	//   }
+		this.userList[socket.data.nickname].isAdmin = false;
+		this.userList[socket.data.nickname].isChief = false;
+		this.userList[socket.data.nickname].roomId = roomId;
+	    socket.data.roomId = roomId;
+	    socket.data.roomName = roomId;
+	    socket.join(roomId);
+	  }
 
 	async changeChief(chatRoom: ChatRoomListDto, socket: Socket) {
+		if (!chatRoom)
+			return ;
 		if (chatRoom.chiefName === socket.data.nickname) {
 			socket.emit('isNotChief');
 			const sockets = this.server.sockets.adapter.rooms.get(socket.data.roomId);
@@ -433,22 +428,15 @@ export class ChannelGateway {
 	}
 
 	kick(nickname: string, roomId: string) {
-		console.log('===== kick =====');
-		console.log(nickname);
-		console.log(roomId);
 		const sockets = this.server.sockets.adapter.rooms.get(roomId);
 
 		for (const socketId of sockets) {
 			const target = this.server.sockets.sockets.get(socketId);
 			if (target.data.nickname === nickname) {
 				this.leaveRoom(target);
-				target.data.roomId = 'lobby';
-				target.data.roomName = 'lobby';
-				this.userList[target.data.nickname].roomId = "lobby";
 				this.server
 					.to(roomId)
 					.emit('systemMessage', `${nickname} has been kicked from the room.`);
-				target.join('lobby');
 				target.emit('isNotAdmin');
 				target.emit('kick');
 				return;
@@ -472,6 +460,7 @@ export class ChannelGateway {
 	leaveRoom(socket: Socket): boolean {
 		const oldRoomId = socket.data.roomId;
 		socket.leave(oldRoomId);
+		this.channelUserList(oldRoomId);
 		// true => 내가 마지막 사람, false => 나 말고도 사람이 더 남음
 		if (
 			this.server.sockets.adapter.rooms.get(oldRoomId) !== undefined
@@ -493,16 +482,17 @@ export class ChannelGateway {
 	}
 
 	// 채널 유저 리스트
-	async channelUserList(socket: Socket) {
+	async channelUserList(roomId: string) {
 		const users = [];
-		const sockets = this.server.sockets.adapter.rooms.get(socket.data.roomId);
+		const sockets = this.server.sockets.adapter.rooms.get(roomId);
 
+		if (!sockets)
+			return ;
 		for (const socketId of sockets) {
 			const user = this.server.sockets.sockets.get(socketId);
 			users.push(user.data.nickname);
 		}
-		console.log(users);
-		this.server.to(socket.data.roomId).emit('userList', users);
+		this.server.to(roomId).emit('userList', users);
 	}
 
 	async findSocketByName(name: string): Promise<Socket> {

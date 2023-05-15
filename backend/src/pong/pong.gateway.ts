@@ -25,15 +25,6 @@ export class PongGateway {
 
 	constructor() { this.gameRoomList = {}; }
 
-	handleConnection(socket: Socket) {
-		console.log("This is Pong socket server");
-	}
-
-	// handleDisconnect(@ConnectedSocket() client: Socket) {
-	// 	console.log("Pong socket server Disconnect");
-	// 	this.gameList.pop();
-	//   }
-
 	@SubscribeMessage("register")
 	async register(@MessageBody() data: { roomId: string, type: number, playerA: string, playerB: string }, @ConnectedSocket() socket: Socket) {
 		if (this.server.sockets.adapter.rooms.get(data.roomId) == undefined)
@@ -90,9 +81,10 @@ export class PongGateway {
 
 	@Interval(15)
 	async update() {
-		if (!this.gameRoomList)
-			return;
 		for (const roomId of Object.keys(this.gameRoomList)) {
+			console.log(this.gameRoomList);
+			if (this.endGameInstantly(roomId) == 0)
+				return ;
 			this.gameRoomList[roomId].ball.x += this.gameRoomList[roomId].ball.velocityX;
 			this.gameRoomList[roomId].ball.y += this.gameRoomList[roomId].ball.velocityY;
 
@@ -134,6 +126,41 @@ export class PongGateway {
 		}
 	}
 
+	endGameInstantly(roomId: string){
+		const sockets = this.server.sockets.adapter.rooms.get(roomId);
+			if (sockets.size === 1){
+				for (const socketId of sockets){
+					const socket = this.server.sockets.sockets.get(socketId);
+					if (socket.data.nickname === this.gameRoomList[roomId].playerA.nickname)
+						this.gameRoomList[roomId].playerA.score = 3;
+					else
+						this.gameRoomList[roomId].playerB.score = 3;
+				}
+				return 1;
+			}
+			else if (sockets.size === 0){
+				delete this.gameRoomList[roomId];
+				return 0;
+			}
+			else{
+				for (const socketId of sockets){
+					const socket = this.server.sockets.sockets.get(socketId);
+					if (socket.data.roomId !== roomId){
+						if (socket.data.nickname === this.gameRoomList[roomId].playerA.nickname){
+							this.gameRoomList[roomId].playerA.score = 0;
+							this.gameRoomList[roomId].playerB.score = 3;
+						}
+						else{
+							this.gameRoomList[roomId].playerA.score = 3;
+							this.gameRoomList[roomId].playerB.score = 0;
+						}					
+						break;
+					}
+				}
+				return 2;
+			}
+	}
+
 	collision(b: Ball, p: Player): boolean {
 		const bTop = b.y - b.radius;
 		const bBottom = b.y + b.radius;
@@ -166,12 +193,12 @@ export class PongGateway {
 	endGame(roomId: string) {
 		this.server.to(roomId).emit("endGame", {});
 		const room = this.server.sockets.adapter.rooms.get(roomId);
+		delete this.gameRoomList[roomId];
 		if (!room)
-			return;
+		return;
 		for (const socketId of room) {
 			const user = this.server.sockets.sockets.get(socketId);
 			user.leave(roomId);
 		}
-		delete this.gameRoomList[roomId];
 	}
 }
