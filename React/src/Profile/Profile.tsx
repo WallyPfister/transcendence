@@ -89,14 +89,19 @@ function Profile() {
                             Swal.fire('Complete!');
                             target.classList.remove('del');
                             target.classList.add('add');
-                        });
+                        })
                     else if (target.classList.contains('add'))
                         CustomAxios.post('/member/friend/' + profileData.name).then((res) => {
                             Swal.fire('Complete!');
                             target.classList.remove('add');
                             target.classList.add('del');
                         })
-                        .catch((err) => {if (err.response.status === 404) Swal.fire('No such user')});
+                        .catch((err) => {
+                            if (err.response.status === 404) 
+                                Swal.fire('No such user');
+                            else if (err.response.status === 409)
+                                Swal.fire('Already friend');
+                        });
                 }
             });
         }
