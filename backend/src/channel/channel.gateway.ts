@@ -155,10 +155,10 @@ export class ChannelGateway {
 
 	@SubscribeMessage('changeRoomPassword')
 	async changePassword(
-		@MessageBody() data: { roomId: string; password: string },
+		@MessageBody() data: { password: string },
 		@ConnectedSocket() socket: Socket,
 	) {
-		const roomId = data.roomId;
+		const roomId = socket.data.roomId;
 		if (data.password === '') data.password = undefined;
 		if (roomId === undefined || roomId === '') {
 			this.server.emit('errorMessage', {
