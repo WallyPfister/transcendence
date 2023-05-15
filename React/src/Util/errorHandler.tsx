@@ -27,8 +27,7 @@ async function errorHandler(error: AxiosError) {
                 });
                 return CustomAxios(originalRequest);
             }
-        } else
-            console.log(error);
+        }
     } else if (error.response && error.response.status === 500) {
         removeToken();
         Swal.fire('관리자에게 문의해주세요.').then((res) => {
@@ -36,8 +35,7 @@ async function errorHandler(error: AxiosError) {
                 window.location.href = process.env.REACT_APP_CLIENT_URL || 'intra.42.fr';
             }
         });
-    } else
-        console.log(error);
+    }
 }
 
 export const removeToken = () => {
