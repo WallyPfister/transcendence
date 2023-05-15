@@ -63,8 +63,7 @@ function ChannelWindow(props: any) {
             maxLength={8}
             onChange={(e) => {
               const inputValue = e.target.value;
-              const sanitizedValue = inputValue.replace(/[^0-9]/g, "");
-              setPassword(sanitizedValue);
+              setPassword(inputValue);
             }}
             onKeyDown={(e) => handleChanKeyDown(e)}
           />
