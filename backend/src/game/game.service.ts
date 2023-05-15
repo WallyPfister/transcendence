@@ -158,10 +158,7 @@ export class GameService {
 		// 게임 종류랑 초대할 사람 담아서 보내주기
 		const { status } = await this.memberRepository.getStatus(data.invitee);
 		if (status !== MemberConstants.ONLINE) {
-			socket.emit('errorMessage', {
-				nickname: '<system>',
-				message: 'The invitee\'s status is not online. Please try again later.',
-			});
+			socket.emit('errorMessage', "The invitee\'s status is not online. Please try again later.");
 			return;
 		}
 		const inviteeSocket = await this.findSocketByName(data.invitee); // 초대 당한 애 소켓 찾기
