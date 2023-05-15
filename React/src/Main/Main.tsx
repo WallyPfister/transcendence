@@ -181,7 +181,7 @@ function Main() {
       setShowPasswordModal(true);
     });
 
-	socket.on("duplicateUser", () => {
+	socket.on("goLogin", () => {
 		navigate("/");
 	});
 
@@ -201,7 +201,7 @@ function Main() {
       socket.off("systemMessage");
       socket.off("passwordRequired");
       socket.emit("exitRoom");
-	    socket.off("duplicateUser");
+	    socket.off("goLogin");
     };
   }, []);
 
