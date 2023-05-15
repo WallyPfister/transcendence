@@ -213,6 +213,31 @@
   height: 100%;
 }
 
+#main #chat-interface #switch-box #list-window .button-container #owner-button {
+  width: 95%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+#main #chat-interface #switch-box #list-window .button-container #owner-button button{
+  width: 50%;
+  font-size: max(8px, 1vw);
+  margin-top: 5px;
+}
+
+#main #chat-interface #switch-box #list-window .button-container #admin-button {
+  width: 95%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+#main #chat-interface #switch-box #list-window .button-container #admin-button button{
+  width: 50%;
+  font-size: max(8px, 1vw);
+}
+
 #main #chat-interface #switch-box #list-window #friends {
   color: #65ff4b;
 }
