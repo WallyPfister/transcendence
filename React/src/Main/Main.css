@@ -83,6 +83,23 @@
   margin: 15px 0;
 }
 
+#main #chat-interface #chat-box #chat-status #chat-authority {
+  display: flex;
+  flex-direction: column;
+}
+
+#main #chat-interface #chat-box #chat-status #chat-authority div{
+  margin-top: 6px
+}
+
+#main #chat-interface #chat-box #chat-status #chat-authority #is-cheif{
+  color: #8be9fd;
+}
+
+#main #chat-interface #chat-box #chat-status #chat-authority #is-admin{
+  color: #65ff4b;
+}
+
 #main #chat-interface #chat-box #chat-window {
   height: 78%;
   overflow-y: auto;
@@ -105,6 +122,10 @@
 
 #main #chat-interface #chat-box #chat-window .my-message {
   color: #fff84b;
+}
+
+#main #chat-interface #chat-box #chat-window .blocked {
+  display: none;
 }
 
 #main #chat-interface #chat-box input {
@@ -185,6 +206,26 @@
   align-items: center;
   justify-content: center;
   height: 100%;
+}
+
+#main #chat-interface #switch-box #list-window #friends {
+  color: #65ff4b;
+}
+
+#main #chat-interface #switch-box #list-window .offline {
+  color: #d9d9d9;
+}
+
+#main #chat-interface #switch-box #list-window .online {
+  color: #65ff4b;
+}
+
+#main #chat-interface #switch-box #list-window .busy {
+  color: #fff84b;
+}
+
+#main #chat-interface #switch-box #list-window #blacked {
+  color: #ff2f2f;
 }
 
 #main #chat-interface #switch-box #list-window .button-invite-type {

@@ -18,7 +18,8 @@ function Main() {
   const navigate = useNavigate();
 
   interface Message {
-    nickname: string;
+    type: number; // 0: msg, 1: privmsg, 2: system, 3:error
+    nickname: string | null;
     message: string;
   }
 
@@ -45,6 +46,7 @@ function Main() {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [isPrivate, setIsPrivate] = useState<boolean>(false);
   const [privateUser, setPrivateUser] = useState<string>("");
+  const [blackedUser, setBlackedUser] = useState<string[]>([]);
 
   const chatWindowRef = useRef<HTMLDivElement>(null); // create a ref for the chat window
 
@@ -66,6 +68,44 @@ function Main() {
     }
   }, [messages]);
 
+  useEffect(() => {}, [friends, blackedUser]);
+
+  const addMessage = (nickname: string, message: string) => {
+    const newMessage: Message = {
+      type: 0,
+      nickname: nickname,
+      message: message,
+    };
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
+  };
+
+  const addPrivateMessage = (nickname: string, message: string) => {
+    const newMessage: Message = {
+      type: 1,
+      nickname: nickname,
+      message: message,
+    };
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
+  };
+
+  const addSystemMessage = (message: string) => {
+    const newMessage: Message = {
+      type: 2,
+      nickname: null,
+      message: message,
+    };
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
+  };
+
+  const addErrorMessage = (message: string) => {
+    const newMessage: Message = {
+      type: 3,
+      nickname: null,
+      message: message,
+    };
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
+  };
+
   useEffect(() => {
     socket.on("connect", () => {
       console.log("Socket.IO connected!");
@@ -84,11 +124,7 @@ function Main() {
     socket.on("isChief", () => {
       setIsChief(true);
       setIsAdmin(true);
-      const newMessage: Message = {
-        nickname: "<system>",
-        message: "I need a weapon. -Master Chief-",
-      };
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
+      addSystemMessage("I need a weapon. -Master Chief-");
     });
 
     socket.on("isNotChief", () => {
@@ -107,49 +143,50 @@ function Main() {
     });
 
     socket.on("kick", () => {
-      socket.emit("joinRoom", {roomId: "lobby"});
+      socket.emit("joinRoom", { roomId: "lobby" });
     });
 
-    socket.on("newMessage", (newMessage: Message) => {
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
+    socket.on("newMessage", (newMessage: any) => {
+      addMessage(newMessage.nickname, newMessage.message);
     });
 
     socket.on("privateMessage", ({ nickname: nickname, message: message }) => {
-      const newMessage: Message = {
-        nickname: "@private",
-        message: nickname + ": " + message,
-      };
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
+      addPrivateMessage(nickname, message);
     });
 
     socket.on("addUser", (nickname: string) => {
-      const newMessage: Message = {
-        nickname: "@join",
-        message: nickname + " has joined the room",
-      };
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
+      addSystemMessage(nickname + " has joined the room");
     });
 
     socket.on("errorMessage", (message: string) => {
-      const newMessage: Message = {
-        nickname: "<error>",
-        message: message,
-      };
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
+      addErrorMessage(message);
     });
 
     socket.on("systemMessage", (message: string) => {
-      const newMessage: Message = {
-        nickname: "<system>",
-        message: message,
-      };
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
+      addSystemMessage(message);
     });
 
     socket.on("passwordRequired", (body: { roomName: string }) => {
       setPrivateRoomName(body.roomName);
       setShowPasswordModal(true);
     });
+
+    return () => {
+      socket.off("connect");
+      socket.off("joinRoom");
+      socket.off("userList");
+      socket.off("isChief");
+      socket.off("isNotChief");
+      socket.off("isAdmin");
+      socket.off("isNotAdmin");
+      socket.off("kick");
+      socket.off("newMessage");
+      socket.off("privateMessage");
+      socket.off("addUser");
+      socket.off("errorMessage");
+      socket.off("systemMessage");
+      socket.off("passwordRequired");
+    };
   }, []);
 
   const handleFriendListClick = () => {
@@ -162,6 +199,10 @@ function Main() {
         };
       });
       setFriends(friendDataArray);
+    });
+    CustomAxios.get("/member/black/").then((res) => {
+      const blackedDataArray: string[] = res.data;
+      setBlackedUser(blackedDataArray);
     });
     setSelectedTab("friends");
   };
@@ -191,6 +232,7 @@ function Main() {
           nickname: privateUser,
           message: message,
         });
+        addPrivateMessage("to " + privateUser, message);
         setPrivateUser("");
         setIsPrivate(false);
       } else {
@@ -221,30 +263,44 @@ function Main() {
   const addFriend = (user: string) => {
     CustomAxios.post("/member/friend/" + user)
       .then(() => {
-        const newMessage: Message = {
-          nickname: "<system>",
-          message: ` ${user} is added to friend list.`,
-        };
-        setMessages((prevMessages) => [...prevMessages, newMessage]);
+        addSystemMessage(user + " is added to friend list.");
       })
       .catch((err) => {
         if (err.response.status === 404) {
-          const newMessage: Message = {
-            nickname: "<error>",
-            message: ` ${user} not found.`,
-          };
-          setMessages((prevMessages) => [...prevMessages, newMessage]);
+          addErrorMessage(user + " not found.");
+        }
+        if (err.response.status === 409) {
+          addErrorMessage(user + " is alreay in friend list.");
         }
       });
   };
 
   const deleteFriend = (user: string) => {
     CustomAxios.delete("/member/friend/" + user).then(() => {
-      const newMessage: Message = {
-        nickname: "<system>",
-        message: ` ${user} is deleted from the friend list.`,
-      };
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
+      addSystemMessage(user + " is deleted from the friend list.");
+      handleFriendListClick();
+    });
+  };
+
+  const blackUser = (user: string) => {
+    CustomAxios.post("/member/black/" + user)
+      .then(() => {
+        addSystemMessage(user + " is added to Blacked list.");
+      })
+      .catch((err) => {
+        if (err.response.status === 404) {
+          addErrorMessage(user + " not found.");
+        }
+        if (err.response.status === 409) {
+          addErrorMessage(user + " is alreay blocked.");
+        }
+      });
+  };
+
+  const unBlackUser = (user: string) => {
+    CustomAxios.delete("/member/black/" + user).then(() => {
+      addSystemMessage(user + "is deleted from the Blacked list.");
+      handleFriendListClick();
     });
   };
 
@@ -277,11 +333,7 @@ function Main() {
     } else if (type === "power") {
       socket.emit("invite", { type: 1, invitee: user });
     }
-    const newMessage: Message = {
-      nickname: "<system>",
-      message: ` You challanged ${user} to a ${type} dual.`,
-    };
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
+    addSystemMessage(` You challanged ${user} to a ${type} dual.`);
     setInviteGameSelect(false);
   };
 
@@ -322,8 +374,10 @@ function Main() {
         <div id="chat-box">
           <div id="chat-status">
             <div id="chat-name">{roomName}</div>
-            {isAdmin === true && <div id="is-admin">Admin</div>}
-            {isChief === true && <div id="is-cheif">Chief</div>}
+            <div id="chat-authority">
+              {isChief === true && <div id="is-cheif">Chief</div>}
+              {isAdmin === true && <div id="is-admin">Admin</div>}
+            </div>
           </div>
           <div id="chat-window" ref={chatWindowRef}>
             {messages.map(
@@ -331,19 +385,22 @@ function Main() {
                 msg.message !== "" && (
                   <div
                     key={index}
+                    style={{ marginBottom: "8px", marginTop: "8px" }}
                     className={
-                      msg.nickname === "<system>"
+                      msg.nickname === nickname
+                        ? "my-message"
+                        : blackedUser.includes(msg.nickname || "")
+                        ? "blocked"
+                        : msg.type === 1
+                        ? "private-message"
+                        : msg.type === 2
                         ? "system-message"
-                        : msg.nickname === nickname
-                          ? "my-message"
-                          : msg.nickname === "<error>"
-                            ? "error-message"
-                            : msg.nickname === "@private"
-                              ? "private-message"
-                              : ""
+                        : msg.type === 3
+                        ? "error-message"
+                        : ""
                     }
                   >
-                    {msg.nickname === "@join" || msg.nickname === "@private"
+                    {msg.nickname === null
                       ? msg.message
                       : msg.nickname + ": " + msg.message}
                   </div>
@@ -382,17 +439,27 @@ function Main() {
           <div id="list-window">
             {selectedTab === "friends" && (
               <div>
+                <button id="friends">Friends</button>
                 {friends.map((user) => (
                   <div
                     key={user.nickname}
                     onClick={() => handleUserClick(user.nickname)}
+                    style={{ marginBottom: "8px", marginTop: "8px" }}
                     className={
                       selectUser === user.nickname ? "user-selected" : ""
                     }
                   >
-                    {user.level}
-                    {user.nickname}
-                    {user.status}
+                    <div
+                      className={`${
+                        user.status === 0
+                          ? "offline"
+                          : user.status === 1
+                          ? "online"
+                          : "busy"
+                      }`}
+                    >
+                      LV {user.level} {user.nickname}
+                    </div>
                     {selectUser === user.nickname && (
                       <div className="button-container">
                         <button onClick={() => goToProfile(user.nickname)}>
@@ -420,7 +487,7 @@ function Main() {
                             <button
                               className="button-power-invite"
                               onClick={() =>
-                                selectGametype(user.nickname, "Power")
+                                selectGametype(user.nickname, "power")
                               }
                             >
                               Power
@@ -431,14 +498,30 @@ function Main() {
                     )}
                   </div>
                 ))}
+                <button id="blacked">Blacked</button>
+                {blackedUser.map((user) => (
+                  <div
+                    key={user}
+                    onClick={() => handleUserClick(user)}
+                    style={{ marginBottom: "8px", marginTop: "8px" }}
+                    className={selectUser === user ? "user-selected" : ""}
+                  >
+                    {user}
+                    {selectUser === user && (
+                      <button onClick={() => unBlackUser(user)}>Unblack</button>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
+
             {selectedTab === "channel" && (
               <div>
                 {channelUser.map((user) => (
                   <div
                     key={user}
                     onClick={() => handleUserClick(user)}
+                    style={{ marginBottom: "8px", marginTop: "8px" }}
                     className={selectUser === user ? "user-selected" : ""}
                   >
                     {user}
@@ -466,6 +549,7 @@ function Main() {
                             <button onClick={() => muteUser(user)}>Mute</button>
                           </div>
                         )}
+                        <button onClick={() => blackUser(user)}>Black</button>
                         <button onClick={(event) => inviteGame(event)}>
                           1vs1
                         </button>
@@ -479,7 +563,7 @@ function Main() {
                             </button>
                             <button
                               className="button-power-invite"
-                              onClick={() => selectGametype(user, "Power")}
+                              onClick={() => selectGametype(user, "power")}
                             >
                               Power
                             </button>

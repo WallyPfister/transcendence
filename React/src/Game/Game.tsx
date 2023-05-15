@@ -87,6 +87,9 @@ function Game() {
       }
       setShowResult(true);
     });
+    return () => {
+      socket.off("endGame");
+    }
   }, [aInfo, bInfo]);
 
   const canvasRef = useRef(null);

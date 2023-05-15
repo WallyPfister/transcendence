@@ -423,10 +423,6 @@ export class ChannelGateway {
 	) {
 		const user = await this.findSocketByName(data.nickname);
 		if (user) {
-			socket.emit('privateMessage', {
-				nickname: data.nickname,
-				message: data.message,
-			});
 			user.emit('privateMessage', {
 				nickname: socket.data.nickname,
 				message: data.message,
