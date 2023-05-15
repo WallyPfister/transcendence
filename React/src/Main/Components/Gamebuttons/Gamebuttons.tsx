@@ -16,8 +16,6 @@ function GameButtons({ nickname }) {
 
   useEffect(() => {
     socket.on("addQueue", (type: number) => {
-      console.log(type);
-
       if (type === 0) startTimer(setCasualTime);
       else if (type === 2) startTimer(setLadderTime);
     });
