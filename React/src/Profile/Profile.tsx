@@ -134,11 +134,11 @@ function Profile() {
                                 <div id="achieve">
                                     <div id="achieve-1">
                                         <img className="off" src={'../img/achieve-' + (profileData.achieve1 ? 'star' : 'non') + '.svg'} alt="img"></img>
-                                        <p>Win 5 times in a row</p>
+                                        <p>Win 5 times</p>
                                     </div>
                                     <div id="achieve-2">
                                         <img className="off" src={'../img/achieve-' + (profileData.achieve2 ? 'star' : 'non') + '.svg'} alt="img"></img>
-                                        <p>Win 10 times in a row</p>
+                                        <p>Win 10 times</p>
                                     </div>
                                     <div id="achieve-3">
                                         <img className="off" src={'../img/achieve-' + (profileData.achieve3 ? 'star' : 'non') + '.svg'} alt="img"></img>

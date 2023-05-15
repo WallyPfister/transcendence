@@ -29,7 +29,7 @@ function App() {
               <Route path='/main' element={<CustomRoute.PrivateRoute component={<Main/>}/>}/>
               <Route path='/rank' element={<CustomRoute.PrivateRoute component={<Rank/>}/>}/>
               <Route path='/profile/*' element={<CustomRoute.PrivateRoute component={<Profile/>}/>}/>
-              <Route path='/game/*' element={<CustomRoute.PrivateRoute component={<Game/>}/>}/>
+              <Route path='/game' element={<CustomRoute.PrivateRoute component={<Game/>}/>}/>
               <Route path='/*' element={<NotFound/>}/>
             </Routes>
           </BrowserRouter>
