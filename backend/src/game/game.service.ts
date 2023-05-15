@@ -173,8 +173,8 @@ export class GameService {
 		this.memberRepository.updateStatus(data.inviterName, MemberConstants.INGAME);
 
 		const roomId = randomBytes(Math.ceil(25 / 2)).toString('hex').slice(0, 25);
-		socket.emit("startGame", new GameInfoDto(data.type, roomId, data.inviterName, socket.data.nickname, 0));
-		inviter.emit("startGame", new GameInfoDto(data.type, roomId, data.inviterName, socket.data.nickname, 1));
+		inviter.emit("startGame", new GameInfoDto(data.type, roomId, data.inviterName, socket.data.nickname, 0));
+		socket.emit("startGame", new GameInfoDto(data.type, roomId, data.inviterName, socket.data.nickname, 1));
 	}
 
 	@SubscribeMessage('inviteReject') // 거절 버튼 누름

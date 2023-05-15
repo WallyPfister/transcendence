@@ -50,7 +50,7 @@ export class ChannelGateway {
 		)
 		if (user === undefined)
 			return;
-		const room = this.channelList[user.roomId];
+		const room = this.chatRoomList[user.roomId];
 		if (!room) {
 			delete this.userList[user.nickname];
 			return;
@@ -67,12 +67,12 @@ export class ChannelGateway {
 				this.userList[nextChief.data.nickname].isAdmin = true;
 			}
 			else
-				delete this.channelList[user.roomId];
+				delete this.chatRoomList[user.roomId];
 		}
 		if (user.isAdmin === true) {
-			if (this.channelList[user.roomId]) {
+			if (this.chatRoomList[user.roomId]) {
 				if (index > -1)
-					this.channelList[user.roomId].adminList.slice(index, 1);
+					this.chatRoomList[user.roomId].adminList.slice(index, 1);
 			}
 		}
 		delete this.userList[user.nickname];
