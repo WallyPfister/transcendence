@@ -35,7 +35,7 @@ function Game() {
 
   useEffect(() => {
 
-    if (gameData == null) {
+    if (gameData === null) {
       navigate("/");
       return;
     }
