@@ -32,6 +32,10 @@ export class GameService {
 
 	@SubscribeMessage('enterGame')
 	waitGame(@MessageBody() type: number, @ConnectedSocket() socket: Socket) {
+		if (socket.data.nickname === undefined) {
+			socket.emit("duplicateUser");
+			return ;
+		}
 		if (!this.gameQ[type].enQueue(socket.data.nickname)) {
 			socket.emit('errorMessage', "The waiting list is full. Please try again later.");
 			return;
