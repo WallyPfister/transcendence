@@ -525,7 +525,7 @@ function Main() {
                     )}
                   </div>
                 ))}
-                <button id="blacked">BlackList</button>
+                <button id="black">BlackList</button>
                 {blackList.map((user) => (
                   <div
                     key={user}
