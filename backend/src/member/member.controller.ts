@@ -1,4 +1,4 @@
-import { BadRequestException, Body, ConflictException, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards, ValidationPipe } from '@nestjs/common';
+import { Body, ConflictException, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards, ValidationPipe } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiUnauthorizedResponse, ApiConflictResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiTags, ApiBadRequestResponse } from '@nestjs/swagger';
 import { MemberService } from './member.service';
 import { MemberRepository } from './member.repository';
@@ -302,7 +302,7 @@ export class MemberController {
 	}
 
 	@ApiOperation({
-		summary: 'Add a balck member',
+		summary: 'Add a black member',
 		description: 'It adds a black list to the requester.'
 	})
 	@ApiParam({
@@ -377,7 +377,7 @@ export class MemberController {
 	@ApiBearerAuth()
 	@Delete('black/:blackName')
 	@UseGuards(JwtAuthGuard)
-	async deleteBalckList(@Payload() payload: any, @Param('blackName') blackName: string): Promise<void> {
+	async deleteBlackList(@Payload() payload: any, @Param('blackName') blackName: string): Promise<void> {
 		return await this.memberRepository.deleteBlackList(payload['sub'], blackName);
 	}
 }
