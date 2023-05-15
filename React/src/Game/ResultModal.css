@@ -27,12 +27,14 @@
   font-size: clamp(100px, 10vw, 140px);
 }
 
-
 #result-modal .avatar {
   width: 30vw;
   height: 30vw;
-  margin-bottom: 1vw;
+  margin-bottom: 20px;
+  object-fit: cover;
+  border-radius: 20px;
 }
+
 #result-modal #info {
   width: 80%;
   display: flex;
