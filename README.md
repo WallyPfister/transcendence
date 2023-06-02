@@ -10,7 +10,7 @@
 </br></br></br>
 
 ## 🚀 Contributers
-[hyunjcho](https://github.com/highjcho) | [sojoo](https://github.com/zoovely) | [sunghkim](https://github.com/K-SeongHun) | [sokim](https://github.com/S0YKIM) | [yachoi](https://github.com/yangsonchoi)
+[🐿hyunjcho](https://github.com/highjcho) | [🧸sojoo](https://github.com/zoovely) | [🪐sunghkim](https://github.com/K-SeongHun) | [🍀sokim](https://github.com/S0YKIM) | [🔭yachoi](https://github.com/yangsonchoi)
 
 </br>
 
@@ -61,8 +61,10 @@ $ make dev  # See what is happening in the containers
 
 </br>
 
-## 🌊 Flowchart
-![flowchart](https://github.com/S0YKIM/Cub3d/blob/main/img/program%20process.jpg?raw=true)
+## 💫 Functions
+
+### Login
+![flowchart](https://github.com/WallyPfister/transcendence/blob/main/img/flowchart/transcendence-login.drawio.png)
 
 </br>
 
