@@ -1,12 +1,12 @@
-import { StartGameModal, useStartGame } from '../Socket/StartGameModal';
-import { InviteFailModal, useInviteFail } from '../Socket/InviteFailedModal';
-import { InviteGameModal, useInviteGame } from '../Socket/InviteGameModal';
+import { StartGameModal, useStartGame } from "./StartGameModal";
+import { InviteFailModal, useInviteFail } from "./InviteFailedModal";
+import { InviteGameModal, useInviteGame } from "./InviteGameModal";
 
-export function SocketModalContainer({socket}) {
-
+export function SocketModalContainer({ socket }) {
   const { showInvite, closeInvite, inviteData } = useInviteGame(socket);
   const { showStart, closeStart, startData } = useStartGame(socket);
-  const { showInviteFail, closeInviteFail, inviteFailData } = useInviteFail(socket);
+  const { showInviteFail, closeInviteFail, inviteFailData } =
+    useInviteFail(socket);
 
   return (
     <>

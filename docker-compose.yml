@@ -47,7 +47,7 @@ services:
             - trans
     react:
         container_name: react
-        build: ./React/
+        build: ./frontend/
         image: react:transcendence
         restart: on-failure
         ports:
