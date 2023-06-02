@@ -188,11 +188,15 @@ export class GameService {
 	}
 
 	async updateGameResult(result: GameResultDto): Promise<void> {
-		this.memberService.updateWinGameResult(result);
-		this.memberService.updateLoseGameResult(result.loser, result.type);
-		this.gameRepository.createHistory(result.roomId + "a", result.winner, result.loser, result.winScore, result.loseScore, true, result.type);
-		this.gameRepository.createHistory(result.roomId + "b", result.loser, result.winner, result.loseScore, result.winScore, false, result.type);
-		this.memberRepository.updateStatus(result.winner, MemberConstants.ONLINE);
-		this.memberRepository.updateStatus(result.loser, MemberConstants.ONLINE);
+		try {
+			this.gameRepository.createHistory(result.roomId + "a", result.winner, result.loser, result.winScore, result.loseScore, true, result.type);
+			this.gameRepository.createHistory(result.roomId + "b", result.loser, result.winner, result.loseScore, result.winScore, false, result.type);
+			this.memberService.updateWinGameResult(result);
+			this.memberService.updateLoseGameResult(result.loser, result.type);
+			this.memberRepository.updateStatus(result.winner, MemberConstants.ONLINE);
+			this.memberRepository.updateStatus(result.loser, MemberConstants.ONLINE);
+		} catch (err) {
+			return ;
+		}
 	}
 }
