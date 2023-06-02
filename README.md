@@ -9,8 +9,8 @@
 ![](https://github.com/WallyPfister/transcendence/blob/main/img/signup.gif?raw=true)
 </br></br></br>
 
-## 🚀 Contributers
-[🐿hyunjcho](https://github.com/highjcho) | [🧸sojoo](https://github.com/zoovely) | [🪐sunghkim](https://github.com/K-SeongHun) | [🍀sokim](https://github.com/S0YKIM) | [🔭yachoi](https://github.com/yangsonchoi)
+## 📝 Notion
+[🍀sokim](https://pouncing-elbow-0a4.notion.site/Transcendence-954e7670eea04363a9752ae0fa667050)
 
 </br>
 
@@ -85,3 +85,8 @@ $ make dev  # See what is happening in the containers
 - [REFACTOR] : 코드 리팩토링
 - [MERGE] : 풀리퀘스트 머지
 - [TEST] : 테스트 코드 작성
+
+</br>
+
+## 🚀 Contributers
+[🐿hyunjcho](https://github.com/highjcho) | [🧸sojoo](https://github.com/zoovely) | [🪐sunghkim](https://github.com/K-SeongHun) | [🍀sokim](https://github.com/S0YKIM) | [🔭yachoi](https://github.com/yangsonchoi)
