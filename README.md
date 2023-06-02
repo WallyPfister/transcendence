@@ -66,6 +66,11 @@ $ make dev  # See what is happening in the containers
 ### Login
 ![flowchart](https://github.com/WallyPfister/transcendence/blob/main/img/flowchart/transcendence-login.drawio.png)
 
+- 42-Oauth API를 통한 1차 인증
+- nodemailer를 이용하여 전송한 이메일 코드로 2차 인증
+- 로컬 스토리지에 JWT Access Token이 존재하는 경우 바로 로그인
+- JWT Access Token이 만료된 경우 Refresh Token을 통해 재발급
+
 </br>
 
 ## 🌷 Commit Rules
