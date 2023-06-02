@@ -1,12 +1,12 @@
 <div align="center">
-  <img src="https://github.com/S0YKIM/Cub3d/blob/main/img/cube.jpg" height="128px" alt="Transcendence" >
+  <img src="https://github.com/WallyPfister/transcendence/blob/main/img/ping-pong.png" height="128px" alt="Transcendence" >
   <h1>Transcendence</h1>
   <p> Socket based online pong game </p>
 </div>
 </br>
 
 ## 🎬 Preview
-![](https://github.com/S0YKIM/Cub3d/blob/main/img/simulation.gif?raw=true)
+![](https://github.com/WallyPfister/transcendence/blob/main/img/signup.gif?raw=true)
 </br></br></br>
 
 ## 🚀 Contributers
