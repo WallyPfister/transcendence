@@ -25,16 +25,15 @@ export class GameService {
 	@WebSocketServer()
 	server: Server;
 
-	constructor( private memberService: MemberService,
-				private memberRepository: MemberRepository,
-				private gameRepository: GameRepository )
-				{ this.gameQ = Array.from({ length: 3 }, () => new GameQueue(30)); }
+	constructor(private memberService: MemberService,
+		private memberRepository: MemberRepository,
+		private gameRepository: GameRepository) { this.gameQ = Array.from({ length: 3 }, () => new GameQueue(30)); }
 
 	@SubscribeMessage('enterGame')
 	waitGame(@MessageBody() type: number, @ConnectedSocket() socket: Socket) {
 		if (socket.data.nickname === undefined) {
 			socket.emit("goLogin");
-			return ;
+			return;
 		}
 		if (!this.gameQ[type].enQueue(socket.data.nickname)) {
 			socket.emit('errorMessage', "The waiting list is full. Please try again later.");
@@ -188,11 +187,11 @@ export class GameService {
 		inviter.emit("rejectedGame", socket.data.nickname);
 	}
 
-	updateGameResult(result: GameResultDto): void {
+	async updateGameResult(result: GameResultDto): Promise<void> {
 		this.memberService.updateWinGameResult(result);
 		this.memberService.updateLoseGameResult(result.loser, result.type);
-		this.gameRepository.createHistory(result.winner, result.loser, result.winScore, result.loseScore, true, result.type);
-		this.gameRepository.createHistory(result.loser, result.winner, result.loseScore, result.winScore, false, result.type);
+		this.gameRepository.createHistory(result.roomId + "a", result.winner, result.loser, result.winScore, result.loseScore, true, result.type);
+		this.gameRepository.createHistory(result.roomId + "b", result.loser, result.winner, result.loseScore, result.winScore, false, result.type);
 		this.memberRepository.updateStatus(result.winner, MemberConstants.ONLINE);
 		this.memberRepository.updateStatus(result.loser, MemberConstants.ONLINE);
 	}

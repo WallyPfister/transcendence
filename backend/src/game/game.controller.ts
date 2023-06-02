@@ -9,7 +9,7 @@ import { GameRepository } from './game.repository';
 @Controller('game')
 export class GameController {
 	constructor(private readonly gameService: GameService,
-				private readonly gameRepository: GameRepository) { }
+		private readonly gameRepository: GameRepository) { }
 
 	@ApiOperation({
 		summary: 'Update member ping game information',
@@ -29,13 +29,10 @@ export class GameController {
 	})
 	@ApiOkResponse({
 		description: 'Save the game result successfully.',
-		type: void
 	})
 	@Post()
 	@UseGuards(JwtAuthGuard)
 	async updateGameResultAndHistory(@Body(new ValidationPipe()) gameResult: GameResultDto): Promise<void> {
-		if (await this.gameRepository.checkHistory(gameResult.roomId))
-			return ;
 		await this.gameService.updateGameResult(gameResult);
 	}
 }
