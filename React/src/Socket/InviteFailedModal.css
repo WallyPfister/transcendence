@@ -1,0 +1,35 @@
+.invite-fail-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 9999;
+}
+
+.invite-fail-modal {
+	width: 50%;
+  border: 3px solid #d9d9d9;
+  border-radius: 20px;
+  padding: 30px 30px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  font-size: clamp(24px, 4vw, 48px);
+}
+
+.invite-fail-modal button {
+  height: max(40px, 3vw);
+  border-radius: 10px;
+  border: none;
+  font-size: clamp(12px, 3vw, 20px);
+  cursor: pointer;
+  margin-top: 20px;
+}

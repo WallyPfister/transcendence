@@ -1,0 +1,29 @@
+.history-line {
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 5px;
+    box-sizing: border-box;
+    font-size: max(12px, 1.5vw);
+}
+
+.history-line .win {
+    color: #65FF4B;
+}
+
+.history-line .lose {
+    color: #FF2F2F;
+}
+
+.history-line div {
+    width: 12%;
+    text-align: center;
+}
+
+.history-line .score, .history-line .date {
+    width: 10%;
+}
+
+.history-line .opponent {
+    width: 45%;
+}

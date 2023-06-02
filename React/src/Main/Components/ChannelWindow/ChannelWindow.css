@@ -1,0 +1,47 @@
+#channel-modal {
+  width: 100%;
+  overflow-y: auto;
+  border: 3px solid #d9d9d9;
+  border-radius: 20px;
+  padding: 10px 10px 10px 10px;
+  box-sizing: border-box;
+}
+
+#channel-modal #channel-list-area #channel-list {
+  padding: 10px 10px 10px 10px;
+}
+
+#channel-modal #channel-list-area #channel-list div {
+	width: 100%;
+	background-color: transparent;
+	border-radius: 10px;
+	color: white;
+	cursor: pointer;
+	line-height: 1.5;
+  overflow: hidden;
+	text-align: center;
+	border: 2px solid #d9d9d9;
+	font-size: 16px;
+	margin-bottom: 2px;
+}
+
+#channel-modal #channel-list-area #create-channel input {
+  width: 80%;
+  padding: 5px;
+  margin: 5px 10px 10px 10px;
+  border: none;
+  border-bottom: 1px solid white;
+  background-color: transparent;
+  color: white;
+  font-size: 20px;
+}
+
+
+#channel-modal #channel-list-area #create-channel input::placeholder {
+  font-size: 16px;
+  font-family: pixopedia;
+}
+
+#channel-modal #channel-list-area input:focus {
+  outline: none;
+}

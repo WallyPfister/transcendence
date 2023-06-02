@@ -1,0 +1,50 @@
+.invite-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 9999;
+}
+
+.invite-modal {
+  border: 3px solid #d9d9d9;
+  border-radius: 20px;
+  padding: 30px 30px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: clamp(20px, 4vw, 30px);
+
+}
+
+.invite-modal #invite-response {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  text-align: center;
+}
+
+.invite-modal #invite-response button {
+  width: 50%;
+  height: max(70px, 5vw);
+  border-radius: 10px;
+  border: none;
+  font-size: clamp(16px, 2.5vw, 24px);
+  cursor: pointer;
+  margin: 30px 30px 0px 30px;
+}
+
+.invite-modal #invite-response .invite-accept{
+  background-color: #65ff4b;
+}
+
+.invite-modal #invite-response .invite-decline{
+  background-color: #fff84b;
+}
