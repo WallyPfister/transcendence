@@ -628,7 +628,11 @@ function Main() {
           />
         </div>
       )}
+<<<<<<< HEAD
     <SocketModalContainer socket={socket}/>
+=======
+        <SocketModalContainer socket={socket}/>
+>>>>>>> refs/remotes/origin/develop
     </div>
   );
 }

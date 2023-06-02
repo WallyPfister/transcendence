@@ -51,10 +51,11 @@ function Game() {
       return;
     }
     socket.emit("gameIn", gameData.roomId);
-
+  
     socket.on("gameOut", () => {
       navigate("/");
     });
+
 
     CustomAxios.get("/member/profile", {
       params: { userName: gameData.playerA },
@@ -91,26 +92,26 @@ function Game() {
   useEffect(() => {
     socket.on("endGame", (data) => {
       setWinner(data.playerA.score > data.playerB.score ? aInfo : bInfo);
-      CustomAxios.post("/game", {
-        winner:
-          data.playerA.score > data.playerB.score
-            ? gameData.playerA
-            : gameData.playerB,
-        loser:
-          data.playerA.score < data.playerB.score
-            ? gameData.playerA
-            : gameData.playerB,
-        winScore:
-          data.playerA.score > data.playerB.score
-            ? data.playerA.score
-            : data.playerB.score,
-        loseScore:
-          data.playerA.score < data.playerB.score
-            ? data.playerA.score
-            : data.playerB.score,
-        type: gameData.type,
-        roomId: gameData.roomId,
-      });
+        CustomAxios.post("/game", {
+          winner:
+            data.playerA.score > data.playerB.score
+              ? gameData.playerA
+              : gameData.playerB,
+          loser:
+            data.playerA.score < data.playerB.score
+              ? gameData.playerA
+              : gameData.playerB,
+          winScore:
+            data.playerA.score > data.playerB.score
+              ? data.playerA.score
+              : data.playerB.score,
+          loseScore:
+            data.playerA.score < data.playerB.score
+              ? data.playerA.score
+              : data.playerB.score,
+          type: gameData.type,
+          roomId: gameData.roomId,
+        })
       setShowResult(true);
     });
     return () => {
