@@ -8,9 +8,7 @@ import { AxiosResponse } from 'axios';
 import NotFound from '../Etc/NotFound';
 import { useContext } from 'react';
 import { SocketContext } from '../Socket/SocketContext';
-import { InviteGameModal, useInviteGame } from '../Socket/InviteGameModal';
-import { StartGameModal, useStartGame } from '../Socket/StartGameModal';
-import { InviteFailModal, useInviteFail } from '../Socket/InviteFailedModal';
+import { SocketModalContainer } from '../Socket/SocketModal';
 
 const getProfileData = (user: string): Promise<ProfileData> => {
     return new Promise<ProfileData>(async (resolve, reject) => {
@@ -66,10 +64,6 @@ function Profile() {
     const { data: profileData, isLoading: profileLoading, isError: profileError } = useQuery<ProfileData>('profile-data-' + userName, ()=>getProfileData(userName), {retry: false, staleTime: 60 * 1000, refetchOnMount: 'always'});
     const { data: history, isLoading: historyLoading, isError: histotyError } = useQuery<Array<HistoryData>>('history-data' + userName, ()=>getHistory(userName), {retry: false, staleTime: 60 * 1000, refetchOnMount: 'always'});
     const socket = useContext(SocketContext);
-    const { showInvite, closeInvite, inviteData } = useInviteGame(socket);
-    const { showStart, closeStart, startData } = useStartGame(socket);
-    const { showInviteFail, closeInviteFail, inviteFailData } =
-      useInviteFail(socket);
 
     if (profileLoading || historyLoading)
         return (<img src="../img/spinner.gif" alt="img"></img>);
@@ -165,28 +159,7 @@ function Profile() {
                             }
                         </div>
                     </div>
-                    {showInvite && (
-        <div className="invite-modal-overlay">
-          <InviteGameModal
-            onClose={closeInvite}
-            socket={socket}
-            inviteData={inviteData}
-          />
-        </div>
-      )}
-      {showStart && (
-        <div className="startgame-modal-overlay">
-          <StartGameModal onClose={closeStart} data={startData} />
-        </div>
-      )}
-      {showInviteFail && (
-        <div className="invite-fail-overlay">
-          <InviteFailModal
-            onClose={closeInviteFail}
-            inviteFailData={inviteFailData}
-          />
-        </div>
-      )}
+                    <SocketModalContainer socket={socket}/>
                 </div>
             )
         }
