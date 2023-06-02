@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { NavigateFunction, useNavigate } from 'react-router-dom';
-import Timer from '../Etc/Timer';
+import { useNavigate } from 'react-router-dom';
 import { SignUpHandlers as handler } from './SignUpHandlers';
+import Timer from '../Util/Timer';
 import './SignUp.css';
 
 function SignUp() {
-    const nav: NavigateFunction = useNavigate();
+    const nav = useNavigate();
     const [nickPass, setNickPass] = useState(false);
     const [codePass, setCodePass] = useState(false);
     const [isRunning, setIsRunning] = useState(false);

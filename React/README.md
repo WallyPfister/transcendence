@@ -5,7 +5,7 @@
 ## Rules
 - ClassName && id 네이밍은 kebab-case
 - Component && function 네이밍은 UpperCamelCase
-- TS 작성할 때 변수는 무조건 let or const, :자료형 붙여서 선언하기
+- TS 작성할 때 변수는 무조건 let or const
 - 컴포넌트는 function 컴포넌트명() {} 선언
 - 컴포넌트 내 함수는 화살표 함수로 선언
 

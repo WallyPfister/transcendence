@@ -1,7 +1,7 @@
-import axios, { AxiosInstance } from "axios";
+import axios from "axios";
 import Swal from "sweetalert2";
 
-const LimitedAxios: AxiosInstance = axios.create({
+const LimitedAxios = axios.create({
     baseURL: process.env.REACT_APP_API_URL,
     headers: {
         'Content-Type': 'application/json'

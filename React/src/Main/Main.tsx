@@ -6,19 +6,12 @@ import PasswordModal from "./Components/PasswordModal/PasswordModal";
 import Gamebuttons from "./Components/Gamebuttons/Gamebuttons";
 import { SocketContext } from "../Socket/SocketContext";
 import { useNavigate } from "react-router-dom";
-import { InviteGameModal, useInviteGame } from "../Socket/InviteGameModal";
-import { StartGameModal, useStartGame } from "../Socket/StartGameModal";
 import CustomAxios from "../Util/CustomAxios";
 import { removeToken } from "../Util/errorHandler";
-import { InviteFailModal, useInviteFail } from "../Socket/InviteFailedModal";
+import { SocketModalContainer } from "../Socket/SocketModal";
 
 function Main() {
   const socket = useContext(SocketContext);
-  const { showInvite, closeInvite, inviteData } = useInviteGame(socket);
-  const { showStart, closeStart, startData } = useStartGame(socket);
-  const { showInviteFail, closeInviteFail, inviteFailData } =
-    useInviteFail(socket);
-
   const navigate = useNavigate();
 
   interface Message {
@@ -635,28 +628,7 @@ function Main() {
           />
         </div>
       )}
-      {showInvite && (
-        <div className="invite-modal-overlay">
-          <InviteGameModal
-            onClose={closeInvite}
-            socket={socket}
-            inviteData={inviteData}
-          />
-        </div>
-      )}
-      {showStart && (
-        <div className="startgame-modal-overlay">
-          <StartGameModal onClose={closeStart} data={startData} />
-        </div>
-      )}
-      {showInviteFail && (
-        <div className="invite-fail-overlay">
-          <InviteFailModal
-            onClose={closeInviteFail}
-            inviteFailData={inviteFailData}
-          />
-        </div>
-      )}
+    <SocketModalContainer socket={socket}/>
     </div>
   );
 }

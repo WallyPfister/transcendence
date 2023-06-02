@@ -1,15 +1,10 @@
-import LimitedAxios from "../Util/LimitedAxios";
-import Swal from "sweetalert2";
 import { useState, useEffect } from "react";
-
-interface TimerProps {
-    isRunning: boolean,
-    setIsRunning: React.Dispatch<React.SetStateAction<boolean>>
-}
+import LimitedAxios from "./LimitedAxios";
+import Swal from "sweetalert2";
+import { TimerProps } from "./UtilInterface";
 
 function Timer({ isRunning, setIsRunning }: TimerProps) {
     const [timeLeft, setTimeLeft] = useState(0);
-
     const minutes = String(Math.floor((timeLeft / (1000 * 60)) % 60)).padStart(2, '0');
     const second = String(Math.floor((timeLeft / 1000) % 60)).padStart(2, '0');
 

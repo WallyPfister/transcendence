@@ -1,7 +1,7 @@
-import axios, { AxiosInstance } from "axios";
+import axios from "axios";
 import errorHandler from "./errorHandler";
 
-const CustomAxios: AxiosInstance = axios.create({
+const CustomAxios = axios.create({
     baseURL: process.env.REACT_APP_API_URL,
     headers: {
         'Content-Type': 'application/json',

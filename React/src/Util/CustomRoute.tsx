@@ -1,16 +1,7 @@
 import { useState, useEffect } from "react";
 import CustomAxios from "./CustomAxios";
 import { useNavigate } from "react-router-dom";
-
-interface AuthRouteProps {
-    component: JSX.Element,
-    isSignUp: boolean,
-    isVerify: boolean,
-}
-
-interface PrivateRouteProps {
-    component: JSX.Element
-}
+import { AuthRouteProps, PrivateRouteProps } from "./UtilInterface";
 
 const AuthRoute = (props: AuthRouteProps) => {
     const [isAllowed, setIsAllowed] = useState(-1);

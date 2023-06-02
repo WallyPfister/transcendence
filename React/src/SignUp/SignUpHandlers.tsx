@@ -2,9 +2,10 @@ import { NavigateFunction } from 'react-router-dom';
 import LimitedAxios from '../Util/LimitedAxios';
 import Swal from 'sweetalert2';
 
-const nickCheck = (event: React.MouseEvent<HTMLButtonElement>, setNickPass: React.Dispatch<React.SetStateAction<boolean>>): void => {
+const nickCheck = (event: React.MouseEvent<HTMLButtonElement>, setNickPass: React.Dispatch<React.SetStateAction<boolean>>) => {
     event.preventDefault();
-    const input: HTMLInputElement = document.getElementById("nick-input") as HTMLInputElement;
+    const input = document.getElementById("nick-input") as HTMLInputElement;
+
     LimitedAxios.get('/member/checkName', {params: {name: input.value}})
         .then((res) => {
             if (res.data === true) {
@@ -28,14 +29,15 @@ const nickCheck = (event: React.MouseEvent<HTMLButtonElement>, setNickPass: Reac
         });
 }
 
-const codeCheck = (event: React.MouseEvent<HTMLButtonElement>, setCodePass: React.Dispatch<React.SetStateAction<boolean>>, setIsRunning: React.Dispatch<React.SetStateAction<boolean>>): void => {
+const codeCheck = (event: React.MouseEvent<HTMLButtonElement>, setCodePass: React.Dispatch<React.SetStateAction<boolean>>, setIsRunning: React.Dispatch<React.SetStateAction<boolean>>) => {
     event.preventDefault();
-    const confirmButton: HTMLButtonElement = event.target as HTMLButtonElement;
-    const codeInput: HTMLInputElement = document.getElementById("code-input") as HTMLInputElement;
+    const confirmButton = event.target as HTMLButtonElement;
+    const codeInput = document.getElementById("code-input") as HTMLInputElement;
+
     LimitedAxios.get('/auth/signup/tfa-verify', {params: {code: codeInput.value}})
         .then((res) => {
-            const emailInput: HTMLInputElement = document.getElementById("email-input") as HTMLInputElement;
-            const sendButton: HTMLButtonElement = document.getElementById("send-button") as HTMLButtonElement;
+            const emailInput = document.getElementById("email-input") as HTMLInputElement;
+            const sendButton = document.getElementById("send-button") as HTMLButtonElement;
             Swal.fire('Your e-mail address has been confirmed');
             codeInput.setAttribute('disabled', '');
             confirmButton.setAttribute('disabled', '');
@@ -51,20 +53,20 @@ const codeCheck = (event: React.MouseEvent<HTMLButtonElement>, setCodePass: Reac
 }
 
 const fileInput = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const target: HTMLInputElement = event.target as HTMLInputElement;
-    const file: File | null = target.files && target.files[0];
-    const nameDiv: HTMLDivElement = document.getElementById('file-name') as HTMLDivElement;
+    const target = event.target as HTMLInputElement;
+    const file = target.files && target.files[0];
+    const nameDiv = document.getElementById('file-name') as HTMLDivElement;
 
     if (file)
         nameDiv.innerText = file.name;
 }
 
-const register = (event: React.MouseEvent<HTMLButtonElement>, nickPass: boolean, codePass: boolean, nav: NavigateFunction): void => {
+const register = (event: React.MouseEvent<HTMLButtonElement>, nickPass: boolean, codePass: boolean, nav: NavigateFunction) => {
     event.preventDefault();
-    const name: string = (document.getElementById('nick-input') as HTMLInputElement).value;
-    const mail: string = (document.getElementById('email-input') as HTMLInputElement).value;
-    const tfa: boolean = (document.getElementById('auth-check') as HTMLInputElement).checked;
-    const files: FileList | null = (document.getElementById('avatar') as HTMLInputElement).files;
+    const name = (document.getElementById('nick-input') as HTMLInputElement).value;
+    const mail = (document.getElementById('email-input') as HTMLInputElement).value;
+    const tfa = (document.getElementById('auth-check') as HTMLInputElement).checked;
+    const files = (document.getElementById('avatar') as HTMLInputElement).files;
 
     if (nickPass === false)
         Swal.fire('Please check nickname');
@@ -73,10 +75,10 @@ const register = (event: React.MouseEvent<HTMLButtonElement>, nickPass: boolean,
     else if (files && files.length === 0) {
         registerApiRequest(name, "../img/default-avatar.jpeg", mail, tfa, nav);
     } else if (files) {
-        const fileReader: FileReader = new FileReader();
+        const fileReader = new FileReader();
         fileReader.readAsDataURL(files[0]);
         fileReader.onloadend = () => {
-            const base64: string = fileReader.result as string;
+            const base64 = fileReader.result as string;
             registerApiRequest(name, base64, mail, tfa, nav);
         }
     }
