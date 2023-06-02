@@ -61,7 +61,7 @@ $ make dev  # See what is happening in the containers
 
 </br>
 
-## 💫 Functions
+## 💫 Features
 
 ### Login
 ![flowchart](https://github.com/WallyPfister/transcendence/blob/main/img/flowchart/transcendence-login.drawio.png)
