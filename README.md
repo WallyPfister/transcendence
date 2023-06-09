@@ -6,7 +6,7 @@
 </br>
 
 ## 🎬 Preview
-![](https://github.com/WallyPfister/transcendence/blob/main/img/signup.gif?raw=true)
+![](https://github.com/WallyPfister/transcendence/blob/main/img/in_game.gif?raw=true)
 </br></br></br>
 
 ## 👩‍💻 Tech Stack
@@ -31,7 +31,7 @@
 
 ## 📝 Notion
 [🍀sokim](https://pouncing-elbow-0a4.notion.site/Transcendence-954e7670eea04363a9752ae0fa667050)
-
+[:monocle_face:sunghkim](https://jade-drop-dc9.notion.site/Pong-729ab48c17f84f7bbe21dc3299361f09?pvs=4)
 </br>
 
 ## 🚧 Structure
