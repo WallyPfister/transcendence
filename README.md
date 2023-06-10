@@ -30,8 +30,12 @@
   
 
 ## 📝 Notion
-[🍀sokim](https://pouncing-elbow-0a4.notion.site/Transcendence-954e7670eea04363a9752ae0fa667050)
-[:monocle_face:sunghkim](https://jade-drop-dc9.notion.site/Pong-729ab48c17f84f7bbe21dc3299361f09?pvs=4)
+<div align="center">
+  
+|[🍀 sokim](https://pouncing-elbow-0a4.notion.site/Transcendence-954e7670eea04363a9752ae0fa667050)|[:monocle_face: sunghkim](https://jade-drop-dc9.notion.site/Pong-729ab48c17f84f7bbe21dc3299361f09?pvs=4)|[🧸 sojoo & 🔭 yachoi](https://zoovely.notion.site/Transcendence-FE-80a126363b5543b19b39a80a7eef66b5?pvs=4)|🐿 hyunjcho|
+|---|---|---|---|
+  
+</div>
 </br>
 
 ## 🚧 Structure
