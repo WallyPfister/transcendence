@@ -127,15 +127,13 @@ export class GameService {
 	}
 
 	async checkSocket(type: number, name: string, flag: number): Promise<Socket> {
-		if (this.gameQ[type].getCount() < 2)
-			return null;
 		const socket = await this.findSocketByName(name);
 		if (socket === null) {
 			if (flag === 1)
 				this.gameQ[type].deQueue();
 			else
 				this.gameQ[type].deQueueSecond();
-			this.checkSocket(type, this.gameQ[type].peek(flag), flag);
+			return null;
 		}
 		return socket;
 	}
@@ -151,11 +149,11 @@ export class GameService {
 	@SubscribeMessage('invite')
 	async inviteGame(@MessageBody() data: { type: number, invitee: string }, @ConnectedSocket() socket: Socket) {
 		const { status } = await this.memberRepository.getStatus(data.invitee);
-		if (status !== MemberConstants.ONLINE) {
+		const inviteeSocket = await this.findSocketByName(data.invitee);
+		if (status !== MemberConstants.ONLINE || inviteeSocket === null) {
 			socket.emit('errorMessage', "The invitee\'s status is not online. Please try again later.");
 			return;
 		}
-		const inviteeSocket = await this.findSocketByName(data.invitee);
 		const gameType = data.type;
 		const inviter = socket.data.nickname;
 		inviteeSocket.emit("invite", { gameType, inviter })
