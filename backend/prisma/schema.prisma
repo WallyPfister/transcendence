@@ -16,11 +16,11 @@ model member {
 	email		String		@db.VarChar(50)
 	intraId		String		@db.VarChar(20) @unique
 	avatar		String
-	status		Int			@default(1)
+	status		Int
 	win			Int			@default(0)
 	lose		Int			@default(0)
 	level		Int			@default(0)
-	score		Int			@default(1000)
+	score		Int			@default(0)
 	achieve		Int			@default(0)
 	friend		member[]	@relation("friend", map: "friend_member")
 	blackList	member[]	@relation("blackList", map: "blackList_member")

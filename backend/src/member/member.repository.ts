@@ -17,13 +17,8 @@ export class MemberRepository {
 			return await this.prisma.member.create({
 				data: {
 					...memberInfo,
-					status: MemberConstants.OFFLINE,
-					win: 0,
-					lose: 0,
-					level: 0,
-					score: 0,
-					achieve: 0
-				},
+					status: MemberConstants.OFFLINE
+				}
 			});
 		} catch (err) {
 			throw new ConflictException(`There is a member with the same Intra Id as ${memberInfo.intraId}.`);
