@@ -32,7 +32,7 @@
 ## 📝 Notion
 <div align="center">
   
-|[🍀 sokim](https://pouncing-elbow-0a4.notion.site/Transcendence-954e7670eea04363a9752ae0fa667050)|[:monocle_face: sunghkim](https://jade-drop-dc9.notion.site/Pong-729ab48c17f84f7bbe21dc3299361f09?pvs=4)|[🧸 sojoo & 🔭 yachoi](https://zoovely.notion.site/Transcendence-FE-80a126363b5543b19b39a80a7eef66b5?pvs=4)|🐿 hyunjcho|
+|[🍀 sokim](https://pouncing-elbow-0a4.notion.site/Transcendence-954e7670eea04363a9752ae0fa667050)|[:monocle_face: sunghkim](https://jade-drop-dc9.notion.site/Pong-729ab48c17f84f7bbe21dc3299361f09?pvs=4)|[🧸 sojoo & 🔭 yachoi](https://zoovely.notion.site/Transcendence-FE-80a126363b5543b19b39a80a7eef66b5?pvs=4)|[🐿 hyunjcho](https://future-plane-946.notion.site/Transcendence-d9ff7e05c764453383332b6e06f29736?pvs=4)|
 |---|---|---|---|
   
 </div>
@@ -87,6 +87,14 @@ $ make dev  # See what is happening in the containers
 
 ## 💫 Features
 
+### singup
+![signup](https://github.com/WallyPfister/transcendence/blob/main/img/signup.gif)
+
+- nickname 중복 및 사용 불가 문자 확인
+- 최초 가입 시 사용 가능 email 여부 확인
+- 프로필 사진 등록
+- two-factor 인증 사용 여부 확인
+
 ### Login
 ![flowchart](https://github.com/WallyPfister/transcendence/blob/main/img/flowchart/transcendence-login.drawio.png)
 
@@ -94,6 +102,61 @@ $ make dev  # See what is happening in the containers
 - nodemailer를 이용하여 전송한 이메일 코드로 2차 인증
 - 로컬 스토리지에 JWT Access Token이 존재하는 경우 바로 로그인
 - JWT Access Token이 만료된 경우 Refresh Token을 통해 재발급
+
+### Profile
+![my](https://github.com/WallyPfister/transcendence/blob/main/img/my_profile.gif)
+
+- My Profile 버튼을 통해 자신의 profile 확인
+- 친구 목록 또는 채팅방 유저 목록에서 원하는 멤버의 profile 확인
+- 해당 멤버의 level, score, game history 및 달성 achievement 등 확인
+
+### Game Random Matching
+![ladder](https://github.com/WallyPfister/transcendence/blob/main/img/ladder.gif)
+
+- 게임 대기큐를 이용하여 casual 및 ladder 게임 랜덤 매칭
+
+### Game Invite
+![invite](https://github.com/WallyPfister/transcendence/blob/main/img/invite.gif)
+
+- 친구 목록 또는 채팅방 유저 목록에서 원하는 멤버 casual 게임 초대
+- 초대시 상대방에게 수락 및 거절 메시지 전송
+
+![rejected](https://github.com/WallyPfister/transcendence/blob/main/img/rejected.gif)
+
+- 상대방이 게임 초대 거절 시 초대 거절 안내
+
+### Game
+![game](https://github.com/WallyPfister/transcendence/blob/main/img/in_game.gif)
+
+- 실시간 게임 진행 상황 렌더링
+- ladder 게임의 경우 결과에 따라 point 부여 및 point에 따른 level 변경
+- achivement 달성 시 반영 
+
+### Ranking
+![ranking](https://github.com/WallyPfister/transcendence/blob/main/img/ranking.gif)
+
+- 모든 멤버의 실시간 랭킹 순위 확인
+
+### Chat Admin
+![admin](https://github.com/WallyPfister/transcendence/blob/main/img/kick.gif)
+
+- 채팅룸 개설자의 경우 `Chief Admin`권한 부여
+- `Chief Admin`의 경우 다른 채팅방 멤버에게 Admin 권한을 부여하거나 제거할 수 있음
+- `Admin` 권한을 가진 경우 채팅방 멤버를 Ban, Kick, Mute 할 수 있음
+- `Ban`: 해당 채팅방 입장 금지, `Kick`: 채팅방 강제 퇴장, `Mute`: 일정 시간 대화 금지
+- 일반 `Admin`은 `Chief Admin`에게 권한 박탈 및 기타 기능을 사용할 수 없음
+
+### Friends & BlackList
+![others](https://github.com/WallyPfister/transcendence/blob/main/img/other_profile.gif)
+
+- 친구 및 블랙리스트 목록 관리
+- 블랙리스트에 추가된 멤버의 메시지는 해당 멤버에게 미전송
+
+### Private Message
+![dm](https://github.com/WallyPfister/transcendence/blob/main/img/other_profile.gif)
+
+- 친구로 등록한 멤버에게 private message 전송 가능
+- private message의 경우 파란색으로 표기되며 같은 채팅방에 있지 않아도 수신할 수 있음
 
 </br>
 
