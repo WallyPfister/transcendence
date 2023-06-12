@@ -170,7 +170,6 @@ export class GameService {
 		}
 		this.memberRepository.updateStatus(socket.data.nickname, MemberConstants.INGAME);
 		this.memberRepository.updateStatus(data.inviterName, MemberConstants.INGAME);
-
 		const roomId = randomBytes(Math.ceil(25 / 2)).toString('hex').slice(0, 25);
 		inviter.emit("startGame", new GameInfoDto(data.type, roomId, data.inviterName, socket.data.nickname, 0));
 		socket.emit("startGame", new GameInfoDto(data.type, roomId, data.inviterName, socket.data.nickname, 1));

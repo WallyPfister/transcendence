@@ -90,7 +90,7 @@ export class MemberRepository {
 				score: true,
 				achieve: true
 			}
-		})
+		});
 	}
 
 	async updateStatus(name: string, status: number): Promise<void> {
@@ -131,7 +131,7 @@ export class MemberRepository {
 				level: true,
 				achieve: true
 			}
-		})
+		});
 	}
 
 	async getMemberHistory(name: string): Promise<MemberGameHistoryDto[]> {
@@ -167,7 +167,7 @@ export class MemberRepository {
 				score: true,
 				achieve: true
 			}
-		})
+		});
 	}
 
 	async deleteMember(name: string): Promise<void> {
@@ -186,7 +186,7 @@ export class MemberRepository {
 		}).friend({
 			where: { name: checkMember },
 			select: { name: true }
-		})
+		});
 		if (friend.length === 0)
 			return false;
 		return true;
@@ -243,7 +243,7 @@ export class MemberRepository {
 		}).blackList({
 			where: { name: checkMember },
 			select: { name: true }
-		})
+		});
 		if (black.length === 0)
 			return false;
 		return true;

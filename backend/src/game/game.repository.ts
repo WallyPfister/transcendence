@@ -16,6 +16,6 @@ export class GameRepository {
 				result: result,
 				type: type
 			}
-		})
+		});
 	}
 }
