@@ -153,7 +153,7 @@ $ make dev  # See what is happening in the containers
 - 블랙리스트에 추가된 멤버의 메시지는 해당 멤버에게 미전송
 
 ### Private Message
-![dm](https://github.com/WallyPfister/transcendence/blob/main/img/other_profile.gif)
+![dm](https://github.com/WallyPfister/transcendence/blob/main/img/private_message.gif)
 
 - 친구로 등록한 멤버에게 private message 전송 가능
 - private message의 경우 파란색으로 표기되며 같은 채팅방에 있지 않아도 수신할 수 있음
