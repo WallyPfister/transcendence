@@ -75,12 +75,26 @@
 $ git clone https://github.com/WallyPfister/transcendence.git
 ```
 
+### 🖐️ Environment Variables
+```
+You have to fill in the env values and change the file name from .env_sample to .env.
+For example...
+
+# Two-factor Authentication
+MAILER_NAME=[YOUR EMAIL ID]
+MAILER_PASS=[YOUR EMAIL PASSWORD]
+```
+
 ### 🖐️ Execute
 ```
-$ make # Run containers in the background mode
+To run containers in the background mode...
+
+$ make
 ```
 ```
-$ make dev  # See what is happening in the containers
+See what is happening in the containers...
+
+$ make dev
 ```
 
 </br>
