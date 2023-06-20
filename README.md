@@ -61,7 +61,7 @@
         ├── channel/  # socket based chat
         ├── config/   # environment variables
         ├── game/     # control game queue
-        ├── member/   # manange members
+        ├── member/   # manage members
         ├── pong/     # draw game canvas
         └── prisma/   # prisma ORM
 ```
